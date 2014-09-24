@@ -1,0 +1,105 @@
+/************************************************************************/
+/* weird example */
+
+<?
+echo "0\n"; // prints "0D"
+?>
+
+/************************************************************************/
+/* Explanation/comments on the bug we found */
+
+
+NEW NOTE: all the stuff below MUST be explained with copy-on write. 
+  I believe copy-on-write is exposed
+
+It seems that, for some reason, when performing a foreach loop on an array or object 
+which is not aliased, a local copy is created, on which the iteration is performed. 
+This is shown, for example, by the fact that, when re-assigning the array/object being 
+iterated in the body of the loop, and when no aliasing is present, the effects of 
+the assignment will not be visible until the loop has finished (strangely, this doesn't 
+happen in case there was aliasing before entering the loop -- in that case the changes
+will be immediately visible from withing the loop body):
+
+	$obj1 -> a = 1; $obj1 -> b = 2; 
+	$obj2 -> a = 3; $obj2 -> b = 4; 
+	//$ref = &$obj1;
+	foreach ($obj1 as $v) { echo "$v,";
+		if ($v === $obj1 -> a) $obj1 = $obj2; };
+	if ($obj1 === $obj2) echo "true";  //1,2,true
+
+Also, it seems that, in order to 'hide' this behaviour to the programmers, the value of 
+the original array/object 'current pointer' is replaced by the value of the local/temporary
+array/object's 'current pointer'.
+This seems to happen in three cases:
+ - when exit from loop
+ - when 'break'
+ - on throwing exception
+ 
+However, it seems that this 'hiding' mechanism is broken, as shown by our bug report. 
+We believe this behaviour is due to the fact that, when in the no-aliasing/local-copy case, 
+the first time 'current' is read, the value of the original array's current is replaced 
+with the value of the local array's current, once and for all.
+
+We believe that update/resync shouldn't happen in that position, but only on loop exit, break
+and exception. Instead, we propose the following solution: when calling 'current($x)' inside
+a foreach body, when $x is the array [or object] being iterated and there was no sharing on 
+$x before loop start (hence we are in the local-copy case), simply return the result of calling
+'current' on the local copy (i.e. for as long as the loop is running, pretent the local 
+copy is $x).
+
+/************************************************************************/
+/* Explanation/comments on the bug we found -- bug report */
+
+Seems that 'current($x)' is computed only once, the first time 
+it is called, while subsequent calls yields the same value. 
+
+This happens only if no aliasing is present on $x when the foreach 
+loop starts, suggesting that, in this case, the iteration is performed
+on some sort of temporary copy of $x.
+
+This behaviour suggests that the first time 'current($x)' is called 
+it updates the value of the internal pointer of $x with the value of 
+the internal pointer of the local copy (since the foreach loop is being
+performed on a temporary copy of $x the current pointer of $x is left 
+untouched), while on subsequent calls it just perform as expected, 
+returning the value of the current element of $x. 
+However, Since the iteration is not being performed on $x but on a 
+temporary copy of it, the printed value is constant, which explains the 
+observed behaviour.
+
+Moreover, while normally a call to 'current($x)' immediately after 
+a foreach loop should return 'false', it the cases above it returns 
+the exact same value computed the first time 'current' was called in 
+the loop body. 
+This suggest that in this 'local-copy/no-aliasing' scenario, there 
+should normally be a mechanism which 'synchronize' the current 
+pointer of the original array with the one of the temporary copy used 
+for iteration, which runs after every foreach loop, when breaking etc.
+However, it seems that calling 'current($x)' inside the loop body not 
+only updates the current pointer of $x once and for all as discussed 
+above, but also overrides the synchronization mechanism just mentioned, 
+leaving the current pointer of $x in an inconsistent/arbitrary state 
+(in fact, after the loop, 'current($x)' will be 'false' if 'current($x)'
+was never called in the loop body, or the value returned by 'current($x)'
+when called for the first time otherwise).
+
+/************************************************************************/
+/* Comments on bug id=60688 */
+
+- both examples -ours and Wolfgang's- in tests/handwritten 
+
+- explanation: the doc says there is a function 
+
+compare($a,$b) = 0 if $a == $b, 1 if $a > $b and -1 if $a < $b.
+Reading this we might expect that 
+
+$a < $b iff compare($a, $b) == -1
+$a > $b iff compare($a, $b) ==  1
+
+but actually it seems that zend is doing
+
+$a < $b iff compare($a, $b) == -1
+$a > $b iff compare($b, $a) == -1
+
+We have now "implemented" the bug.
+

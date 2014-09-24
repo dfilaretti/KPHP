@@ -1,0 +1,8 @@
+load "/Users/df/bin/k/lib/maude/lib/k-prelude"
+load "base.maude"
+load "builtins.maude"
+mod ATERM-TO-KAST is 
+  including ATERM-TO-KAST-BASE .
+  including ATERM-TO-KAST-BUILTINS .
+eq mainModule = 'ATERM-TO-KAST .
+endm

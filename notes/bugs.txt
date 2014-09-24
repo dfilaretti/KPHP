@@ -1,0 +1,62 @@
+Bug interessanti
+
+ --- #61188	
+
+Bug noti:
+
+============
+bug id=53824
+============
+
+- va in loop, ecco perchè nessuno se l'è preso
+- still open
+- check it out, does it make sense? difference kphp/php
+
+===================
+"our bug": id 53405
+===================
+
+- they agree that current is buggy, we provide a reasonable way to formalize
+
+- this guy is in charge:
+	http://nikic.github.io/
+	his initial patch
+	https://github.com/nikic/php-src/commit/185c7fae3a3d7a90693c24726a8f2685b3751464
+
+=========
+bug 60688
+=========
+
+- still open
+- it's a "documentation bug" as well as probably a "proper bug" (in the sense that, as shown
+  by both Wolfgang's example and our example, the comparison give weird results).
+
+the doc says there is a function and that PHP use that internally to perform comparison:
+
+compare($a,$b) = 
+	| 0 if $a == $b, 
+	| 1 if $a > $b 
+	| -1 if $a < $b.
+
+Reading this we might expect that (and in fact I implemented 
+
+	$a < $b iff compare($a, $b) == -1
+	$a > $b iff compare($a, $b) ==  1
+
+but actually it seems that zend is doing
+
+	$a < $b iff compare($a, $b) == -1
+	$a > $b iff compare($b, $a) == -1
+
+This btw, means that the "+1" branch is useless. We have now "implemented" the bug in kphp.
+
+============
+bug id 62901
+============
+
+- for us depends on the interpretation of when arrays are copied.
+
+  - we pass around as references, copy happens if you store them somewhere
+  - bug reporter assumes they are passed around as literal
+  - PHP behaves in the same way as KPHP, so the behaviour makes sense. 
+    I think this is not a bug.

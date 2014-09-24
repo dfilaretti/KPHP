@@ -1,0 +1,237 @@
+\begin{thebibliography}{10}
+
+\bibitem{Arusoaie2012b}
+A.~Arusoaie, D.~Lucanu, and V.~Rusu.
+\newblock {A Generic Framework for Symbolic Execution}.
+\newblock In {\em Software Language Engineering}, volume 8225 of {\em Lecture
+  Notes in Computer Science}, pages 281--301. Springer International
+  Publishing, 2013.
+
+\bibitem{Huet2007}
+Y.~Bertot, P.~Castéran, G.~Huet, and C.~Paulin-Mohring.
+\newblock {\em {Interactive Theorem Proving and Program Development - Coq'Art -
+  the {C}alculus of Inductive Constructions}}.
+\newblock Texts in theoretical computer science. Springer, 2004.
+
+\bibitem{Blazy2009}
+S.~Blazy and X.~Leroy.
+\newblock {Mechanized Semantics for the Clight Subset of the C Language}.
+\newblock {\em Journal of Automated Reasoning}, 43:263--288, 2009.
+
+\bibitem{Bodin}
+M.~Bodin, , A.~Chargu\'{e}raud, D.~Filaretti, P.~Gardner, S.~Maffeis,
+  A.~Schmitt, and G.~Smith.
+\newblock {A Trusted Mechanised JavaScript Specification}.
+\newblock In {\em POPL '14}, 2014.
+
+\bibitem{Java-in-K}
+D.~Bogdanas.
+\newblock {Formal Semantics of Java in the K Framework}.
+\newblock \url{https://github.com/kframework/java-semantics}.
+
+\bibitem{Bogdanas2012}
+D.~Bogdanas.
+\newblock {Label-Based Programming Language Semantics in the K Framework with
+  SDF}.
+\newblock In {\em SYNASC'12}, pages 170--177, 2012.
+
+\bibitem{Bouwers2007}
+E.~Bouwers.
+\newblock {PHP-Sat}.
+\newblock \url{http://www.program-transformation.org/PHP/PhpSat}.
+
+\bibitem{Clavel2002}
+M.~Clavel, F.~Dur\'{a}n, S.~Eker, P.~Lincoln, N.~Mart\'{\i}-Oliet, J.~Meseguer,
+  and J.~F. Quesada.
+\newblock {Maude: Specification and Programming in Rewriting Logic}.
+\newblock {\em Theoretical Computer Science}, 285(2):187--243, 2002.
+
+\bibitem{Cousot1977}
+P.~Cousot and R.~Cousot.
+\newblock {Abstract Interpretation: a Unified Lattice Model for Static Analysis
+  of Programs by Construction or Approximation of Fixpoints}.
+\newblock In {\em POPL '77}, pages 238--252, 1977.
+
+\bibitem{pbkdf2Web}
+PHP Documentation.
+\newblock {Cryptographic Function pbkdf2}.
+\newblock \url{http://php.net/manual/en/function.hash-hmac.php}.
+
+\bibitem{Ellison2012}
+C.~Ellison and G.~Ro{\c s}u.
+\newblock {An Executable Formal Semantics of C with Applications}.
+\newblock In {\em POPL '12}, pages 533--544, 2012.
+
+\bibitem{gcc-test}
+Free~Software Foundation.
+\newblock {GCC Torture Suite}.
+\newblock \url{http://gcc.gnu.org/onlinedocs/gccint/C-Tests.html}.
+
+\bibitem{PHP-docs}
+The~PHP Group.
+\newblock {PHP Official Documentation}.
+\newblock \url{http://www.php.net/manual/en/}.
+
+\bibitem{zend}
+The~PHP Group.
+\newblock {PHP Zend Engine}.
+\newblock \url{http://php.net}.
+
+\bibitem{Guha2010}
+A.~Guha, C.~Saftoiu, and S.~Krishnamurthi.
+\newblock {The Essence of Javascript}.
+\newblock In {\em ECOOP'10}, pages 126--150, 2010.
+
+\bibitem{Python-in-K}
+D.~Guth.
+\newblock {Python Semantics in K}.
+\newblock \url{http://code.google.com/p/k-python-semantics/}.
+
+\bibitem{Heering1992}
+J.~Heering, P.~R.~H. Hendriks, P.~Klint, and J.~Rekers.
+\newblock {The Syntax Definition Formalism SDF - Reference Manual}.
+\newblock {\em SIGPLAN Not.}, 24(11):43--75, 1989.
+
+\bibitem{Ecma2009}
+{ECMA} International.
+\newblock {ECMA-262 ECMAScript Language Specification}.
+\newblock
+  \url{http://www.ecma-international.org/publications/standards/Ecma-262.htm},
+  2009.
+
+\bibitem{New2012}
+{International Organization for Standardization}.
+\newblock {C Language Specification - C11. ISO/IEC 9899:2011}.
+\newblock
+  \url{http://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=57853},
+  2011.
+
+\bibitem{Hjelseth2010}
+R.~Jhala and R.~Majumdar.
+\newblock {Software Model Checking}.
+\newblock {\em ACM Compututing Surveys}, 41(4), 2009.
+
+\bibitem{Jovanovic2010}
+N.~Jovanovic, C.~Kruegel, and E.~Kirda.
+\newblock {Static Analysis for Detecting Taint-Style Vulnerabilities in Web
+  Applications}.
+\newblock {\em Journal of Computer Security}, 18(5):861--907, 2010.
+
+\bibitem{Klein:2012}
+C.~Klein, J.~Clements, C.~Dimoulas, C.~Eastlund, M.~Felleisen, M.~Flatt,
+  A.~McCarthy, J, J.~Rafkind, S.~Tobin-Hochstadt, and R.~B. Findler.
+\newblock {Run Your Research: On the Effectiveness of Lightweight
+  Mechanization}.
+\newblock In {\em POPL '12}, pages 285--296, 2012.
+
+\bibitem{Haskell-in-K}
+D.~Lazar.
+\newblock {Haskell Semantics in K}.
+\newblock \url{https://github.com/davidlazar/haskell-semantics}.
+
+\bibitem{Lucanu2013}
+D.~Lucanu and V.~Rusu.
+\newblock {Program Equivalence by Circular Reasoning}.
+\newblock In {\em IFM'13}, pages 362--377, 2013.
+
+\bibitem{Maffeis2008}
+S.~Maffeis, J.C. Mitchell, and A.~Taly.
+\newblock {An Operational Semantics for JavaScript}.
+\newblock In {\em APLAS '08}, pages 307--325, 2008.
+
+\bibitem{Maffeis2009a}
+S.~Maffeis, J.C. Mitchell, and A.~Taly.
+\newblock {Isolating JavaScript with Filters, Rewriting, and Wrappers}.
+\newblock In {\em ESORICS'2009}, pages 505--522, 2009.
+
+\bibitem{Maffeis2009}
+S.~Maffeis and A.~Taly.
+\newblock {Language-Based Isolation of Untrusted JavaScript}.
+\newblock In {\em CSF'09}, pages 77--91, 2009.
+
+\bibitem{Meredith2007}
+P.~Meredith, M.~Hills, and G.~Ro{\c s}u.
+\newblock {A K Definition of Scheme}.
+\newblock Technical Report Department of Computer Science UIUCDCS-R-2007-2907,
+  University of Illinois at Urbana-Champaign, 2007.
+
+\bibitem{Meredith2010}
+P.~Meredith, M.~Katelman, J.~Meseguer, and G.~Ro\c{s}u.
+\newblock {A Formal Executable Semantics of Verilog}.
+\newblock In {\em MEMOCODE'10}, pages 179--188, 2010.
+
+\bibitem{Milner1997}
+R.~Milner, M.~Tofte, and D.~Macqueen.
+\newblock {\em {The Definition of Standard ML}}.
+\newblock MIT Press, 1997.
+
+\bibitem{Nipkow2002}
+T.~Nipkow, L.C. Paulson, and M.~Wenzel.
+\newblock {\em {Isabelle/HOL - A Proof Assistant for Higher-Order Logic}},
+  volume 2283.
+\newblock Springer, 2002.
+
+\bibitem{Norrish1998}
+M.~Norrish.
+\newblock {C Formalised in HOL}.
+\newblock University of Cambridge Technical Report UCAM-CL-TR-453, 1998.
+
+\bibitem{phpMyAdminWeb}
+phpMyAdmin Team.
+\newblock {phpMyAdmin}.
+\newblock \url{http://www.phpmyadmin.net/home_page/index.php}.
+
+\bibitem{Pierce2002}
+B.C. Pierce.
+\newblock {\em {Types and Programming Languages}}.
+\newblock MIT Press, Cambridge, MA, USA, 2002.
+
+\bibitem{Politz2013}
+J.~G. Politz, A.~Martinez, M.~Milano, S.~Warren, D.~Patterson, J.~Li,
+  A.~Chitipothu, and S.~Krishnamurthi.
+\newblock {Python: the Full Monty}.
+\newblock In {\em OOPSLA'13}, 2013.
+
+\bibitem{Rosu2012}
+G.~Ro{\c s}u and A.~\c{S}tef\u{a}nescu.
+\newblock {Checking Reachability using Matching Logic}.
+\newblock In {\em OOPSLA'12}, pages 555--574, 2012.
+
+\bibitem{Rosu2010}
+G.~Ro{\c s}u and T.F. {\c S}erb{\u a}nu{\c t}{\u a}.
+\newblock {An Overview of the K Semantic Framework}.
+\newblock {\em Journal of Logic and Algebraic Programming}, 79(6):397--434,
+  2010.
+
+\bibitem{Fortify-web}
+Fortify Team.
+\newblock {Fortify Code Secure}.
+\newblock \url{http://www.armorize.com/codesecure/}.
+
+\bibitem{K-web}
+K~Team.
+\newblock The {K} {F}ramework.
+\newblock \url{http://k-framework.org/index.php/Main_Page}.
+
+\bibitem{zendtest}
+PHP Quality~Assurance Team.
+\newblock {Zend Test Suite}.
+\newblock \url{https://qa.php.net/write-test.php}.
+
+\bibitem{Tozawa2009}
+A.~Tozawa, M.~Tatsubori, T.~Onodera, and Y.~Minamide.
+\newblock {Copy-On-Write in the PHP Language}.
+\newblock In {\em POPL'09}, pages 200--212, 2009.
+
+\bibitem{Woo1993}
+T.Y.C. Woo and M.~Lam.
+\newblock {A Semantic Model for Authentication Protocols}.
+\newblock In {\em Security and Privacy (SP)}, pages 178--194, 1993.
+
+\bibitem{Xie2006}
+Y.~Xie and A~Aiken.
+\newblock {Static Detection of Security Vulnerabilities in Scripting
+  Languages}.
+\newblock In {\em USENIX'06}, 2006.
+
+\end{thebibliography}

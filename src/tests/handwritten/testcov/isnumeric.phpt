@@ -1,0 +1,16 @@
+--TEST--
+isnumeric
+--FILE--
+<?php
+	var_dump(is_numeric(0));
+	var_dump(is_numeric("0"));
+	var_dump(is_numeric(1.0));
+	var_dump(is_numeric("1.0"));
+	var_dump(is_numeric("asd"));
+?>
+--EXPECT--
+bool(true)
+bool(true)
+bool(true)
+bool(true)
+bool(false)

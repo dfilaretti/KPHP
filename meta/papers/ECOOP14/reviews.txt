@@ -1,0 +1,377 @@
+
+
+*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=
+
+First reviewer's review:
+
+          >>> Summary of the submission <<<
+
+The paper presents an operational semantics, mechanized on the Maude-based K
+framework, for a subset of PHP. It is the first effort to formalize the
+semantics of PHP, and so it concentrates on core constructs. The paper alos
+illustrates the potential application of the semantics as a basis for an LTL
+model checker for PHP: it defines LTL constructs suitable for reasoning about
+PHP constructs, and presents two examples of their use.
+
+          >>> Evaluation <<<
+
+The paper presents an impressive amount of solid work. The K mechanization is
+available. As a result of this work, a number of subtle aspects of the
+semantics of PHP have been identified, and prototypes for an interpreter and a
+model checker are available.
+
+The introduction clearly motivates and identifies the problem and contributions
+of the paper. The paper is very well written, with interesting examples that
+motivate the work. The selection of rules to present is well judged. The
+evaluation and validation of the work via tests is thorough and honest. 
+
+The work is an important first step for the formalisation of PHP. 
+
+Minor points
+------------
+
+Section 1,line 2: billion-dollar
+
+S1,paragraph 2,l-2: quality-assurance
+
+S1,para3,l1: Static-analysis
+
+pg2,l4: static-analysis
+
+pg2,para1,l3: precision. PHP
+
+pg2,para2: break it at "In defining ..." and "We write ..."; l7: or -> our
+
+pg2,para3: "encouraging results" is too vague
+
+There are sentences from the introduction repeated throughout the paper; remove
+this. There are also bad line breaks!
+
+In Section 2.1, aliasing is not unusual and there are several formal semantics
+that capture that. Also arrays and objects are not unusual. What is unusual is
+the use of default indices and the treatment of visibility. Be more specific. 
+
+pg6,l6: In -> If
+
+pg7,l1: fix quotes
+
+pg7,l2 after the second piece of code: happens is that 
+
+For-each: explain what you mean by object iteration.
+
+Code on top of pg8: explain better, considering those that are unfamiliar with
+the PHP notation.
+
+S3,para1,l-1: relying -> referring 
+
+pg9,para2,l-1: it? Do you mean, the others can be omitted?
+
+pg10,para1,l-1: works
+
+pg12,Configuration,l7: The sentence starting here is incomplete. 
+
+Top of pg14: explain that code. 
+
+An example to illustrate the rule for functions would be good as well. 
+
+S5,para2,l-1: or -> of
+
+S5,pars3,l-2: propositions
+
+S5.1: the use of the step rules is rather obvious. Explain why we could want to
+consider that the other rules carry out a state change. 
+
+S5.2: remove the many examples of calls to PMA_isValid, leaving their
+discussion in the text, to make space for the missing explanations. 
+
+S5.3: explain the need for 3 better. 
+
+pg22,l1: remove a
+
+S7,l5: specification; l6: and proving -> and to prove; l9: build -> have built
+(change the tense of the other verbs in this paragraph as well: have tested
+have developed, have proved) 
+
+pg23,l3: out -> our
+
+pg23,para2,l-2: static-analysis
+
+Thank you for your response. 
+
+*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*
+
+Second reviewer's review:
+
+          >>> Summary of the submission <<<
+
+This paper discusses a formal semantics for PHP using the executable
+modelling language K. The faithfulness of the semantics is tested against 
+the Zend benchmark suite for PHP. Interesting benchmarks about the use 
+of the various semantic rules were given, and the semantics was used to
+verify some PHP programs, using an extension of LTL and its implementation
+in the Maude framework underlying K.
+
+The paper starts by motivating the overarching problem, which is to provide 
+static analysis tools for PHP, due to the prevalence of PHP and the large
+number
+of security attacks on PHP programs. In particular, the difficult of providing
+a definitive semantics for PHP is discussed - no informal description of the 
+semantics exists, as is the case for Javascript; rather the Zend benchmark
+suite
+and hand-tested programs against the reference implementation form the basis
+of the "ground truth".
+
+The paper continues by giving an overview of PHP, in particular focussing on
+the "challenging and surprising" features - very basic things like variables,
+arrays, and types have, frankly, very non-uniform semantics indeed.
+
+Next an overview of the K-based semantics of PHP is given, following an
+overview
+of K (something this reviewer was not familiar with, but found intriguing). 
+The semantics consisted of a vast number of rules (~800), which were available
+on an external website. Only a few rules, however, were presented in the
+paper,
+namely, those for assignments and function calls. That said, the paper does
+provide
+quite a few details describing how the formal semantics addresses the main 
+challenges, without actually presenting all the formal rules.
+
+As the semantics is executable, it can actually act as a PHP interpreter.
+This follows the recent trend set by Krisnamurthi et al with their executable
+semantics of Javascript, namely, tackling real languages and producing 
+large scale executable semantics. The semantics of PHP is evaluated by running
+the Zend benchmark. The semantics passed a large part of the benchmark suite.
+The parts not passed were due to library functions and unimplemented language
+extensions. The coverage of the test suite is analysed in terms of the number
+of rules of the language semantics that were exercised. This was quite 
+interesting: some were exercised very heavily, and others not at all. 
+(Does it satisfy a power law distribution?) To deal with the semantics that 
+were not touched by the benchmark suite, specialised test cases were added
+(after being tested on PHP implementations).
+
+The paper then discusses two applications of the semantics, both relying on
+the model checking and symbolic execution backends to the K implementation
+(relying heavily on Maude). The two applications discussed were input
+validation
+and cryptographic key generation. These case studies, though small,
+highlighted
+the possibilities of the approach.
+
+A number of limitations are discussed and ideas for future work are 
+presented. These mostly cover missing language features and language
+extensions.
+
+After a discussion of related work, focussing on large scale formalisations
+and PHP analysis, the paper concludes.
+
+          >>> Evaluation <<<
+
+Points in favour:
+- The paper describes a monumental undertaking, which was carried out with
+a high degree of precision and quality.
+- The outcome will be valuable to anyone wanting to understand PHP in depth,
+or to write valid analysis tools for PHP --- giving the vast amount of PHP
+out there, this is very important.
+- Paper is quite well written.
+
+Points against:
+- nothing really 
+
+Originality & Significance:
+- The idea of producing an executable semantics for a whole programming
+language is not new, but it has not been applied to PHP. PHP is interesting
+in this respect, because not even an informal semantics exists. By testing
+the semantics against existing benchmark suites, a high degree of fidelity
+is achieved. 
+
+- Recording the coverage of the semantic rules for the benchmark seemed new
+to me --- in any case, the results for PHP are interesting, even though it 
+is hard to infer anything general from them.
+
+- The semantics of the odd, crazy, strange, unintuitive, ... features of
+PHP has not been considered in the literature, to my knowledge.
+While not beautiful, from a purists perspective, it is useful to understand 
+them in detail
+
+- Having a formal semantics for PHP can have a lot of useful consequences,
+for language implementers, language designers, tool developers and so forth.
+Given the vast amount of _buggy_ PHP code out there, the results of this paper
+have the potential to have a positive impact on web-based software. 
+
+Evidence:
+- The semantics is executable (and available) and can be run as an actual
+PHP implementation.
+- The resulting semantics are tested against the well-known (definitive?)
+Zend benchmark suite, and in cases not covered by the suite, by specialised
+programs tested against PHP implementations.
+
+Clarity:
+- The paper is generally well written. 
+- I found the introduction to K a little daunting, as it was somewhat obscured
+by ultra-concise syntax, and the rules actually presented were hard to follow.
+But for the rest, the paper was easy to follow and quite interesting.
+
+Proposed changes:
+- The semantics has a number of limitations. These should be mentioned up
+front.
+
+Minor comments:
+- p1: billion dollars companies --> billion dollar companies
+- p2: formal model of PHP *up*on which semantics-based
+- throughout: Section does not need a capital in sentences like "In this
+Section, we give"
+On the other hand, one could use a capital in sentences like "In Section 4, we
+give".
+- p4: use of verb "inject": inject the result into what?
+- p5: current element (the first by default), *which* can be manipulated
+- p5 at bottom: and *are* hence worth discussing
+- p6, middle: $x[i], *which* is now shared with $y.
+- p6: Accordingly, in our semantics, we copy by reference -- really? "We"
+doesn't
+seem to be the right subject of this sentence. A similar problem on page 7,
+where "we" iterate twice through array $a: are you iterating through the
+array?
+- p7: some typos: lef --> left
+etc. 
+
+Please give the paper a good proofread.
+
+*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*
+
+Third reviewer's review:
+
+          >>> Summary of the submission <<<
+
+This paper presents a formal executable semantics of a significant 
+portion of PHP. Although PHP is one of the most popular programming 
+languages for server-side scripting, it lacks a formal
+or even semi-formal description of its semantics. Resolving this issue 
+is the objective of the paper. In the paper, the authors define 
+a formal semantics of PHP in terms of rewriting rules in the K-Maude system.
+This semantics clarifies unusual behaviors of 
+language constructs of PHP, formalizes a subtle evaluation 
+strategy used by the standard implementation of PHP, and enables one to
+use existing K-Maude tool chains for verifying properties of some 
+PHP programs, as demonstrated by two case studies in the paper. The
+semantics in the paper has been validated against the standard benchmark 
+programs for PHP interpreters/compilers. 
+
+          >>> Evaluation <<<
+
+Pros:
+1. First formal executable semantics of a significant part of PHP.
+
+2. Well-written paper. Although I did not have any experience in
+writing or even reading PHP programs, reading the paper was enough for
+me to understand and appreciate subtleties of the PHP language.
+
+3. The paper clarifies unknown corner cases of the PHP language.
+
+4. Demonstration of the formalization by model-checking PHP programs.
+
+5. Thorough validation of the defined semantics.
+
+Cons:
+1. While reading the paper, I kept asking myself: what lessons can 
+a person like me learn from this paper? Frankly, I am not much into the 
+mechanized formal semantics of PL. My interest in PHP is not that 
+great, either. I understand that this is a very difficult question 
+to answer. But frankly I could not find a convincing answer from 
+this paper, and it is one of the reasons that I am not super supportive
+for the paper. The authors say that the formal executable semantics 
+in the paper can become a basis for building a static analysis. Although
+this is true in principle, it is the case for any formal semantics. I 
+want to see more concrete stories about how the particular formal 
+semantics of the authors lead to better static analyses or testing tools.
+
+2. I was slightly disappointed that the case studies did not involve
+strange features of PHP described in the first part of the paper. One
+clear benefit of the semantics in the paper is the clarification of
+the PHP language. Currently, the case studies do not seem to say
+anything about this benefit.
+
+* p2: In defining or semantics ---> In defining our semantics
+* p2: a an interactive web ---> an interactive web
+* p6: In such sharing ---> Such sharing
+* p7: What really happens it ---> What really happens is
+* p8: I cannot quite understand why the output should be 1,3,4,true, 
+ not 1,2,3,4,true. Please add explanation for readers not familiar with PHP.
+* p9: it can be omitted. I cannot understand what you meant by "it".
+* p11: What is described in the first paragraph in the "Reference" section 
+ is the standard distinction between L values and R values, which 
+ exists in other programming languages already. I suggest to add a few
+ sentences to this section and distinguish the discussion specific 
+ for PHP from that which applies for several programming languages.
+* p13: forces is to ---> forces to
+* p13: What do you mean by "another tricky PHP feature"?
+* p14: incRefCount(L1 ---> incRefCount(L1)
+* p15: for categories ---> four categories
+* p16: many test are ---> many tests are
+* p16: I really like the idea of automatic generation of a regression test
+suite
+ described in the footnote. If this had been done, I would have strongly
+supported
+ the paper.
+* p19: properties or real PHP code ---> properties of real PHP code
+* p19: are able prove ---> are able to prove
+* p21-22: Just some of my personal opinion. I fully agree that the 
+ issues discussed in "Internal functions" and "Language extensions" are 
+ very important, but currently people do not have any reasonable solutions
+ for them other than just working hard. Personally, I think developing 
+ automated or semi-automated techniques that help define the formal semantics 
+ of language extensions and internal functions is a great research problem.
+
+*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*
+
+Fourth reviewer's review:
+
+          >>> Summary of the submission <<<
+
+An executable formal semantics for a substantial code is presented. The
+proposed semantics is validated by testing it against the official test suite
+distributed with the Zend engine. Potential applications of the provided
+formalization are illustrated by considering two case studies.
+
+          >>> Evaluation <<<
+
+Strength: the executable formal semantics of a substantial core of PHP paves
+the way towards formal verification of PHP programs.
+
+Weakness: The two case studies presented are interesting. However, a lager body
+of case studies, possibly showing flaws in some PHP library would make the
+contribution of the paper more interesting.
+
+Suggestions for improvement
+
+- P.2 l.16: "defining or semantics" -> "defining our semantics".
+
+- P.2 l.-10: "LTL" -> "Linear Temporal Logic (LTL)".
+- P.2 l.-8: "Linear Temporal Logic (LTL)" -> "LTL".
+
+- P.2 l.-2: "a an" -> an".
+
+- P.4 l.26,27: "for example. An object can be converted to the string "object",
+but cannot be converted to a number.". Maybe you can explicitly point out that
+"automatic conversion" is not transitive.
+
+- Top of p.8: Please improve the explanation. In particular clarify the
+following issue: if fields are considered either in lexicographical ordering or
+in introduction ordering, then the assignment "$obj1 = $obj2" should be done
+only at the second iteration (when $v has value 2). So the output should be
+"1,2,3,4,true". 
+
+- P.11 l. 17: "..form ref(Loc,Key) where L is...", should "L" be "Loc".
+
+- P.12 l.-16,-15,-14: the sentence mentions the "declarations" and "sentences"
+cells, however they are not showed in Fig.2. Moreover, it seems to me that
+there is something of odd in the sentence.
+
+- Top of p.14: please add few sentence to explain how the rules in Fig.3
+explain the semantics of the code on top of page 14.
+
+Section 5: the two case studies presented are interesting. However, a lager
+body of case studies, possibly showing flaws in some PHP library would make the
+contribution of the paper more interesting.
+
+*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*=--=*
+

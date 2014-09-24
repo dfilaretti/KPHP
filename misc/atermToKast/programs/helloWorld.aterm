@@ -1,0 +1,50 @@
+CompilationUnit(
+  None(), []
+, [ ClassDec(
+      ClassDecHead([Public()], Id("helloWorld"), None(), None(), None())
+    , ClassBody(
+        [ MethodDec(
+            MethodDecHead(
+              [Public(), Static()]
+            , None()
+            , Void()
+            , Id("main")
+            , [ Param(
+                  []
+                , ArrayType(ClassOrInterfaceType(TypeName(Id("String")), None()))
+                , Id("args")
+                )
+              ]
+            , None()
+            )
+          , Block(
+              [ ExprStm(
+                  Invoke(
+                    Method(
+                      MethodName(
+                        AmbName(AmbName(Id("System")), Id("out"))
+                      , Id("println")
+                      )
+                    )
+                  , [Lit(String([Chars("Hello World!")]))]
+                  )
+                )
+              , ExprStm(
+                  Invoke(
+                    Method(
+                      MethodName(
+                        AmbName(AmbName(Id("System")), Id("out"))
+                      , Id("println")
+                      )
+                    )
+                  , [Lit(String([Chars("Done!")]))]
+                  )
+                )
+              ]
+            )
+          )
+        ]
+      )
+    )
+  ]
+)

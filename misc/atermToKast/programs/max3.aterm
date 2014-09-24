@@ -1,0 +1,23 @@
+Program(
+  VarDecList(["a", "b", "c", "max"])
+, [ Assign("a", Lit("5"))
+  , Assign("b", Lit("3"))
+  , Assign("c", Lit("4"))
+  , If(
+      Not(LtEq(Lookup("a"), Lookup("b")))
+    , If(
+        Not(LtEq(Lookup("a"), Lookup("c")))
+      , Block([Assign("max", Lookup("a"))])
+      , Assign("max", Lookup("c"))
+      )
+    )
+  , If(
+      LtEq(Lookup("a"), Lookup("b"))
+    , If(
+        Not(LtEq(Lookup("b"), Lookup("c")))
+      , Assign("max", Lookup("b"))
+      , Assign("max", Lookup("c"))
+      )
+    )
+  ]
+)

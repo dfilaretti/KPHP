@@ -1,0 +1,103 @@
+module Program
+
+imports Common
+imports KBuiltinsBasic
+exports
+
+context-free syntax
+context-free start-symbols
+DzString Float Bool DzInt String ATerm Id Int DzBool ATermList ListWrap DzFloat K
+context-free syntax
+    DzInt -> Int {}
+    "[" InsertDzATermList "]" -> ListWrap {cons("ListWrap1440Syn")}
+    ATerm "," ATermList -> ATermList {cons("ATermList1445Syn")}
+    ATerm -> ATermList {}
+    Int -> ATerm {}
+    DzBool -> Bool {}
+    Id "(" ")" -> ATerm {cons("ATerm1444Syn")}
+    ListWrap -> ATerm {}
+    Id "(" InsertDzATermList ")" -> ATerm {cons("ATerm1443Syn")}
+    DzFloat -> Float {}
+    "[" "]" -> ListWrap {cons("ListWrap1442Syn")}
+    DzString -> String {}
+    String -> ATerm {}
+    ATermList -> InsertDzATermList
+
+
+    DzDzString        -> DzString    {cons("DzString1Const")}
+    DzDzInt        -> DzInt    {cons("DzInt1Const")}
+    DzDzId        -> DzId    {cons("DzId1Const")}
+    DzDzBool        -> DzBool    {cons("DzBool1Const")}
+    DzDzFloat        -> DzFloat    {cons("DzFloat1Const")}
+
+
+
+%% start symbols subsorts
+    KItem        -> K
+    DzString        -> K
+    Float        -> K
+    Bool        -> K
+    DzInt        -> K
+    String        -> K
+    ATerm        -> K
+    Id        -> K
+    Int        -> K
+    DzBool        -> K
+    ATermList        -> K
+    ListWrap        -> K
+    DzFloat        -> K
+lexical syntax
+    "true" -> DzDzBool
+    "false" -> DzDzBool
+
+
+    "false" -> IdDz {reject}
+    "true" -> IdDz {reject}
+
+lexical restrictions
+    %% follow restrictions
+
+
+lexical syntax
+    [\+\-]?[0-9]+"."[0-9]+([eE][\+\-]?[0-9]+)?[fFdD]? -> DzFloatDz
+    [A-Za-z\_][A-Za-z0-9\_]* -> IdDz
+    [\-\+]?[0-9]+ -> DzIntDz
+    "\"" ((~[\"\n\r\\])|(((([\\][nrtf\"\\])|([\\][x][0-9a-fA-F][0-9a-fA-F]))|([\\][u][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]))|([\\][U][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])))*"\"" -> DzStringDz
+    "]" -> DzStringDz {reject}
+    "false" -> DzStringDz {reject}
+    "true" -> DzStringDz {reject}
+    "(" -> DzStringDz {reject}
+    ")" -> DzStringDz {reject}
+    "," -> DzStringDz {reject}
+    "[" -> DzStringDz {reject}
+    "]" -> DzIntDz {reject}
+    "false" -> DzIntDz {reject}
+    "true" -> DzIntDz {reject}
+    "(" -> DzIntDz {reject}
+    ")" -> DzIntDz {reject}
+    "," -> DzIntDz {reject}
+    "[" -> DzIntDz {reject}
+    "]" -> IdDz {reject}
+    "false" -> IdDz {reject}
+    "true" -> IdDz {reject}
+    "(" -> IdDz {reject}
+    ")" -> IdDz {reject}
+    "," -> IdDz {reject}
+    "[" -> IdDz {reject}
+    "]" -> DzFloatDz {reject}
+    "false" -> DzFloatDz {reject}
+    "true" -> DzFloatDz {reject}
+    "(" -> DzFloatDz {reject}
+    ")" -> DzFloatDz {reject}
+    "," -> DzFloatDz {reject}
+    "[" -> DzFloatDz {reject}
+context-free syntax
+    DzStringDz -> DzString {cons("DzString1Const")}
+    DzIntDz -> DzInt {cons("DzInt1Const")}
+    IdDz -> Id {cons("Id1Const")}
+    DzFloatDz -> DzFloat {cons("DzFloat1Const")}
+
+
+context-free restrictions
+    Id -/- [A-Za-z0-9\_]
+    DzInt -/- [0-9]

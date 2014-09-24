@@ -1,0 +1,10 @@
+--TEST--
+is_string
+--FILE--
+<?php
+	var_dump(is_string("abc"));
+	var_dump(is_string(1));
+?>
+--EXPECT--
+bool(true)
+bool(false)

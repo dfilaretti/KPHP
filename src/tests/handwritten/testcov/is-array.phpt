@@ -1,0 +1,10 @@
+--TEST--
+is_array
+--FILE--
+<?php
+	var_dump(is_array(array(1)));
+	var_dump(is_array(1));
+?>
+--EXPECT--
+bool(true)
+bool(false)

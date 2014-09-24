@@ -1,0 +1,296 @@
+CompilationUnit(
+  None()
+, []
+, [ ClassDec(
+      ClassDecHead([Public()], Id("literals_06_char_escape"), None(), None(), None())
+    , ClassBody(
+        [ MethodDec(
+            MethodDecHead(
+              [Public(), Static()]
+            , None()
+            , Void()
+            , Id("main")
+            , [ Param(
+                  []
+                , ArrayType(ClassOrInterfaceType(TypeName(Id("String")), None()))
+                , Id("args")
+                )
+              ]
+            , None()
+            )
+          , Block(
+              [ ExprStm(
+                  Invoke(
+                    Method(
+                      MethodName(
+                        AmbName(AmbName(Id("System")), Id("out"))
+                      , Id("println")
+                      )
+                    )
+                  , [Lit(String([Chars("Named escape:")]))]
+                  )
+                )
+              , ExprStm(
+                  Invoke(
+                    Method(
+                      MethodName(
+                        AmbName(AmbName(Id("System")), Id("out"))
+                      , Id("println")
+                      )
+                    )
+                  , [ Plus(
+                        Plus(
+                          Plus(
+                            Plus(
+                              Plus(
+                                Plus(
+                                  Plus(
+                                    Plus(Lit(String([])), Lit(Char(NamedEscape(98))))
+                                  , Lit(Char(NamedEscape(116)))
+                                  )
+                                , Lit(Char(NamedEscape(110)))
+                                )
+                              , Lit(Char(NamedEscape(102)))
+                              )
+                            , Lit(Char(NamedEscape(114)))
+                            )
+                          , Lit(Char(NamedEscape(34)))
+                          )
+                        , Lit(Char(NamedEscape(39)))
+                        )
+                      , Lit(Char(NamedEscape(92)))
+                      )
+                    ]
+                  )
+                )
+              , ExprStm(
+                  Invoke(
+                    Method(
+                      MethodName(
+                        AmbName(AmbName(Id("System")), Id("out"))
+                      , Id("println")
+                      )
+                    )
+                  , [Lit(String([Chars("Octal escape of simple chars:")]))]
+                  )
+                )
+              , ExprStm(
+                  Invoke(
+                    Method(
+                      MethodName(
+                        AmbName(AmbName(Id("System")), Id("out"))
+                      , Id("println")
+                      )
+                    )
+                  , [ Plus(
+                        Plus(
+                          Plus(
+                            Plus(
+                              Plus(
+                                Lit(String([]))
+                              , Lit(Char(OctaEscape3(49, 52, 49)))
+                              )
+                            , Lit(Char(OctaEscape3(49, 48, 49)))
+                            )
+                          , Lit(Char(OctaEscape2(54, 48)))
+                          )
+                        , Lit(Char(OctaEscape2(52, 48)))
+                        )
+                      , Lit(Char(OctaEscape2(52, 51)))
+                      )
+                    ]
+                  )
+                )
+              , ExprStm(
+                  Invoke(
+                    Method(
+                      MethodName(
+                        AmbName(AmbName(Id("System")), Id("out"))
+                      , Id("println")
+                      )
+                    )
+                  , [Lit(String([Chars("Unicode escape of simple chars:")]))]
+                  )
+                )
+              , ExprStm(
+                  Invoke(
+                    Method(
+                      MethodName(
+                        AmbName(AmbName(Id("System")), Id("out"))
+                      , Id("println")
+                      )
+                    )
+                  , [ Plus(
+                        Plus(
+                          Plus(
+                            Plus(
+                              Plus(
+                                Lit(String([]))
+                              , Lit(
+                                  Char(UnicodeEscape([117], 48, 48, 54, 49))
+                                )
+                              )
+                            , Lit(
+                                Char(UnicodeEscape([117], 48, 48, 52, 49))
+                              )
+                            )
+                          , Lit(
+                              Char(UnicodeEscape([117], 48, 48, 51, 48))
+                            )
+                          )
+                        , Lit(
+                            Char(UnicodeEscape([117], 48, 48, 50, 48))
+                          )
+                        )
+                      , Lit(
+                          Char(UnicodeEscape([117], 48, 48, 50, 51))
+                        )
+                      )
+                    ]
+                  )
+                )
+              , ExprStm(
+                  Invoke(
+                    Method(
+                      MethodName(
+                        AmbName(AmbName(Id("System")), Id("out"))
+                      , Id("println")
+                      )
+                    )
+                  , [Lit(String([Chars("Octal escape:")]))]
+                  )
+                )
+              , ExprStm(
+                  Invoke(
+                    Method(
+                      MethodName(
+                        AmbName(AmbName(Id("System")), Id("out"))
+                      , Id("println")
+                      )
+                    )
+                  , [ Plus(
+                        Plus(
+                          Plus(
+                            Plus(
+                              Plus(
+                                Plus(
+                                  Plus(
+                                    Plus(
+                                      Plus(
+                                        Plus(Lit(String([])), Lit(Char(OctaEscape1(48))))
+                                      , Lit(Char(OctaEscape1(55)))
+                                      )
+                                    , Lit(Char(OctaEscape2(48, 48)))
+                                    )
+                                  , Lit(Char(OctaEscape2(48, 55)))
+                                  )
+                                , Lit(Char(OctaEscape2(51, 55)))
+                                )
+                              , Lit(Char(OctaEscape2(55, 55)))
+                              )
+                            , Lit(Char(OctaEscape3(48, 48, 48)))
+                            )
+                          , Lit(Char(OctaEscape3(48, 48, 55)))
+                          )
+                        , Lit(Char(OctaEscape3(48, 55, 55)))
+                        )
+                      , Lit(Char(OctaEscape3(49, 55, 55)))
+                      )
+                    ]
+                  )
+                )
+              , ExprStm(
+                  Invoke(
+                    Method(
+                      MethodName(
+                        AmbName(AmbName(Id("System")), Id("out"))
+                      , Id("println")
+                      )
+                    )
+                  , [ Plus(
+                        Plus(
+                          Lit(String([Chars("Octal escape 0, 127, again: ")]))
+                        , Lit(Char(OctaEscape1(48)))
+                        )
+                      , Lit(Char(OctaEscape3(49, 55, 55)))
+                      )
+                    ]
+                  )
+                )
+              , ExprStm(
+                  Invoke(
+                    Method(
+                      MethodName(
+                        AmbName(AmbName(Id("System")), Id("out"))
+                      , Id("println")
+                      )
+                    )
+                  , [Lit(String([Chars("Unicode escape:")]))]
+                  )
+                )
+              , ExprStm(
+                  Invoke(
+                    Method(
+                      MethodName(
+                        AmbName(AmbName(Id("System")), Id("out"))
+                      , Id("println")
+                      )
+                    )
+                  , [ Plus(
+                        Plus(
+                          Plus(
+                            Plus(
+                              Plus(
+                                Lit(String([]))
+                              , Lit(
+                                  Char(UnicodeEscape([117], 48, 48, 48, 48))
+                                )
+                              )
+                            , Lit(
+                                Char(UnicodeEscape([117], 48, 48, 48, 49))
+                              )
+                            )
+                          , Lit(
+                              Char(
+                                UnicodeEscape([117, 117], 48, 48, 48, 55)
+                              )
+                            )
+                          )
+                        , Lit(
+                            Char(UnicodeEscape([117], 48, 48, 49, 48))
+                          )
+                        )
+                      , Lit(
+                          Char(
+                            UnicodeEscape(
+                              [117, 117, 117]
+                            , 48
+                            , 48
+                            , 55
+                            , 102
+                            )
+                          )
+                        )
+                      )
+                    ]
+                  )
+                )
+              , ExprStm(
+                  Invoke(
+                    Method(
+                      MethodName(
+                        AmbName(AmbName(Id("System")), Id("out"))
+                      , Id("println")
+                      )
+                    )
+                  , [Lit(String([Chars("Done!")]))]
+                  )
+                )
+              ]
+            )
+          )
+        ]
+      )
+    )
+  ]
+)

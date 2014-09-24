@@ -1,0 +1,9 @@
+[StmtList(
+   [ExprStmt(
+      Asssssign(IdVar(DName(("x", i_1)), Ref(NoScope)), i_2,
+        Sc(C(Int(("1", i_3))))), i_4);
+    ExprStmt(
+      Asssssign(IdVar(DName(("y", i_5)), Ref(NoScope)), i_6,
+        Sc(C(Int(("2", i_7))))), i_8); EmptyStmt(i_9);
+    InlineHtml(("
+", i_10))]); FinalDef(i_11)]

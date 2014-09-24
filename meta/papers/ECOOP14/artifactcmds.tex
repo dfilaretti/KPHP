@@ -1,0 +1,22 @@
+% Commands for one-page artifact description appendices in lncs volumes
+% Written by Camil Demetrescu and Erik Ernst
+% April 8, 2014
+
+% ARTIFACT: This entire file should be used as-is; it defines standard
+% headings to be included in the artifact description, and it will be 'input'
+% into the file artifact.tex such that you can use the environments defined
+% below
+
+\newcommand{\artifactauthors}[1]{{\paragraph{\bf Authors of the artifact.}#1}}
+\newenvironment{summary}{\paragraph{\bf Summary.}}{}
+\newenvironment{content}{\paragraph{\bf Content.}}{}
+\newenvironment{getting}{\paragraph{\bf Getting the artifact.} }{}
+\newenvironment{platforms}{\paragraph{\bf Tested platforms.}}{}
+\newcommand{\license}[1]{{\paragraph{\bf License.}#1}}
+\newcommand{\mdsum}[1]{{\paragraph{\bf MD5 sum of the artifact.}#1}}
+\newcommand{\artifactsize}[1]{{\paragraph{\bf Size of the artifact.}#1}}
+\newcommand{\AEBadge}{%
+  \raisebox{-9mm}[-15mm][0pt]{%
+    \hspace{-39mm}%
+    \includegraphics[width=15mm]{aec-badge-ecoop}%
+    \hspace{22.5mm}}}

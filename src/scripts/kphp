@@ -1,0 +1,25 @@
+#!/bin/bash
+
+FILENAME=$1
+
+if [ $# -eq 0 ]
+then
+	echo "No arguments supplied"
+	exit
+fi
+
+if [ $# -eq 1 ]
+then
+	krun --output none --parser="java -jar parser/parser.jar" $1
+fi
+
+if [ $# -eq 2 ]
+then
+	if [ $2 = "--config" ] 
+	then
+		krun --parser="java -jar parser/parser.jar" $1
+	else
+		echo "Invalid option"
+		exit
+	fi	
+fi

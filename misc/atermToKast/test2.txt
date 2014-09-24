@@ -1,0 +1,18 @@
+[FuncDef(
+   {f_tok=i_1; f_type=FunctionRegular; f_attrs=None; f_modifiers=[]; 
+    f_ref=None; f_name=Name(("foo", i_2)); f_tparams=None; 
+    f_params=(i_3,
+              [Left3(
+                 {p_attrs=None; p_modifier=None; p_soft_type=None; 
+                  p_type=None; p_ref=None; p_name=DName(("x", i_4)); 
+                  p_default=None; }); Right3(i_5);
+               Left3(
+                 {p_attrs=None; p_modifier=None; p_soft_type=None; 
+                  p_type=None; p_ref=None; p_name=DName(("y", i_6)); 
+                  p_default=None; })],
+              i_7);
+    f_return_type=None; 
+    f_body=(i_8, [Echo(i_9, [Left(Sc(C(String(("yo!", i_10)))))], i_11)],
+            i_12);
+    }); StmtList([EmptyStmt(i_13); InlineHtml(("
+", i_14))]); FinalDef(i_15)]

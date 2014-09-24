@@ -1,0 +1,71 @@
+test commit
+---
+FIXES
+-------------------------------------------------------------------------------
+
+- zend tests
+  - tests/lang//returnByReference.008.phpt
+  - tests/lang//passByReference_005.phpt
+  - tests/lang//bug29893.phpt
+
+- my tests in 'bugs' folder
+
+LATER
+-------------------------------------------------------------------------------
+
+- add in long version 
+  - bug antoine
+  - bug array comparison
+- improve paper, prepare for reviewers questions/rebuttal
+- report new bug? add to paper
+- hash ltl code could be improved
+- tests
+  - put zend directory on web site
+    - python script needs improvement beforehand
+  - create and add also one-liners
+  - update 'runtest.py' so that it can also test a single and also subfolders.
+  - add timer information (use cmd 'time')
+- technical report? advertise on lists/k/etc?
+- future work
+  - auth logics a la authz for oauth (we have lables)
+  - server model
+
+RULES CLEANUP
+-------------------------------------------------------------------------------
+
+- we have 'currentOverflow(M:Map, L:Loc)' which is true if in memory M, the array at 
+  location L has 'none' pointer. This is used in assignment rules.
+  I also introduced 'arrayCurrentOverflow(V:Array)' which does the same, 
+  but accept an array term as argument. It is used once in typeConversions.k.
+  The two different styles are appropriate for the context where each one 
+  is used but... can be unified somehow?
+
+- arraySyncCurrent (and rules which makes use of it) can also be factorized
+  (by putting more logic into arraySyncCurrent, so that rules that make use 
+  of it does not need any duplication anymore)
+
+- ho introdotto nuove funzioni 'locHoldsArray: Map -> Loc -> Bool' da usare
+   in comparison ops. Ma potrebbero essere anche usate nel resto della semantica
+   per accorciare le regole. In particolare, 
+ 	    <k> .... </k>
+    	 <mem> ... L |-> zval(V:Array,_,_,_) ... </mem>
+   diventa 
+     	<k> ... </k>
+     	<mem> Mem:Map </mem>
+     	when locHoldsArray(Mem, L)
+
+FUTURE FEATURES
+-------------------------------------------------------------------------------
+
+- add a way to enable or disable WARNINGS 
+
+- 'func_get_args', 'func_num_args'
+-  abstract classes
+-  interfaces
+-  generators
+-  closures (desugar into objects)
+-  'include'
+-  'eval'
+-  escape chars. e.g. "<?php echo "\"\t\\'" . '\n\\\'a\\\b\\' ?>"
+-  ...
+-  'printf', 'scanf'

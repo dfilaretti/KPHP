@@ -1,0 +1,4 @@
+rule [name]:
+	<k> ... </k>
+	<ub>
+	[attribute] 

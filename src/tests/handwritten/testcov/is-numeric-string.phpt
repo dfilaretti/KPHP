@@ -1,0 +1,10 @@
+--TEST--
+asd
+--FILE--
+<?php
+	var_dump(is_numeric("123"));
+	var_dump(is_numeric("a123"));
+?>
+--EXPECT--
+bool(true)
+bool(false)

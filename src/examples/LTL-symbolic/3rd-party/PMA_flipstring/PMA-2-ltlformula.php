@@ -1,0 +1,1 @@
+TrueLtl \/Ltl <>Ltl (lab("after-call") /\Ltl hasType(gv(variable("result")),bool))

@@ -1,0 +1,80 @@
+% Template for one-page artifact description appendices in lncs volumes
+% Written by Camil Demetrescu and Erik Ernst
+% April 8, 2014
+
+% ARTIFACT: do not change the following line
+\clearpage\appendix\section{Artifact Description}
+
+% ARTIFACT: please note that the rest of this file contains (1) LaTeX commands
+% and environments that you must use in the way they are given here, and in the
+% same order, each producing one section of text; (2) example data filling in
+% those commands and environments with text to show how they may be used; you
+% must preserve the former and replace the latter by information concerning
+% your artifact; the comments describe each of these sections to indicate
+% their purpose; also note that the entire appendix must fit on one page
+
+% ARTIFACT: section on authors of the artifact; note that this may differ from
+% the list of authors of the paper, e.g., you may wish to mention other people
+% who contributed to the artifact, but who did not co-author the paper
+\artifactauthors{Daniele Filaretti and Sergio Maffeis.}
+
+% ARTIFACT: section giving a brief summary of the purpose of the artifact
+\begin{summary}
+  The provided package is designed to support repeatability of the experiments of the paper: 
+  in particular, it allows users to test the \kphp{} interpreter and symbolic model checker on a variety of 
+  examples, including the ones discussed in the paper. 
+  We provide details on how to install and build \kphp{}, together with step-by-step instructions for running the examples and getting users started with their own experiments.
+\end{summary}
+
+% ARTIFACT: section on the contents of the artifact (code, data, etc.)
+\begin{content}
+  The artifact package includes:
+  \begin{itemize}
+  \item the complete source files;
+  \item a build of the \K\ Framework (which is needed for running \kphp{});
+  \item all the examples discussed in the paper;
+  \item a self-contained Linux-based virtual machine which can be used to run the artifact, if a user does not want to install \kphp{} and \K\ directly;
+  \item detailed instructions on how to build and use the artifact in {\tt index.html}.
+  \end{itemize}
+\end{content} 
+
+% ARTIFACT: section containing links to sites (e.g., github) holding the
+% latest version of the code, if any
+\begin{getting}
+  The artifact, endorsed by the Artifact Evaluation Committee of ECOOP'14,  is available free
+  of charge as supplementary material of this paper on SpringerLink. \kphp{} is still under development. The latest version of \kphp{}, together with a user-friendly
+  web interface, is available online at \url{http://www.phpsemantics.org}.
+\end{getting} 
+
+% ARTIFACT: section specifying the platforms on which the artifact is known to
+% work, including requirements beyond the operating system such as large
+% amounts of memory or many processor cores
+\begin{platforms}
+  The \K\ tool binaries (needed for running \kphp{})
+  run best on Linux and OS X. On Windows, Cygwin emulation must be used, 
+  which may slow down execution. 
+  The self-contained Linux-based VMware virtual machine we provide
+  (included in the package) can be used in case of installation problems
+  on non-standard system configurations. 
+\end{platforms}
+
+% ARTIFACT: section specifying the license under which the artifact is
+% made available
+\license{EPL-1.0 (\url{http://www.eclipse.org/legal/epl-v10.html}).}
+
+% ARTIFACT: section specifying the md5 sum of the artifact master file
+% uploaded to SpringerLink, enabling downloaders to check that the file is the
+% expected version and suffered no damage during download
+\mdsum{ed21cb3680e42078bc7cd2778ecfe03f.}
+
+% ARTIFACT: section specifying the size of the artifact master file uploaded
+% to SpringerLink
+\artifactsize{281.6 MB.}
+
+% ARTIFACT: include here any additional references, if needed...
+
+%\bibliographystyle{unsrt}
+%\begin{thebibliography}{10}
+%...
+%\end{thebibliography}
+
