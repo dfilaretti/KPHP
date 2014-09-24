@@ -42,14 +42,6 @@ the parser we intend to use.
 5: Model checking a PHP script against an LTL property
 --------------------------------
 
-NOTE: there is currently an issue with the K tools which causes an exception 
-to be thrown when checking a false LTL property on a program which prints 
-some output on stdout . As a temporary solution, it is necessary to disable 
-printing on stdout . This is simply done as follow:
-
- - open the configuration.k file
- - remove/comment the string stream="stdout" which is inside the "out" cell.
-
 The semantics must be compiled with a --transition option followed by one or more tags, 
 specifying the set of rules we wish to consider transitions.
 
