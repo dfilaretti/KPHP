@@ -1,7 +1,8 @@
 phpsemantics
 ============
 
-An Executable Formal Semantics for PHP 5.
+An Executable Formal Semantics for PHP 5 defined in The K Framework (http://www.kframework.org/index.php/Main_Page).
 
-For more information, visit: http://phpsemantics.org/.
-For installation instructions, go to the 'src' folder.
+More info, papers, etc: http://phpsemantics.org/.
+
+Installation instructions: 'src' folder.
