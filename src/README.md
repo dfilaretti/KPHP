@@ -1,4 +1,4 @@
-Instruction for running kphp
+# Getting started with KPHP
 
 1: Prerequisites
 --------------------------------
