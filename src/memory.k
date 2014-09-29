@@ -15,6 +15,12 @@ module MEMORY
 /*@ \subsection{Values} */
 // ---------------------------------------------------------------------------------------------
 
+// We add breakpoints
+//syntax Breakpoint ::= "breakpoint"
+syntax Breakpoint ::= "breakpoint" "(" Int ")"
+
+
+
 // Language values are partitioned into Scalar, compound and special values. 
 syntax LanguageValue ::= PlainLanguageValue | LiteralValue
 
@@ -74,7 +80,7 @@ syntax LiteralValue ::= "Literal" "(" K ")" [klabel('lit)]
 // Finally, we define Values as the union of Semantic and Language values, and we set
 // KResult = Values
 syntax Value ::= LanguageValue | SemanticValue 
-syntax KResult ::= Value  
+syntax KResult ::= Value | Breakpoint
 
 /* For convenience, we define a set of option types */
 

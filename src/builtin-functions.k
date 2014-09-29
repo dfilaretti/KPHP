@@ -9,6 +9,19 @@ module BUILTIN-FUNCTIONS
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 
+//syntax K ::= "insertBreakpoint" 
+//rule insertBreakpoint => breakpoint
+
+syntax K ::= "insertBreakpoint" "(" K ")"
+
+// ---------------------------------------------------------------------------------------------
+/*@ \subsection{Support for breakpoints} */
+// ---------------------------------------------------------------------------------------------
+
+context insertBreakpoint(HOLE)
+rule    insertBreakpoint(V:ConvertibleToLanguageValue => convertToLanguageValue(V))
+rule    insertBreakpoint(I:Int) => breakpoint(I)
+
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{array key exists} */
 // ---------------------------------------------------------------------------------------------

@@ -12,7 +12,94 @@ module INIT
 /*@ \section{Initialization} */
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
-    
+
+
+syntax Mode ::= "resume" | "runpgm"
+
+syntax K ::= "initfresh" "(" Int ")"
+
+
+rule
+	<k> initfresh(0) => . ... </k>
+	<trash> _ => . </trash>
+
+
+rule 
+	<k> initfresh(N:Int) => initfresh(N -Int 1) ... </k>
+	<trash> ... . => L |-> zval("TEST", string, 0, false) ... </trash>
+	when fresh(L:Loc) andBool (N >Int 0)
+
+	
+// ----------------------------------------
+//  RUN MODE
+// ----------------------------------------
+
+
+rule 
+	
+	<M>	
+		<mode> runpgm </mode> 
+		<pgm> Pgm:K </pgm>
+		<initState>
+			<kphp>  
+				<script>  
+					<k> .K </k>
+					OtherScriptStuff:Bag
+				</script>
+				<lastUsedLoc> #symLoc(N:Int) </lastUsedLoc> 
+				B:Bag
+			</kphp>
+		</initState>
+	</M>
+	
+		
+		
+		
+		=>
+		
+		<kphp> 
+			<script>
+				<k> initfresh(N -Int 1) ~> Pgm </k>
+				OtherScriptStuff
+			</script>
+			<lastUsedLoc> .K </lastUsedLoc> 
+			B
+		</kphp>
+
+	
+// ----------------------------------------
+//  RESUME MODE
+// ----------------------------------------
+
+
+rule 
+	<M>
+		<mode> resume </mode> 
+		<pgm> _ </pgm>
+		<initState>
+			<kphp>  
+				<script>  
+					<k> BREAKPOINT(_) ~> SavedK:K </k>
+					OtherScriptStuff:Bag
+				</script>
+				<lastUsedLoc> #symLoc(N:Int) </lastUsedLoc> 
+				B:Bag
+			</kphp>
+		</initState>
+	</M>
+			
+		=>
+		
+		<kphp> 
+			<script>
+				<k> initfresh(N -Int 1) ~> SavedK </k>
+				OtherScriptStuff
+			</script>
+			<lastUsedLoc> .K </lastUsedLoc> 
+			B
+		</kphp>
+
+
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Building the initial state} 
 		The following operations loads the (currently defined) builtin functions such as

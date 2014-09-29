@@ -138,12 +138,14 @@ rule
 	[structural]
 */
 
-syntax Returnable ::= LanguageValue | Loc
+syntax Returnable ::= LanguageValue | Loc | Breakpoint
 
 syntax Bool ::= "isRetValueLoc" "(" Returnable ")" [function]
 
 rule isRetValueLoc(L:Loc) => true 
 rule isRetValueLoc(V:LanguageValue) => false 
+rule isRetValueLoc(B:Breakpoint) => false 
+
 
 // No matter if the function returns by value or by reference; in both cases
 // if the return value is a Ref, we get the corresponding location.

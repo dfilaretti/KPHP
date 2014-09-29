@@ -1,25 +1,78 @@
 #!/bin/bash
 
-FILENAME=$1
+MODE=$1
+CONFIG=$2
+FILENAME=$3
 
-if [ $# -eq 0 ]
-then
-	echo "No arguments supplied"
+# throw an error if there are less than 2 arguments
+if [ $# -lt 1 ]; then
+    echo "SYNTAX:"
+	echo "	kphp run <config> <file>"
+	echo "	kphp resume <config>"
 	exit
-fi
-
-if [ $# -eq 1 ]
-then
-	krun --output none --parser="java -jar parser/parser.jar" $1
-fi
-
-if [ $# -eq 2 ]
-then
-	if [ $2 = "--config" ] 
-	then
-		krun --parser="java -jar parser/parser.jar" $1
+else
+	# run
+	if [ $1 = "run" ]; then
+		# 3 arguments
+		if [ $# -eq 3 ] ; then
+			# no config
+			krun --output none --parser="java -jar parser/parser.jar" -cMODE="runpgm" --config-var-parser="kast --parser ground" -cCFG $2 $3 
+		# 4 arguments
+		elif [ $# -eq 4 ] ; then
+			# display config
+			if [ $4 = "--config" ]; then
+				krun --parser="java -jar parser/parser.jar" -cMODE="runpgm" --config-var-parser="kast --parser ground" -cCFG $2 $3 
+			# wrong argument
+			else
+				echo echo "Parameter $3 not recognised for 'run'. The only parameter is '--config'"
+				exit
+			fi
+		# wrong number of arguments for 'run'
+		else
+			echo "ERROR in 'run'"
+			echo "SYNTAX:"
+			echo "	kphp run <config> <file>"
+			echo "	kphp resume <config>"
+			exit
+		fi
+	#resume
+	elif [ $1 = "resume" ]; then
+		# 3 arguments
+		if [ $# -eq 2 ] ; then
+			# no config
+			krun --output none -cPGM=".K" -cMODE="resume" --config-var-parser="kast --parser ground" -cCFG $2
+		# 4 arguments
+		elif [ $# -eq 3 ] ; then
+			# display config
+			if [ $3 = "--config" ]; then
+				krun -cPGM=".K" -cMODE="resume" --config-var-parser="kast --parser ground" -cCFG $2
+			# wrong argument
+			else
+				echo "Parameter $3 not recognised for 'resume'. The only parameter is '--config'"
+				exit
+			fi
+		# wrong number of arguments for 'run'
+		else
+			echo "ERROR in 'resume'"
+			echo "SYNTAX:"
+			echo "	kphp run <config> <file>"
+			echo "	kphp resume <config>"
+			exit
+		fi
 	else
-		echo "Invalid option"
-		exit
-	fi	
+        	if [ $# -eq 1 ] ; then
+			# no config
+			krun --output none --parser="java -jar parser/parser.jar" -cMODE="runpgm" --config-var-parser="kast --parser ground" -cCFG init-config.xml $1 
+		# 4 arguments
+		elif [ $# -eq 2 ] ; then
+			# display config
+			if [ $2 = "--config" ]; then
+				krun --parser="java -jar parser/parser.jar" -cMODE="runpgm" --config-var-parser="kast --parser ground" -cCFG init-config.xml $1 
+			# wrong argument
+			else
+				echo "Parameter $3 not recognised. The only parameter is '--config'"
+				exit
+			fi
+		fi
+	fi
 fi

@@ -8,13 +8,20 @@ module CONFIGURATION
 /*@ \section{Configuration} */
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
-   
+
 configuration
-	<kphp>
+	<M multiplicity="*">	
+		<mode multiplicity="*"> $MODE:Mode </mode>
+		<pgm multiplicity="*"> $PGM:K </pgm>
+		<initState multiplicity="*"> $CFG:Bag </initState> 
+	</M>	
+	
+	<kphp multiplicity="*">
 		<script color="pink">
 			<declarations> .K </declarations>
 			<commands> .K </commands>
-			<k> buildInitState ~> $PGM:K </k>
+			//<k> buildInitState ~> $PGM:K </k>
+			<k> .K </k>
 		</script>	
 		<tables color="yellow">
 			<functions> .Map </functions>
@@ -48,23 +55,38 @@ configuration
 		</control>	
      	<br/> 		
      	<IO color="magenta">
+     		
+     		
      		<in stream="stdin"> .List </in>
      		<out stream="stdout"> .List </out>	
-     		// <out> .List </out>	// use this one for model checking (and comment previous)
-            <exitStatus> 0 </exitStatus>
-     		<errorManagement> 0 </errorManagement>
-     		<varDumpLevel> 0 </varDumpLevel>
+            
+            
+            /*            
+            <in> .List </in>
+     		<out> .List </out>	
+            */
+
+            <exitStatus> .K </exitStatus>
+     		<errorManagement> .K </errorManagement>
+     		<varDumpLevel> .K </varDumpLevel>
      	</IO>
 		<br/>
 		<instrumentation color="red">
-			<cleanTraceOnTermination> false </cleanTraceOnTermination> 
-			<isTerminated> false </isTerminated> 
-			<label> "@" </label>
+			<cleanTraceOnTermination> .K </cleanTraceOnTermination> 
+			<isTerminated> .K </isTerminated> 
+			<label> .K </label>
 		</instrumentation>     		
+		
+		// temporary stuff needed for breakpoints
+		<trash> .Map </trash>
+		<lastUsedLoc> .K </lastUsedLoc>		
+		// --------------------------------------
+		
 		<gc color="blue"> 
 			<locationsToCollect> .List </locationsToCollect>
-			<gcEnabled> false </gcEnabled>
+			<gcEnabled> .K </gcEnabled>
 		</gc>
 		<trace> .List </trace> 
-    	</kphp>
+    </kphp>
+
 endmodule

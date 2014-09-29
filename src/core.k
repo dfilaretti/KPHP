@@ -171,6 +171,13 @@ rule [expr]:
 	<trace> Trace:List => Trace ListItem("expr") </trace>
 	[step]
 
+syntax K ::= "BREAKPOINT" "(" Int ")"
+
+rule [expr-breakpoint]:
+	<k> 'Expr(breakpoint(Line)) => BREAKPOINT(Line) ... </k>
+	<lastUsedLoc> _ => L </lastUsedLoc>
+		when fresh(L:Loc) 
+
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Variable lookup} 
 		Variable lookup returns a reference, i.e. a pair consisting of a location (the location 

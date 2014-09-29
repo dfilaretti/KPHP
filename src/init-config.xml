@@ -1,0 +1,237 @@
+<kphp>
+    <trace>
+        .List
+    </trace>
+    <gc>
+        <gcEnabled>
+            false
+        </gcEnabled>
+        <locationsToCollect>
+            .List
+        </locationsToCollect>
+    </gc>
+    <instrumentation>
+        <isTerminated>
+            true
+        </isTerminated>
+        <cleanTraceOnTermination>
+            false
+        </cleanTraceOnTermination>
+        <label>
+            "@"
+        </label>
+    </instrumentation>
+	<trash> .Map </trash>
+	<lastUsedLoc> #symLoc(13) </lastUsedLoc>
+    <scopes>
+        <superGlobalScope>
+            #symLoc(1)
+        </superGlobalScope>
+        <globalStaticScope>
+            #symLoc(2)
+        </globalStaticScope>
+        <currentScope>
+            #symLoc(3)
+        </currentScope>
+        <globalScope>
+            #symLoc(3)
+        </globalScope>
+    </scopes>
+    <control>
+        <functionArgumentsDeclaration>
+            .K
+        </functionArgumentsDeclaration>
+        <processedStaticDeclarations>
+            .K
+        </processedStaticDeclarations>
+        <processedFunBody>
+            .K
+        </processedFunBody>
+        <loopStack>
+            .List
+        </loopStack>
+        <functionStack>
+            .List
+        </functionStack>
+        <exceptionStack>
+            .List
+        </exceptionStack>
+        <context>
+            <object>
+                .K
+            </object>
+            <function>
+                .K
+            </function>
+            <currentForeachItem>
+                .K
+            </currentForeachItem>
+            <class>
+                .K
+            </class>
+        </context>
+    </control>
+    <IO>
+        <exitStatus>
+            0
+        </exitStatus>
+        <errorManagement>
+            0
+        </errorManagement>
+        <varDumpLevel>
+            0
+        </varDumpLevel>
+        <in>
+        	.List
+		</in>
+        <out>
+        	.List
+        </out>
+    </IO>
+    <script>
+        <k>
+            .K
+        </k>
+        <commands>
+            .K
+        </commands>
+        <declarations>
+            .K
+        </declarations>
+    </script>
+    <tables>
+        <classes>
+            Exception |-> class ( stdClass , ListItem(prop ( "errorMsg" , 
+              public , NULL )) , "Exception" |-> method ( f ( 'ListWrap('Param
+              ('Variable('Simple("msg")))) , 'ListWrap('Expr('Assign(
+              'ObjectAccess('Variable('Simple("this")),, 'ObjectProperty(
+              'Simple("errorMsg"))),, 'Variable('Simple("msg"))))) , @byValue 
+              , #symLoc(6) ) , public , false ) "getMessage" |-> method ( f ( 
+              'ListWrap(.KList) , 'ListWrap('Return('Some('ObjectAccess(
+              'Variable('Simple("this")),, 'ObjectProperty('Simple("errorMsg")
+              ))))) , @byValue , #symLoc(7) ) , public , false ) , #symLoc(5) 
+              )
+            stdClass |-> class ( ROOT , .List , .Map , #symLoc(8) )
+        </classes>
+        <functions>
+            "array_key_exists" |-> f ( 'ListWrap('Param('Variable('Simple("k")
+              )),, 'ParamRef('Variable('Simple("x")))) , 'ListWrap('Return(
+              array_key_exists ( 'Variable('Simple("k")) , 'Variable('Simple(
+              "x")) ))) , @byValue , #symLoc(4) )
+            "count" |-> f ( 'ListWrap('Param('Variable('Simple("x")))) , 
+              'ListWrap('Return(count ( 'Variable('Simple("x")) ))) , @byValue
+               , #symLoc(4) )
+            "current" |-> f ( 'ListWrap('ParamRef('Variable('Simple("x")))) , 
+              'ListWrap('Return(current ( 'Variable('Simple("x")) ))) , 
+              @byValue , #symLoc(4) )
+            "define" |-> f ( 'ListWrap('Param('Variable('Simple("name"))),, 
+              'Param('Variable('Simple("value")))) , 'ListWrap('Return(define 
+              ( 'Variable('Simple("name")) , 'Variable('Simple("value")) ))) ,
+               @byValue , #symLoc(4) )
+            "defined" |-> f ( 'ListWrap('Param('Variable('Simple("x")))) , 
+              'ListWrap('Return(defined ( 'Variable('Simple("x")) ))) , 
+              @byValue , #symLoc(4) )
+            "each" |-> f ( 'ListWrap('ParamRef('Variable('Simple("x")))) , 
+              'ListWrap('Return(each ( 'Variable('Simple("x")) ))) , @byValue 
+              , #symLoc(4) )
+            "gettype" |-> f ( 'ListWrap('Param('Variable('Simple("x")))) , 
+              'ListWrap('Return(gettype ( 'Variable('Simple("x")) ))) , 
+              @byValue , #symLoc(4) )
+            "isEqualArray" |-> f ( 'ListWrap('Param('Variable('Simple("op1")))
+              ,, 'Param('Variable('Simple("op2")))) , 'ListWrap('If('Less(
+              'FunctionCall('FunctionName("count"),, 'ListWrap('Param(
+              'Variable('Simple("op1"))))),, 'FunctionCall('FunctionName(
+              "count"),, 'ListWrap('Param('Variable('Simple("op2")))))),, 
+              'Block('ListWrap('Return('Some('Negative('LNumber('Deci("1")))))
+              )),, 'ListWrap('ElseIf('Greater('FunctionCall('FunctionName(
+              "count"),, 'ListWrap('Param('Variable('Simple("op1"))))),, 
+              'FunctionCall('FunctionName("count"),, 'ListWrap('Param(
+              'Variable('Simple("op2")))))),, 'Block('ListWrap('Return('Some(
+              'LNumber('Deci("1"))))))))),, 'ForEach('Variable('Simple("op1"))
+              ,, 'Pattern('Some('Key('Variable('Simple("key")))),, 'Variable(
+              'Simple("val"))),, 'Block('ListWrap('If('Not('FunctionCall(
+              'FunctionName("array_key_exists"),, 'ListWrap('Param('Variable(
+              'Simple("key"))),, 'Param('Variable('Simple("op2")))))),, 'Block
+              ('ListWrap('Return('Some('Null(.KList))))),, 'ListWrap('ElseIf(
+              'Less('Variable('Simple("val")),, 'ArrayAccess('Variable('Simple
+              ("op2")),, 'Some('Variable('Simple("key"))))),, 'Block('ListWrap
+              ('Return('Some('Negative('LNumber('Deci("1")))))))),, 'ElseIf(
+              'Greater('Variable('Simple("val")),, 'ArrayAccess('Variable(
+              'Simple("op2")),, 'Some('Variable('Simple("key"))))),, 'Block(
+              'ListWrap('Return('Some('LNumber('Deci("1")))))))))))),, 'Return
+              ('Some('LNumber('Deci("0"))))) , @byValue , #symLoc(12) )
+            "is_array" |-> f ( 'ListWrap('Param('Variable('Simple("x")))) , 
+              'ListWrap('Return(is_array ( 'Variable('Simple("x")) ))) , 
+              @byValue , #symLoc(4) )
+            "is_float" |-> f ( 'ListWrap('Param('Variable('Simple("x")))) , 
+              'ListWrap('Return(is_float ( 'Variable('Simple("x")) ))) , 
+              @byValue , #symLoc(4) )
+            "is_numeric" |-> f ( 'ListWrap('Param('Variable('Simple("x")))) , 
+              'ListWrap('Return(is_numeric ( 'Variable('Simple("x")) ))) , 
+              @byValue , #symLoc(4) )
+            "is_scalar" |-> f ( 'ListWrap('Param('Variable('Simple("x")))) , 
+              'ListWrap('Return(is_scalar ( 'Variable('Simple("x")) ))) , 
+              @byValue , #symLoc(4) )
+            "is_string" |-> f ( 'ListWrap('Param('Variable('Simple("x")))) , 
+              'ListWrap('Return(is_string ( 'Variable('Simple("x")) ))) , 
+              @byValue , #symLoc(4) )
+            "key" |-> f ( 'ListWrap('ParamRef('Variable('Simple("x")))) , 
+              'ListWrap('Return(key ( 'Variable('Simple("x")) ))) , @byValue ,
+               #symLoc(4) )
+            "label" |-> f ( 'ListWrap('Param('Variable('Simple("x")))) , 
+              'ListWrap('Return(label ( 'Variable('Simple("x")) ))) , @byValue
+               , #symLoc(4) )
+            "next" |-> f ( 'ListWrap('ParamRef('Variable('Simple("x")))) , 
+              'ListWrap('Return(next ( 'Variable('Simple("x")) ))) , @byValue 
+              , #symLoc(4) )
+            "print_r" |-> f ( 'ListWrap('Param('Variable('Simple("x")))) , 
+              'ListWrap(print_r ( 'Variable('Simple("x")) )) , @byValue , 
+              #symLoc(4) )
+            "reset" |-> f ( 'ListWrap('ParamRef('Variable('Simple("x")))) , 
+              'ListWrap('Return(reset ( 'Variable('Simple("x")) ))) , @byValue
+               , #symLoc(4) )
+            "strlen" |-> f ( 'ListWrap('Param('Variable('Simple("x")))) , 
+              'ListWrap('Return(strlen ( 'Variable('Simple("x")) ))) , 
+              @byValue , #symLoc(4) )
+            "substr" |-> f ( 'ListWrap('Param('Variable('Simple("str"))),, 
+              'Param('Variable('Simple("start"))),, 'ParamDefault('Variable(
+              'Simple("len")),, 999)) , 'ListWrap('Return(substr ( 'Variable(
+              'Simple("str")) , 'Variable('Simple("start")) , 'Variable(
+              'Simple("len")) ))) , @byValue , #symLoc(4) )
+            "user_input" |-> f ( 'ListWrap(.KList) , 'ListWrap('Return(
+              user_input)) , @byValue , #symLoc(4) )
+            "breakpoint" |-> f ('ListWrap('ParamDefault('Variable(
+              'Simple("x")),, 0)), 'ListWrap('Return(
+              insertBreakpoint('Variable('Simple("x"))))) , @byValue , #symLoc(4) )
+            "var_dump" |-> f ( 'ListWrap('Param('Variable('Simple("x")))) , 
+              'ListWrap(var_dump ( 'Variable('Simple("x")) )) , @byValue , 
+              #symLoc(4) )
+        </functions>
+        <constants>
+            .Map
+        </constants>
+        <classInstanceCounters>
+            Exception |-> 0
+            stdClass |-> 0
+        </classInstanceCounters>
+    </tables>
+    <heap>
+        #symLoc(1) |-> zval ( Array ( [ "_GET" , public ] , ListItem([ 
+          "_GET" , public , #symLoc(9) ]) ListItem([ "_COOKIE" , public , 
+          #symLoc(10) ]) ListItem([ "_POST" , public , #symLoc(11) ]) 
+          ListItem([ "GLOBALS" , public , #symLoc(3) ]) ) , array , 1 , false 
+          )
+        #symLoc(2) |-> zval ( Array ( none , .List ) , array , 1 , false )
+        #symLoc(3) |-> zval ( Array ( none , .List ) , array , 1 , false )
+        #symLoc(4) |-> zval ( Array ( none , .List ) , array , 1 , false )
+        #symLoc(5) |-> zval ( Array ( none , .List ) , array , 1 , false )
+        #symLoc(6) |-> zval ( Array ( none , .List ) , array , 1 , false )
+        #symLoc(7) |-> zval ( Array ( none , .List ) , array , 1 , false )
+        #symLoc(8) |-> zval ( Array ( none , .List ) , array , 1 , false )
+        #symLoc(9) |-> zval ( Array ( none , .List ) , array , 1 , false )
+        #symLoc(10) |-> zval ( Array ( none , .List ) , array , 1 , false )
+        #symLoc(11) |-> zval ( Array ( none , .List ) , array , 1 , false )
+        #symLoc(12) |-> zval ( Array ( none , .List ) , array , 1 , false )
+          
+    </heap>
+</kphp>
