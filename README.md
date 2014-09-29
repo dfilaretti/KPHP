@@ -1,4 +1,4 @@
-KPHP
+KPHP - An Executable Formal Semantics for PHP
 ============
 
 KPHP is an *Executable* Formal Semantics for PHP 5 defined in the *K Framework* (http://www.kframework.org/index.php/Main_Page).
