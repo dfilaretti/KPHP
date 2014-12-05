@@ -1,19 +1,22 @@
+--TEST--
+Dynamic access of static members
+--FILE--
 <?php
-
-$x = 1;
-$y = 4;
-echo $x + $y;
-
-
 class A {
-    public $test = 1;
-};
-
-class B extends A {};
-
-$obj = new A();
-
-if ($obj instanceof A) {
-   echo 'A';
+    public    static $b = 'foo';
 }
+
+$classname       =  'A';
+$wrongClassname  =  'B';
+
+
+/*
+echo $classname::$b."\n";
+echo $wrongClassname::$b."\n";
+*/
 ?>
+===DONE===
+--EXPECTF--
+foo
+
+Fatal error: Class 'B' not found in %s041.php on line %d

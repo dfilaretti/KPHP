@@ -62,12 +62,28 @@ def XML2HTML(xml):
 		HTML += "K Cell: " + kcell + "<br> <br>" 
 	return HTML
 
+
+
 # reads a file and return its content
+
+# TODO: it's always good to have the try catch below. But I actually added because
+#       of another issue: when a file is given to krun and it causes problem 
+#       (mainly parsing problems), it seems krun no longer exits with exit code 1
+#       and this means the subprocess throw no exception. The execution is not stopped
+#       and later on we end up reading a non-existing file. Hence why I added this fix here. 
+#       Again, this is good, but we should actually catch *that* error at the source, and 
+#       not here, where it might actually be confused with other kind of errors. 
+
 def get_file_content(filename):
-	f = open(filename, "r")
-	file_content = f.read()
-	f.close()
-	return file_content
+    try:
+	    f = open(filename, "r")
+	    file_content = f.read()
+	    f.close()
+	    return file_content
+    except: 
+        return ""
+
+
 
 def file_outcome(test_file, outcome, result, expected, kcell):
 	# generate XML elements
@@ -249,17 +265,20 @@ def fromScanfStyleToRegexp(input):
                
 # run a single test
 def run_test(filename):
+
 	# load a phpt file and parse and return a dictionary containing its fields (TEST, EXPECT, etc.)
 	crnt_test = parse_phpt_file(filename)
 	print "Running: " + filename + "..."
 	errorcode = 0;
 	residual = ".K";
+
 	# check if the current test uses GET or POST, that are not currently supported.
 	# If that's the case we directly return without even running the test.
 	if ('GET' in crnt_test or 'POST' in crnt_test or 'POST_RAW' in crnt_test):
 		outcome = "not_supported"
 		print "=> " + outcome
 		return [outcome, "KPHP ERROR: GET and POST not supported yet.", "-", "-", {}]
+
 	# get the expected result
 	# TODO: manage EXPECTREGEX properly
 	if ('EXPECT' in crnt_test):
@@ -268,6 +287,7 @@ def run_test(filename):
 		expected_result = crnt_test['EXPECTF'].strip();
 	if ('EXPECTREGEX' in crnt_test):
 		expected_result = crnt_test['EXPECTREGEX'].strip()
+
 	# create version of expected result without newlines
 	expected_result_new_line = expected_result.translate( None, string.whitespace )
 	expected_result_pattern = expected_result_new_line
@@ -284,6 +304,7 @@ def run_test(filename):
  	try:
 		# name of auxiliary files to be given to K tool (one for writing config to, other is php source to run).
 		temp_file = filename + ".tmp" 	
+
 		# calling KPHP here, and getting the result
 		result = subprocess.check_output(["krun --parser=\"java -jar parser/parser.jar\" " + "--output-file " + temp_file + " " + input_file_for_k], shell=True)
 		# BMK: with non-determinisitic input we need -c option on command line
@@ -291,11 +312,13 @@ def run_test(filename):
 		result = result.strip()
 		#result_new_line = result.replace(" ", "").replace('\n', "").replace("\t ", "")
 		result_new_line = result.translate( None, string.whitespace )
-		
+	
+    # TODO: in case the file cause parsing error, the exception is not caught anymore!!!
 	except subprocess.CalledProcessError:
 		outcome = "parsing_issue"
  		print " => " + outcome
 		return [outcome, "Parsing problem. Probably due to outdated parser.", "-", "-",{}]
+
 	# and finally we parse the output from KPHP...
 	try:
 		konfig = parseString(get_file_content(temp_file))
@@ -353,8 +376,10 @@ def run_test(filename):
 # get input data
 test_dir = sys.argv[1]
 output_file = sys.argv[2]
+
 # generate test results in XML format
 folderReport = test_folder(test_dir)
+
 # store the XML report for comparison with next run
 if not os.path.exists(test_dir + "/regression_data"):
          os.makedirs(test_dir + "/regression_data")
