@@ -1,4 +1,4 @@
-require "init.k"
+require "lang/init.k"
 
 module CONFIGURATION
 	imports INIT
