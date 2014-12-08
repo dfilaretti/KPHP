@@ -486,6 +486,7 @@ rule [isEqual-string]:
 	<trace> Trace:List => Trace ListItem("isEqual-string") </trace>
 	[internal]
 
+
 /*
 rule
 	<k> isEqual(NULL, V:LanguageValue) => false ... </k>
