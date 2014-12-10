@@ -89,119 +89,24 @@ rule [array-cast]:
 /*@ \subsection{To Boolean} */
 // ---------------------------------------------------------------------------------------------
 
-syntax K ::= "*toBoolean" "(" LanguageValue ")" [strict]
 
-rule [toBoolean-bool]:    
-	<k> *toBoolean(B:Bool) => B ... </k>
-	<trace> Trace:List => Trace ListItem("toBoolean-bool") </trace>
-	[internal]
-	
-rule [toBoolean-int-zero]:
-	<k> *toBoolean(0) => false ... </k>
-	<trace> Trace:List => Trace ListItem("toBoolean-int-zero") </trace>
-	[internal]
-
-rule [toBoolean-int]:
-	<k> *toBoolean(N:Int) => true ... </k>
-	<trace> Trace:List => Trace ListItem("toBoolean-int") </trace>
-	when notBool (N ==Int 0)
-	[internal]
-
-rule [toBoolean-float-zero]:
-	<k> *toBoolean(F:Float) => false ... </k>
-	<trace> Trace:List => Trace ListItem("toBoolean-float-zero") </trace>
-	when (F ==Float 0.0)
-	[internal]
-
-rule [toBoolean-float]:    
-	<k> *toBoolean(F:Float) => true ... </k>
-	<trace> Trace:List => Trace ListItem("toBoolean-float") </trace>
-	when notBool (F ==Float 0.0)
-	[internal]
-
-rule [toBoolean-empty-string]:    
-	<k> *toBoolean("") => false ... </k>
-	<trace> Trace:List => Trace ListItem("toBoolean-empty-string") </trace>
-	[internal]
-
-rule [toBoolean-string-zero]:    
-	<k> *toBoolean("0") => false ... </k>
-	<trace> Trace:List => Trace ListItem("toBoolean-string-zero") </trace>
-	[internal]
-
-rule [toBoolean-string]:    
-	<k> *toBoolean(S:String) => true ... </k>
-	<trace> Trace:List => Trace ListItem("toBoolean-string") </trace>
-	when notBool ((S ==String "") orBool (S ==String "0"))
-	[internal]
-
-rule [toBoolean-empty-array]:    
-	<k> *toBoolean(Array(_,Elems)) => false ... </k>
-	<trace> Trace:List => Trace ListItem("toBoolean-empty-array") </trace>
-	when (Elems ==List .List)
-	[internal]
-
-rule [toBoolean-non-empty-array]:    
-	<k> *toBoolean(Array(_,Elems)) => true ... </k>  
-	<trace> Trace:List => Trace ListItem("toBoolean-non-empty-array") </trace>
-	when (notBool (Elems ==List .List))
-	[internal]
-
-// Object case: we add it, even if the online docs says this behaviour is "PHP 4 only"
-// Since the expected behaviour for PHP 5 is not mentioned, I guess it is undefined..?
-
-rule [toBoolean-object]:    
-	<k> *toBoolean(OID(L,_,_) => convertToLanguageValue(L)) ... </k>  
-	<trace> Trace:List => Trace ListItem("toBoolean-object") </trace>
-	[internal]
-
-rule [toBoolean-null]:        
-	<k> *toBoolean(NULL) => false ... </k>
-	<trace> Trace:List => Trace ListItem("toBoolean-null") </trace>
-	[internal]
+//syntax K ::= "*toBoolean" "(" LanguageValue ")" [strict, domain]
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{To Float} */
 // ---------------------------------------------------------------------------------------------
 
-syntax K ::= "*toFloat" "(" LanguageValue ")"  [strict]
 
-rule [toFloat-false]:
-	<k> *toFloat(false) => 'DNumber("0.0") ... </k>
-	<trace> Trace:List => Trace ListItem("toFloat-false") </trace>
-	[internal]
-	
-rule [toFloat-true]:
-	<k> *toFloat(true) => 'DNumber("1.0") ... </k>
-	<trace> Trace:List => Trace ListItem("toFloat-true") </trace>
-	[internal]
+//syntax K ::= "*toFloat" "(" LanguageValue ")"  [strict, domain]
 
-rule [toFloat-int]:
-	<k> *toFloat(I:Int) => Int2Float(I) ... </k>
-	<trace> Trace:List => Trace ListItem("toFloat-int") </trace>
-	[internal]
-
-rule [toFloat-float]:
-	<k> *toFloat(F:Float) => F ... </k>
-	<trace> Trace:List => Trace ListItem("toFloat-float") </trace>
-	[internal]
-
-rule [toFloat-string]:
-	<k> *toFloat(S:String) => *toFloat(string2Number(S)) ... </k>
-	<trace> Trace:List => Trace ListItem("toFloat-string") </trace>
-	[internal]
-	
-rule [toFloat-compound]:	
-	<k> *toFloat(O:CompoundValue) => WARNING("conversion of compound types to integer is undefined (http://www.php.net/manual/en/language.types.integer.php)\n") ~> 1.0 ... </k>
-	<trace> Trace:List => Trace ListItem("toFloat-compound") </trace>
-	[internal, error]
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{To Integer} */
 // ---------------------------------------------------------------------------------------------
 
 syntax K ::= "*toInteger" "(" LanguageValue ")"  [strict]
-    
+
+/* TODO: move to domains 
 rule [toInteger-false]:
 	<k> *toInteger(false) => 0 ... </k>
 	<trace> Trace:List => Trace ListItem("toInteger-false") </trace>
@@ -238,11 +143,14 @@ rule [toInteger-compound]:
 	<k> *toInteger(O:CompoundValue) => WARNING("conversion of compound types to integer is undefined (http://www.php.net/manual/en/language.types.integer.php)\n") ~> 1 ... </k>
 	<trace> Trace:List => Trace ListItem("toInteger-compound") </trace>
 	[internal, error]
+*/
+
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Is numeric string} */
 // ---------------------------------------------------------------------------------------------
-	
+
+// TODO: move to domain	
 syntax Bool ::= "isNumericString" "(" String ")" [function]	
 			  | "isIntString" "(" String ")" [function]	
 			  | "isFloatString" "(" String ")" [function]	
@@ -296,7 +204,8 @@ rule
 		Converts a string to a number. */
 // ---------------------------------------------------------------------------------------------
 
-syntax K ::= "string2Number" "(" String ")"
+// TODO: move to domains
+syntax K ::= "string2Number" "(" AString ")"
 
 rule [string2Number-empty]:
 	<k> string2Number("") => 0 ... </k>
@@ -360,6 +269,7 @@ rule [string2Number-float-minus-dot]:
 
 // conversion from string to int according to PHP rules (see PHP docs) 
 
+// TODO: move to domains
 syntax K ::= "extractIntSubstring" "(" String "," String "," Int "," Type ")"
 
 // digit
@@ -452,8 +362,10 @@ rule [extract-int-substring-6]:
 		
 /*@ to string */
 
+
 syntax K ::= "*toString" "(" LanguageValue ")"  
 
+/* TODO: move to domain
 rule [toString-true]:
 	<k> *toString(true) => "1" ... </k>
 	<trace> Trace:List => Trace ListItem("toString-true") </trace>
@@ -496,6 +408,8 @@ rule [toString-null]:
 	<k> *toString(NULL) => "" ... </k>
 	<trace> Trace:List => Trace ListItem("toString-null") </trace>
 	[internal]
+*/
+
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{To Object} */
@@ -593,6 +507,7 @@ rule [toArray-object]:
 
 syntax K ::= "normalizeFloat" "(" Float ")"	[function]
 
+/* TODO: move to domain
 rule normalizeFloat(F) => F	
 	when notBool (hasNoDecimalPart(F))
 	
@@ -602,5 +517,6 @@ rule normalizeFloat(F) => Float2Int(F)
 syntax Bool ::= "hasNoDecimalPart" "(" Float ")"	[function]
 
 rule hasNoDecimalPart(F) => (Int2Float(Float2Int(F)) -Float F) ==Float 0.0
+*/
 
 endmodule 

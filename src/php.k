@@ -1,5 +1,10 @@
+// (some of the) the language infrastructure
+
 require "configuration.k"
 require "syntax.k"
+
+// (language independent) language features
+
 require "lang/shared.k"
 require "lang/memory.k"
 require "lang/core.k"
@@ -18,7 +23,13 @@ require "lang/not-supported.k"
 require "lang/constants.k"
 require "lang/exceptions.k"
 require "lang/post-execution.k"
-require "lang/model-checking.k"
+//require "lang/model-checking.k"
+
+// (abstract) domains 
+
+//require "domains/empty/empty-domain.k"
+require "domains/mySigns/mySigns-domain.k"
+
 
 module PHP-SYNTAX
 endmodule
@@ -46,7 +57,12 @@ module PHP
 	imports CONSTANTS
 	imports EXCEPTIONS
 	imports POST-EXECUTION
-	imports MODEL-CHECKING
+//	imports MODEL-CHECKING
+
+    // Which domain would you like? ;)
+
+    //imports EMPTY-DOMAIN
+    imports MYSIGNS-DOMAIN
 
 	// Builtin stuff	
 	imports URIS

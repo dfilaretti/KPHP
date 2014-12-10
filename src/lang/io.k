@@ -37,6 +37,7 @@ rule [exit]:
 /*@ \subsection{Auxiliary stuff} */
 // ---------------------------------------------------------------------------------------------
 
+/* 
 syntax  K ::= "print" "(" K ")"     [strict]
 
 
@@ -63,6 +64,7 @@ rule [internal-print]:
 	<out> ... . => ListItem(V) </out>  
 	<trace> Trace:List => Trace ListItem("internal-print") </trace>
 	[internal, output]
+*/
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Echo} */

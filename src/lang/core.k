@@ -2,11 +2,16 @@ require "shared.k"
 require "program-transformations.k"
 require "builtin-functions.k"
 
+//require "../domains/empty/empty-domain.k"
+require "../domains/mySigns/mySigns-domain.k"
+
 module CORE 
 	imports SHARED
     imports PROGRAM-TRANSFORMATIONS
 	imports BUILTIN-FUNCTIONS
-	
+    //imports EMPTY-DOMAIN
+    imports MYSIGNS-DOMAIN
+    	
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 /*@ \section{Core} */
@@ -91,43 +96,92 @@ rule [template-document-echo]:
 /*@ \subsection{Literals} */
 // ---------------------------------------------------------------------------------------------
 
-rule [literal-int]:
-	<k> 'LNumber('Deci(Str:String)) => String2Int(Str) ... </k>
-	<trace> Trace:List => Trace ListItem("literal-int") </trace>
-	[structural]
+rule    [literal-int]:
+	    <k> 'LNumber('Deci(Str:String)) => alpha(String2Int(Str)) ... </k>
+	    [structural]
 
-rule [literal-float]:
-	<k> 'DNumber(Str:String) => String2Float(Str) ... </k>
-	<trace> Trace:List => Trace ListItem("literal-float") </trace>
-	[structural]
+rule    [literal-float]:
+	    <k> 'DNumber(Str:String) => alpha(String2Float(Str)) ... </k>
+	    [structural]
+
+rule    [literal-string]:
+	    <k> 'Literal(Str:String) => alpha(Str)	... </k>
+	    [structural]
+
+rule    [literal-true]:
+	    <k> 'True(_) => alpha(true) ... </k>
+    	[structural]
+
+rule    [literal-false]:
+	    <k> 'False(_) => alpha(false) ... </k>
+	    [structural]
+
+rule    [literal-null]:
+	    <k> 'Null(_) => alpha(NULL) ... </k>
+	    [structural]		
 
 
-/* TODO: can be removed?
-rule [hello]:
-	<k> 'Deci(V:Value) => V ... </k>
-	<trace> Trace:List => Trace ListItem("hello") </trace>
-	[structural]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* TODO: remove when done
+rule    [literal-int]:
+	    <k> 'LNumber('Deci(Str:String)) => String2Int(Str) ... </k>
+	    <trace> Trace:List => Trace ListItem("literal-int") </trace>
+	    [structural]
+
+rule    [literal-float]:
+	    <k> 'DNumber(Str:String) => String2Float(Str) ... </k>
+	    <trace> Trace:List => Trace ListItem("literal-float") </trace>
+	    [structural]
+
+// can be removed?
+//rule [hello]:
+//	<k> 'Deci(V:Value) => V ... </k>
+//	<trace> Trace:List => Trace ListItem("hello") </trace>
+//	[structural]
+
+rule    [literal-string]:
+	    <k> 'Literal(Str:String) => Str	... </k>
+	    <trace> Trace:List => Trace ListItem("literal-string") </trace>
+	    [structural]
+
+rule    [literal-true]:
+	    <k> 'True(_) => true ... </k>
+	    <trace> Trace:List => Trace ListItem("literal-true") </trace>
+    	[structural]
+
+rule    [literal-false]:
+	    <k> 'False(_) => false ... </k>
+	    <trace> Trace:List => Trace ListItem("literal-false") </trace>
+	    [structural]
+
+rule    [literal-null]:
+	    <k> 'Null(_) => NULL ... </k>
+	    <trace> Trace:List => Trace ListItem("literal-null") </trace>
+	    [structural]		
 */
 
-rule [literal-string]:
-	<k> 'Literal(Str:String) => Str	... </k>
-	<trace> Trace:List => Trace ListItem("literal-string") </trace>
-	[structural]
-
-rule [literal-true]:
-	<k> 'True(_) => true ... </k>
-	<trace> Trace:List => Trace ListItem("literal-true") </trace>
-	[structural]
-
-rule [literal-false]:
-	<k> 'False(_) => false ... </k>
-	<trace> Trace:List => Trace ListItem("literal-false") </trace>
-	[structural]
-
-rule [literal-null]:
-	<k> 'Null(_) => NULL ... </k>
-	<trace> Trace:List => Trace ListItem("literal-null") </trace>
-	[structural]		
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Blocks} 
@@ -279,11 +333,13 @@ rule [array-access-key-cast-bool]:
 	<trace> Trace:List => Trace ListItem("array-access-key-cast-bool") </trace>
 	[intermediate]
 
+/*
 rule [array-access-key-cast-string]:	
-	<k> 'ArrayAccess(_,,(S:String => 'IntCast(S))) ... </k>
-	<trace> Trace:List => Trace ListItem("array-access-key-cast-string") </trace>
-	when isIntType(String2Int(S)) // 
+	<k> 'ArrayAccess(_,,(S:AString => 'IntCast(S))) ... </k>
+	when isIntType(String2Int(S)) // TODO: this condition only works in concrete.
+                                  // need to update the predicates 
 	[intermediate]
+*/
 
 // Finally if no key is provided, we use NULL as s special key
 

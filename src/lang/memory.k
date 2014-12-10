@@ -19,10 +19,11 @@ module MEMORY
 syntax LanguageValue ::= PlainLanguageValue | LiteralValue
 
 syntax PlainLanguageValue ::= ScalarValue | CompoundValue | SpecialValue
-syntax ScalarValue ::= Int | Float | Bool | String     
+syntax ScalarValue ::= AInt | AFloat | ABool | AString     
 syntax CompoundValue ::= Object | Array
 syntax Null ::= "NULL"
 syntax SpecialValue ::= Null
+
 
 // We represent objects as triples consisting of the name of the class, the instance no.
 // (which is completely implementation-dependent) and a Table.
@@ -71,10 +72,12 @@ syntax LRef 	::= "lref" "(" Ref "," Key "," RefType ")"	[strict(1), klabel('lref
 // type, and cannot specialized anymore.
 syntax LiteralValue ::= "Literal" "(" K ")" [klabel('lit)]
 
+
 // Finally, we define Values as the union of Semantic and Language values, and we set
 // KResult = Values
 syntax Value ::= LanguageValue | SemanticValue 
 syntax KResult ::= Value  
+
 
 /* For convenience, we define a set of option types */
 
@@ -109,6 +112,7 @@ rule isKResult(T:Type) => true
 
 /*@ We define here some helper predicates that will make the semantic rules more concise. */
 
+// TODO: can use builtin (isArray(V) == true)
 syntax Bool ::=  "isArrayType" "(" Value ")"			[function]
 rule    isArrayType(V:Array) => true                  
 rule    isArrayType(V:ScalarValue) => false            
@@ -117,16 +121,31 @@ rule    isArrayType(V:SpecialValue) => false
 
 syntax Bool ::=  "isFloatType" "(" Value ")"			[function]
 
+rule    isFloatType(X) => true
+        when (isAFloat(X) ==K true) 
+
+rule    isFloatType(X) => false
+        when notBool (isAFloat(X) ==K true) 
+
+/*
 rule    isFloatType(V:Array) => false                  
-rule    isFloatType(V:Bool) => false                 	
-rule    isFloatType(V:Int) => false                 	
-rule    isFloatType(V:Float) => true                 	
-rule    isFloatType(V:String) => false                 
+rule    isFloatType(V:ABool) => false                 	
+rule    isFloatType(V:AInt) => false                 	
+rule    isFloatType(V:AFloat) => true                 	
+rule    isFloatType(V:AString) => false                 
 rule    isFloatType(V:Object) => false                 
 rule    isFloatType(V:SpecialValue) => false           
+*/
 
 syntax Bool ::=  "isIntType" "(" Value ")" 				[function]
 
+rule    isIntType(X) => true
+        when (isAInt(X) ==K true) 
+
+rule    isIntType(X) => false
+        when notBool (isAInt(X) ==K true) 
+
+/*
 rule    isIntType(V:Array) => false                  	
 rule    isIntType(V:Bool) => false                 	
 rule    isIntType(V:Int) => true                 		
@@ -134,9 +153,17 @@ rule    isIntType(V:Float) => false
 rule    isIntType(V:String) => false                 	
 rule    isIntType(V:Object) => false                 	
 rule    isIntType(V:SpecialValue) => false           	
+*/
 
 syntax Bool ::=  "isBoolType" "(" Value ")" 				[function]
 
+rule    isBoolType(X) => true
+        when (isABool(X) ==K true) 
+
+rule    isBoolType(X) => false
+        when notBool (isABool(X) ==K true) 
+
+/*
 rule    isBoolType(V:Array) => false                  
 rule    isBoolType(V:Bool) => true                 
 rule    isBoolType(V:Int) => false                 
@@ -144,9 +171,16 @@ rule    isBoolType(V:Float) => false
 rule    isBoolType(V:String) => false                 
 rule    isBoolType(V:Object) => false                 
 rule    isBoolType(V:SpecialValue) => false          
+*/
 
 syntax Bool ::=  "isStringType" "(" Value ")"	[function]
 
+rule    isStringType(X) => true
+        when (isAString(X) ==K true) 
+
+rule    isStringType(X) => false
+        when notBool (isAString(X) ==K true) 
+/*
 rule    isStringType(V:Array) => false                 
 rule    isStringType(V:Bool) => false                 	
 rule    isStringType(V:Int) => false                
@@ -155,9 +189,16 @@ rule    isStringType(V:String) => true
 rule    isStringType(V:Object) => false             
 rule    isStringType(V:SpecialValue) => false        
 rule    isStringType(V:LiteralValue) => false        
-
+*/
 syntax Bool ::=  "isObjectType" "(" Value ")"	[function]
 
+rule    isObjectType(X) => true
+        when (isObject(X) ==K true) 
+
+rule    isObjectType(X) => false
+        when notBool (isObject(X) ==K true) 
+
+/*
 rule    isObjectType(V:Array) => false                 
 rule    isObjectType(V:Bool) => false                 	
 rule    isObjectType(V:Int) => false                
@@ -165,13 +206,14 @@ rule    isObjectType(V:Float) => false
 rule    isObjectType(V:String) => false                
 rule    isObjectType(V:Object) => true             
 rule    isObjectType(V:SpecialValue) => false        
+*/
 
 syntax Type ::= "typeOf" "(" Value ")"					[function]
 
-rule    typeOf(V:Bool) => bool
-rule    typeOf(V:Int) => int
-rule    typeOf(V:Float) => float
-rule    typeOf(V:String) => string
+rule    typeOf(V:ABool) => bool
+rule    typeOf(V:AInt) => int
+rule    typeOf(V:AFloat) => float
+rule    typeOf(V:AString) => string
 rule    typeOf(V:Object) => object
 rule    typeOf(V:Array) => array
 rule    typeOf(NULL) => unset
@@ -249,6 +291,7 @@ rule [zval-read-isRef]:
 	[internal]
 
 syntax LanguageValueOrType ::= LanguageValue | Type
+                             | Int | Bool // NOTE: I added this stuff!!
 
 syntax K ::= "zvalWrite" "(" Loc "," ZvalField "," LanguageValueOrType ")" [strict(1,3)]
     

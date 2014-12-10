@@ -1,9 +1,9 @@
 require "shared.k"
-require "model-checking.k"
+//require "model-checking.k"
 
 module ARITH-OPS 
     imports SHARED
-    imports MODEL-CHECKING
+  //  imports MODEL-CHECKING
 
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
@@ -17,7 +17,6 @@ module ARITH-OPS
 
 rule [negative]:
 	<k> 'Negative(X:K) => 'Min(0,,X) ... </k>
-	<trace> Trace:List => Trace ListItem("negative") </trace>
 	[structural]
 	
 // ---------------------------------------------------------------------------------------------
@@ -27,7 +26,6 @@ rule [negative]:
 
 rule [positive]: 
 	<k> 'Positive(X:K) => X ... </k>
-	<trace> Trace:List => Trace ListItem("positive") </trace>
 	[structural]
 
 // ---------------------------------------------------------------------------------------------
@@ -38,7 +36,7 @@ syntax BinaryOp ::= "plus" | "min" | "mul" | "div" | "mod"
 syntax K ::= "BinOp" "(" BinaryOp "," K "," K ")"
 
 rule [plus]: 
-	<k> 'Plus(L:K,, R:K) => BinOp(plus, L, R) ... </k>
+	<k> 'Plus(L:K,,R:K) => BinOp(plus,L,R) ... </k>
 	<trace> Trace:List => Trace ListItem("plus") </trace>
 	[step]
 
@@ -100,66 +98,58 @@ rule [binop-LHS2LangValue]:
 
 // Type juggling for binary operators
 
-rule [binop-RHS2Float]: 	
-	<k> BinOp(_,V1:Float,(V2:LanguageValue => 'FloatCast(V2))) ... </k>
-	<trace> Trace:List => Trace ListItem("binop-RHS2Float") </trace>
-	when notBool (isFloatType(V2))
-	[intermediate]
+rule    [binop-RHS2Float]: 	
+	    <k> BinOp(_,V1:AFloat,(V2:LanguageValue => 'FloatCast(V2))) ... </k>
+	    when notBool (isFloatType(V2))
+	    [intermediate]
 
-rule [binop-LHS2Float]: 	
-	<k> BinOp(_,(V1:LanguageValue => 'FloatCast(V1)),V2:Float) ... </k>
-	<trace> Trace:List => Trace ListItem("binop-LHS2Float") </trace>
-	when notBool (isFloatType(V1))
-	[intermediate]
+rule    [binop-LHS2Float]: 	
+	    <k> BinOp(_,(V1:LanguageValue => 'FloatCast(V1)),V2:AFloat) ... </k>
+	    when notBool (isFloatType(V1))
+	    [intermediate]
 
-rule [binop-RHS2Int]:
-	<k> BinOp(_,V1:Int,(V2:String => string2Number(V2))) ... </k>
-	<trace> Trace:List => Trace ListItem("binop-RHS2Int") </trace>
-	[intermediate]
+rule    [binop-RHS2Int]:
+	    <k> BinOp(_,V1:AInt,(V2:AString => string2Number(V2))) ... </k>
+	    [intermediate]
 	
-rule [binop-LHS2Int]:
-	<k> BinOp(_,(V2:String => string2Number(V2)),V1:Int) ... </k>
-	<trace> Trace:List => Trace ListItem("binop-LHS2Int") </trace>
-	[intermediate]
+rule    [binop-LHS2Int]:
+	    <k> BinOp(_,(V2:AString => string2Number(V2)),V1:AInt) ... </k>
+	    [intermediate]
 
 // plus
 
-rule [binop-plus-int]:    
-	<k> BinOp(plus,I1:Int,I2:Int) => I1 +Int I2 ... </k>
-	<trace> Trace:List => Trace ListItem("binop-plus-int") </trace>
-	[step]
+rule    [binop-plus-int]:    
+	    <k> BinOp(plus,I1:AInt,I2:AInt) => I1 +AInt I2 ... </k>
+	    [step]
 
-rule [binop-plus-float]:    
-	<k> BinOp(plus,F1:Float,F2:Float) => F1 +Float F2 ... </k>
-	<trace> Trace:List => Trace ListItem("binop-plus-float") </trace>
-	[step]
+rule    [binop-plus-float]:    
+	    <k> BinOp(plus,F1:AFloat,F2:AFloat) => F1 +AFloat F2 ... </k>
+	    [step]
+
 
 // min
 
-rule [binop-min-int]:    
-	<k> BinOp(min,I1:Int,I2:Int) => I1 -Int I2 ... </k>
-	<trace> Trace:List => Trace ListItem("binop-min-int") </trace>
-	[step]
+rule    [binop-min-int]:    
+    	<k> BinOp(min,I1:AInt,I2:AInt) => I1 -AInt I2 ... </k>
+	    [step]
 
-rule [binop-min-float]:    
-	<k> BinOp(min,F1:Float,F2:Float) => F1 -Float F2 ... </k>
-	<trace> Trace:List => Trace ListItem("binop-min-float") </trace>
-	[step]
+rule    [binop-min-float]:    
+    	<k> BinOp(min,F1:AFloat,F2:AFloat) => F1 -AFloat F2 ... </k>
+	    [step]
 
 // mul
 
-rule [binop-mul-int]:    
-	<k> BinOp(mul,I1:Int,I2:Int) => I1 *Int I2 ... </k>
-	<trace> Trace:List => Trace ListItem("binop-mul-int") </trace>
-	[step]
+rule    [binop-mul-int]:    
+	    <k> BinOp(mul,I1:AInt,I2:AInt) => I1 *AInt I2 ... </k>
+	    [step]
 
-rule [binop-mul-float]:    
-	<k> BinOp(mul,F1:Float,F2:Float) => F1 *Float F2 ... </k>
-	<trace> Trace:List => Trace ListItem("binop-mul-float") </trace>
-	[step]
+rule    [binop-mul-float]:    
+    	<k> BinOp(mul,F1:AFloat,F2:AFloat) => F1 *AFloat F2 ... </k>
+	    [step]
 
 // div
 
+/* NOTE: temporary commented 
 rule [binop-div-int]:    
 	<k> BinOp(div,I1:Int,I2:Int) => normalizeFloat(Int2Float(I1) /Float Int2Float(I2)) ... </k>
 	<trace> Trace:List => Trace ListItem("binop-div-int") </trace>
@@ -172,16 +162,16 @@ rule [binop-div-float]:
 	when F2 =/=Float 0.0
 	[step]
 
-// --- Division by zero triggers a warning and returns false
-
 rule [binop-div-int-zero]:    
 	<k> BinOp(div,_,Z:ScalarValue) => WARNING("Division by zero in %s on line %d\n") ~> false ... </k>
 	<trace> Trace:List => Trace ListItem("binop-div-int-zero") </trace>
 	when Z ==K 0 orBool Z ==K 0.0 
 	[error]
+*/
 	
 // mod
 
+/* NOTE: temporary commented
 rule [binop-mod-args2Int]:    
 	<k> BinOp(mod,I1:Float => *toInteger(I1),(I2:Float => *toInteger(I2))) ... </k>
 	<trace> Trace:List => Trace ListItem("binop-mod-args2Int") </trace>
@@ -191,6 +181,7 @@ rule [binop-mod-int]:
 	<k> BinOp(mod,I1:Int,I2:Int) => I1 modInt I2 ... </k>
 	<trace> Trace:List => Trace ListItem("binop-mod-int") </trace>
 	[step]
+*/
 
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
@@ -287,6 +278,7 @@ rule [isEqual-type-juggling-1-2]:
 
 // -- convert to boolean if one arg is boolean or null
 
+// TODO: might need update?
 syntax BoolOrNull ::= Bool | Null
 syntax LanguageValue ::= BoolOrNull
 
@@ -328,14 +320,12 @@ rule [comparison-acd]:
 
 // -- if any arg is float, the other one is converted to float as well
 rule [isEqual-toFloat-RHS]:
-	<k> comparison(Op:ComparisonOp,V1:Float,(V2:Int => *toFloat(V2))) ... </k>
-	<trace> Trace:List => Trace ListItem("isEqual-toFloat-RHS") </trace>
+	<k> comparison(Op:ComparisonOp,V1:AFloat,(V2:AInt => *toFloat(V2))) ... </k>
 	when notBool(isStrictComparison(Op))
 	[intermediate]
 
 rule [isEqual-toFloat-LHS]:	
-	<k> comparison(Op:ComparisonOp,(V1:Int => *toFloat(V1)),V2:Float) ... </k>
-	<trace> Trace:List => Trace ListItem("isEqual-toFloat-LHS") </trace>
+	<k> comparison(Op:ComparisonOp,(V1:AInt => *toFloat(V1)),V2:AFloat) ... </k>
 	when notBool(isStrictComparison(Op))
 	[intermediate]
 
@@ -366,13 +356,6 @@ rule [comparison-equal-array]:
 	<trace> Trace:List => Trace ListItem("comparison-equal-array") </trace>
 	when locsHoldSameCompound(M, V1, V2) 
 	[intermediate]
-
-/* REMOVE
-rule [comparison-equal-loc]: 
-	<k> comparison(equal, V1:Loc, V1) => true ... </k>
-	<trace> Trace:List => Trace ListItem("comparison-equal-loc") </trace>
-	[internal]
-*/
 	
 // isIdentical
 
@@ -388,14 +371,6 @@ rule [comparison-identical-array]:
 	<trace> Trace:List => Trace ListItem("comparison-identical-array") </trace>
 	when locsHoldSameCompound(M, V1, V2) 
 	[intermediate]
-
-/* REMOVE
-rule [comparison-identical-loc]: 
-	<k> comparison(identical, V1:Loc, V1) => true ... </k>
-	<trace> Trace:List => Trace ListItem("comparison-identical-loc") </trace>
-	[internal]
-*/
-
 
 // less
 
@@ -466,62 +441,45 @@ syntax K ::= "isEqual" "(" Value "," Value ")"
 
 // Equality of scalar types. We inherit K/Maude builtin stuff.
 
-rule [isEqual-int]:    
-	<k> isEqual(I1:Int, I2:Int) => I1 ==Int I2 ... </k>
-	<trace> Trace:List => Trace ListItem("isEqual-int") </trace>
-	[internal]
+rule    [isEqual-int]:    
+	    <k> isEqual(I1:AInt,I2:AInt) => I1 ==AInt I2 ... </k>
+	    [internal]
 
-rule [isEqual-float]:    
-	<k> isEqual(F1:Float, F2:Float) => F1 ==Float F2 ... </k>
-	<trace> Trace:List => Trace ListItem("isEqual-float") </trace>
-	[internal]
+rule    [isEqual-float]:    
+	    <k> isEqual(F1:AFloat,F2:AFloat) => F1 ==AFloat F2 ... </k>
+    	[internal]
 
-rule [isEqual-bool]: 
-	<k> isEqual(B1:Bool, B2:Bool) => B1 ==Bool B2 ... </k>
-	<trace> Trace:List => Trace ListItem("isEqual-bool") </trace>
-	[internal]
+rule    [isEqual-bool]: 
+	    <k> isEqual(B1:ABool,B2:ABool) => B1 ==ABool B2 ... </k>
+	    [internal]
 
-rule [isEqual-string]:    
-	<k> isEqual(S1:String, S2:String) => S1 ==String S2 ... </k>
-	<trace> Trace:List => Trace ListItem("isEqual-string") </trace>
-	[internal]
-
-
-/*
-rule
-	<k> isEqual(NULL, V:LanguageValue) => false ... </k>
-	<trace> Trace:List => Trace ListItem("isEqual-null-left") </trace>
-	[internal]
-
-rule
-	<k> isEqual(V:LanguageValue, NULL) => false ... </k>
-	<trace> Trace:List => Trace ListItem("isEqual-null-right") </trace>
-	[internal]
-*/
+rule    [isEqual-string]:    
+	    <k> isEqual(S1:AString,S2:AString) => S1 ==AString S2 ... </k>
+	    [internal]
 
 // Array comparison: calls comparison routine "isEqualArray" (taken from PHP docs)
 
+rule    [isEqual-array-same]:
+	    <k> isEqual(L:Loc,L) => alpha(true) ... </k>
+	    [internal]
 
-rule
-	<k> isEqual(L:Loc,L) => true ... </k>
-	<trace> Trace:List => Trace ListItem("isEqual-same-loc") </trace>
-	[internal]
+/* TODO: adapt
+rule    [isEqual-array]: 	
+	    <k> isEqual(L1:Loc, L2:Loc) => 
+		    *Cond(
+		    isEqualScalar(
+                'FunctionCall("isEqualArray",,'ListWrap('Param(L1),, 'Param(L2))),
+                0),true,false) ... </k>
+	    <heap> 
+	    ... 
+		    L1 |-> zval(V1:Array,_,_,_)
+		    L2 |-> zval(V2:Array,_,_,_)
+	    ...
+	    </heap>
+	    when (L1 =/=K L2)
+	    [internal]
+*/
 
-rule [isEqual-array]: 	
-	<k> isEqual(L1:Loc, L2:Loc) => 
-		*Cond(
-		isEqualScalar('FunctionCall("isEqualArray",,'ListWrap('Param(L1),, 'Param(L2))),0),
-		true,
-		false) ... </k>
-	<heap> 
-	... 
-		L1 |-> zval(V1:Array,_,_,_)
-		L2 |-> zval(V2:Array,_,_,_)
-	...
-	</heap>
-	<trace> Trace:List => Trace ListItem("isEqual-array") </trace>
-	when (L1 =/=K L2)
-	[internal]
 
 // Object comparison. 
 
@@ -1048,65 +1006,56 @@ rule [not]:
 
 context 'PostDec(HOLE)
 
-rule [postDecArg2Loc]:    
+rule    [postDecArg2Loc]:    
 		<k> 'PostDec(R:Ref => convertToLoc(R,r)) ... </k>
-	<trace> Trace:List => Trace ListItem("postDecArg2Loc") </trace>
-	[intermediate]
+	    [intermediate]
 
-rule [postDec]:    
-	<k> 'PostDec(L:Loc) => V ... </k>
-	<heap> ... L |-> zval(V:Int => V -Int 1, _, _, _) ...  </heap>
-	<trace> Trace:List => Trace ListItem("postDec") </trace>
-	[step]
+rule    [postDec]:    
+	    <k> 'PostDec(L:Loc) => V ... </k>
+	    <heap> ... L |-> zval(V:AInt => V -AInt alpha(1),_,_,_) ...  </heap>
+	    [step]
 
 /* post inc */
 
 context 'PostInc(HOLE)
 
-rule [postIncArg2Loc]:
-	<k> 'PostInc(R:Ref => convertToLoc(R,r)) ... </k>
-	<trace> Trace:List => Trace ListItem("postIncArg2Loc") </trace>
-	[intermediate]
+rule    [postIncArg2Loc]:
+	    <k> 'PostInc(R:Ref => convertToLoc(R,r)) ... </k>
+    	[intermediate]
 
-rule [postInc]:
-	<k> 'PostInc(L:Loc) => V ... </k>
-	<heap> ... L |-> zval(V:Int => V +Int 1, _, _, _) ...  </heap>
-	<trace> Trace:List => Trace ListItem("postInc") </trace>
-	[step]
+rule    [postInc]:
+	    <k> 'PostInc(L:Loc) => V ... </k>
+	    <heap> ... L |-> zval(V:AInt => V +AInt alpha(1),_,_,_) ...  </heap>
+	    [step]
         
-rule [postInc-null]:
-	<k> 'PostInc(L:Loc) => NULL ... </k>
- 	<heap> ... L |-> zval(NULL => 1, _, _, _) ...  </heap>
-	<trace> Trace:List => Trace ListItem("postInc-null") </trace>
-	[step]
+rule    [postInc-null]:
+	    <k> 'PostInc(L:Loc) => NULL ... </k>
+ 	    <heap> ... L |-> zval(NULL => alpha(1),_,_,_) ...  </heap>
+	    [step]
 
 /* pre dec */
 
 context 'PreDec(HOLE)
 
-rule [preDec-arg2Loc]:
-	<k> 'PreDec(R:Ref => convertToLoc(R,r)) ... </k>
-	<trace> Trace:List => Trace ListItem("preDec-arg2Loc") </trace>
-	[intermediate]
+rule    [preDec-arg2Loc]:
+	    <k> 'PreDec(R:Ref => convertToLoc(R,r)) ... </k>
+	    [intermediate]
 
-rule [preDec]:    
-	<k> 'PreDec(L:Loc) => V -Int 1 ... </k>
-	<heap> ... L |-> zval(V:Int => V -Int 1, _, _, _) ...  </heap>
-	<trace> Trace:List => Trace ListItem("preDec") </trace>
-	[step]
+rule    [preDec]:    
+	    <k> 'PreDec(L:Loc) => V -AInt alpha(1) ... </k>
+	    <heap> ... L |-> zval(V:AInt => V -AInt alpha(1),_,_,_) ...  </heap>
+	    [step]
 
 /* pre inc */
 
 context 'PreInc(HOLE)
 
-rule [preInc-arg2Loc]:    
-	<k> 'PreInc(R:Ref => convertToLoc(R,r)) ... </k>
-	<trace> Trace:List => Trace ListItem("preInc-arg2Loc") </trace>
-	[intermediate]
+rule    [preInc-arg2Loc]:    
+	    <k> 'PreInc(R:Ref => convertToLoc(R,r)) ... </k> 
+	    [intermediate]
 
-rule [preInc]:    
-	<k> 'PreInc(L:Loc) => V +Int 1 ... </k>
-	<heap> ... L |-> zval(V:Int => V +Int 1, _, _, _) ...  </heap>
-	<trace> Trace:List => Trace ListItem("preInc") </trace>
-	[step]
+rule    [preInc]:    
+	    <k> 'PreInc(L:Loc) => V +AInt alpha(1) ... </k>
+	    <heap> ... L |-> zval(V:AInt => V +AInt alpha(1),_,_,_) ...  </heap>
+	    [step]
 endmodule

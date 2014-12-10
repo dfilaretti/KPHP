@@ -492,6 +492,7 @@ rule [vardump-null]:
 	[internal]
 
 /* var_dumping integers  */
+// TODO: move to domain?
 rule [vardump-int]:    
 	<k> var_dump (L:Loc)  => 
 			*Cond(IsRef, print("&"), .) ~> 
@@ -499,11 +500,12 @@ rule [vardump-int]:
             print("(") ~>
             print(V) ~> 
             print(")\n") ... </k>
-        <heap> ... L |-> zval(V:Int, _, _, IsRef:Bool) ... </heap>
+        <heap> ... L |-> zval(V:AInt, _, _, IsRef:Bool) ... </heap>
 	<trace> Trace:List => Trace ListItem("vardump-int") </trace>
 	when (V isNumeric)
 	
 /* var_dumping floats  */
+// TODO: move to domain?
 rule [vardump-float]:    
 	<k> var_dump (L:Loc)  => 
 			*Cond(IsRef, print("&"), .) ~> 
@@ -512,7 +514,7 @@ rule [vardump-float]:
             print(V) ~>
             //*Cond(hasNoDecimalPart(V), print(Float2Int(V)), print(V))  ~> 
             print(")\n") ... </k>
-        <heap> ... L |-> zval(V:Float, _, _, IsRef:Bool) ... </heap>
+        <heap> ... L |-> zval(V:AFloat, _, _, IsRef:Bool) ... </heap>
 	<trace> Trace:List => Trace ListItem("vardump-float") </trace>
 	when (V isNumeric)
 
