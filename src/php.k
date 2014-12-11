@@ -62,7 +62,7 @@ module PHP
     // Which domain would you like? ;)
 
     //imports EMPTY-DOMAIN
-  //  imports MYSIGNS-DOMAIN
+    //imports MYSIGNS-DOMAIN
 
 	// Builtin stuff	
 	imports URIS

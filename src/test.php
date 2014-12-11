@@ -1,6 +1,11 @@
 <?php
 
-$x = user_input();
+$x = 12;
+$y = 9;
+$z = $x + $y;
+//echo $x + $y;
+
+//$x = user_input();
 
 /*
     class Foo {
@@ -11,7 +16,10 @@ $x = user_input();
 */
 
 /*
-if (x) {
+$y = (0 == 3) ;
+
+
+if ($y) {
     echo "y";
 }
 else {
