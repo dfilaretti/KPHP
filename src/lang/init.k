@@ -25,9 +25,11 @@ syntax  Internal ::= "buildInitState"
 				   | "initBuiltinFunctions"
 				   | "initBuiltinClasses"
 				   | "initSuperGlobals"
+                   | "initStatus"
 
 rule [built-init-state]:	
 	<k> buildInitState =>
+        initStatus ~> 
 		initScopes ~>
 		initBuiltinFunctions ~>
 		initBuiltinClasses ~>
@@ -35,6 +37,11 @@ rule [built-init-state]:
 		buildArrayCompareFun ... </k>
 	<trace> Trace:List => Trace ListItem("built-init-state") </trace>
 	[internal]
+
+
+rule    <k> initStatus => . ... </k>
+        <status> _ => NEXT </status>
+
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Initializing builtin functions} */

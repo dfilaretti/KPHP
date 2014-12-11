@@ -953,11 +953,13 @@ rule [is-type-numeric]:
 	<trace> Trace:List => Trace ListItem("is-type-numeric") </trace>
 	when notBool isStringType(V)
 	[internal]
-	
+
+/* TODO: remove (has been moved to domains) 	
 syntax K ::= "user_input"
 	
 rule <k> user_input => V ...</k>
 	<in> ListItem(V:K) => . ...</in>
+*/
 
 syntax K ::= "label" "(" K ")" [strict]
 

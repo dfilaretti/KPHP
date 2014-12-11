@@ -56,6 +56,24 @@ rule [if-guard2Bool]:
 	when notBool (isBoolType(V))
 	[intermediate]
 
+/*
+rule    [if]:	
+    <k> if (C:Exp) then B1:Block else B2:Block => 
+			    mergeConfigs(
+				    runAndGetConfig(runInMem(Abexp(norm(C), some(E)), B1)),
+				    runAndGetConfig(runInMem(Abexp(norm(!C), some(E)), B2))) ... </k>
+            <mem> E </mem>
+            [transition]
+*/
+
+rule    [if-yeah]:	
+        <k> 'If(C,,B1,,'ListWrap(.KList),,B2) => 
+			    mergeConfigs(
+				    runAndGetConfig(runInMem(Abexp(C, some(E)), B1)),
+				    runAndGetConfig(runInMem(Abexp('Not(C), some(E)), B2))) ... </k>
+        <mem> E </mem>
+
+/* NOTE: this is the old semantics of IF. TODO: replace when done with new one. 
 rule [if-true-1]:	
 	<k> 'If(true,,S:K,,X:K,,Y:K) => S ... </k>
 	<trace> Trace:List => Trace ListItem("if-true-1") </trace>
@@ -82,6 +100,7 @@ rule [if-false-elseIf-2]:
 	'If(false,,Z,,'ListWrap('ElseIf(Guard,, Stmt),, ElseIfs),,'ListWrap(.KList)) ... </k>
 	<trace> Trace:List => Trace ListItem("if-false-elseIf-2") </trace>
 	[step]
+*/
 	
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Conditional Expression} 

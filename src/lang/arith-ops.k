@@ -97,7 +97,6 @@ rule [binop-LHS2LangValue]:
 	[intermediate]
 
 // Type juggling for binary operators
-
 rule    [binop-RHS2Float]: 	
 	    <k> BinOp(_,V1:AFloat,(V2:LanguageValue => 'FloatCast(V2))) ... </k>
 	    when notBool (isFloatType(V2))
@@ -117,7 +116,6 @@ rule    [binop-LHS2Int]:
 	    [intermediate]
 
 // plus
-
 rule    [binop-plus-int]:    
 	    <k> BinOp(plus,I1:AInt,I2:AInt) => I1 +AInt I2 ... </k>
 	    [step]
@@ -128,7 +126,6 @@ rule    [binop-plus-float]:
 
 
 // min
-
 rule    [binop-min-int]:    
     	<k> BinOp(min,I1:AInt,I2:AInt) => I1 -AInt I2 ... </k>
 	    [step]
@@ -138,7 +135,6 @@ rule    [binop-min-float]:
 	    [step]
 
 // mul
-
 rule    [binop-mul-int]:    
 	    <k> BinOp(mul,I1:AInt,I2:AInt) => I1 *AInt I2 ... </k>
 	    [step]
@@ -982,18 +978,15 @@ context 'Not(HOLE)
 
 rule [not-arg2LangValue]: 
 	<k> 'Not(R:ConvertibleToLanguageValue => convertToLanguageValue(R)) ... </k>
-	<trace> Trace:List => Trace ListItem("not-arg2LangValue") </trace>
 	[intermediate]
 	
 rule [not-arg2Bool]: 
 	<k> 'Not(V:LanguageValue => *toBoolean(V)) ... </k>
-	<trace> Trace:List => Trace ListItem("not-arg2Bool") </trace>
 	when notBool (isBoolType(V))
 	[intermediate]
 
 rule [not]: 
-	<k> 'Not(B:Bool) => notBool B  ... </k>
-	<trace> Trace:List => Trace ListItem("not") </trace>
+	<k> 'Not(B:ABool) => notABool B  ... </k>
 	[structural]
 
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=

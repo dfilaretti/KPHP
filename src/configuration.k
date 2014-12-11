@@ -23,6 +23,7 @@ configuration
     		<classInstanceCounters> .Map </classInstanceCounters>
     	</tables>	
 		<br/>
+        <mem>
 	    <scopes color="green">
 			<currentScope> .K </currentScope>
 			<globalScope> .K </globalScope>
@@ -30,7 +31,9 @@ configuration
         	<superGlobalScope> .K </superGlobalScope>
 		</scopes>
 		<heap color="red"> .Map </heap>
+        </mem>
 		<br/>
+        <status> .K </status> 
 		<control color="cyan">	
 			<functionStack> .List </functionStack>
 			<exceptionStack> .List </exceptionStack>
@@ -57,7 +60,7 @@ configuration
      	</IO>
 		<br/>
 		<instrumentation color="red">
-			<cleanTraceOnTermination> false </cleanTraceOnTermination> 
+			<cleanTraceOnTermination> true </cleanTraceOnTermination> 
 			<isTerminated> false </isTerminated> 
 			<label> "@" </label>
 		</instrumentation>     		

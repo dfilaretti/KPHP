@@ -28,7 +28,7 @@ require "lang/post-execution.k"
 // (abstract) domains 
 
 //require "domains/empty/empty-domain.k"
-require "domains/mySigns/mySigns-domain.k"
+//require "domains/mySigns/mySigns-domain.k"
 
 
 module PHP-SYNTAX
@@ -62,7 +62,7 @@ module PHP
     // Which domain would you like? ;)
 
     //imports EMPTY-DOMAIN
-    imports MYSIGNS-DOMAIN
+  //  imports MYSIGNS-DOMAIN
 
 	// Builtin stuff	
 	imports URIS
