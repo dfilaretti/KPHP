@@ -683,4 +683,260 @@ rule [is-crnt-visib-obj-private-false]:
 	<trace> Trace:List => Trace ListItem("is-crnt-visib-obj-private-false") </trace>
 	when (Context =/=K Owner)
 	[internal]
+
+
+///////////////////////////////////////////////////////////////////////////////
+/*@ \subsection{Merging configurations} */
+///////////////////////////////////////////////////////////////////////////////
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Merging entry point, Special cases.
+    ///////////////////////////////////////////////////////////////////////////
+
+    syntax  K ::= "mergeConfigs" "(" BoxedConfig "," BoxedConfig ")"         [strict(1,2)] 
+
+    /*@ Adaptive-merge case. This happens when one branch returned 
+    but the other didn't. See notes. */
+
+/*  TODO (when POP is disambiguated)
+    rule    (mergeConfigs(config(A), config(B)) ~> K => 
+                #if (K =/=K .K) #then 
+                    mergeConfigs(config(A), runAndGetConfig(runInConf(config(B),K)))
+                #else
+                    mergeConfigsBase(config(A), config(B))       
+                #fi) ~> POP(_)
+            when (configGetStatus(A) ==K RET) andBool (configGetStatus(B) ==K NEXT)
+            [transition]
+
+    rule    (mergeConfigs(config(A), config(B)) ~> K => 
+                #if (K =/=K .K) #then 
+                    mergeConfigs(runAndGetConfig(runInConf(config(A),K)),config(B))
+                #else
+                    mergeConfigsBase(config(A), config(B))       
+                #fi
+                ) ~> POP(_)
+            when (configGetStatus(A) ==K NEXT) andBool (configGetStatus(B) ==K RET)
+            [transition]       
+*/
+    /*@ This is misleading. It doesn't mean DONE. This is the case when 
+    one branch is not executed at all. Should find better naming. */
+
+    rule    mergeConfigs(config(A),config(B)) => updateConfig(config(A)) 
+            when (configGetStatus(B) ==K DONE)
+            [transition]
+
+    rule    mergeConfigs(config(A),config(B)) => updateConfig(config(B)) 
+            when (configGetStatus(A) ==K DONE)
+            [transition]
+
+    rule    mergeConfigs(config(A), config(B)) => mergeConfigsBase(config(A),config(B))
+            when  notBool isSpecialMergeCase(configGetStatus(A),configGetStatus(B))  
+ 
+    //@ decide wether our merging task is special or not
+    syntax Bool ::= "isSpecialMergeCase" "(" ReturnCode "," ReturnCode ")" [predicate]
+
+    rule    isSpecialMergeCase(St1,St2) => ((St1 ==K DONE) orBool (St2 ==K DONE))
+
+
+
+    syntax K ::= "mergeConfigsBase" "(" BoxedConfig "," BoxedConfig ")"     [strict(1,2)]
+
+
+/*
+    rule    mergeConfigsBase(
+                config( 
+                    <functions> F1 </functions>
+                    <IO>
+                        <in> In1 </in>
+                        <out> Out1 </out>
+                    </IO>
+                    <context>                   
+                        <mem> M1 </mem>
+                        <status> St1 </status>
+                        <returns> R1 </returns> 
+                        <errors> Er1 </errors> 
+                        <stack> S1 </stack>
+                        <xstack> XS1 </xstack> 
+                        <niter> N1 </niter>
+                    </context>),
+               config(
+                    <functions> F2 </functions>
+                    <IO>
+                        <in> In2 </in>
+                        <out> Out2 </out>
+                    </IO>
+                    <context>
+                        <mem> M2 </mem>
+                        <status> St2 </status>
+                        <returns> R2 </returns> 
+                        <errors> Er2 </errors>
+                        <stack> S2 </stack>
+                        <xstack> XS2 </xstack>
+                        <niter> N2 </niter>
+                    </context>)) =>
+                updateConfig(config(
+                    <functions> mergeFunctions(F1,F2) </functions>
+                    <IO>
+                        <in> In1 </in>
+                        <out> Out1 </out>
+                    </IO>
+                    <context>                   
+                        <mem> mergeMem(N1,M1,M2) </mem>
+                        <status> mergeStatus(St1,St2) </status>
+                        <returns> mergeReturns(R1,R2) </returns> 
+                        <errors> mergeErrors(Er1,Er2) </errors>
+                        <stack> mergeStack(S1,S2) </stack>
+                        <xstack> mergeXStack(XS1,XS2) </xstack>
+                        <niter> mergeNIter(N1,N2) </niter>
+                    </context>))                  
+                    [transition]
+*/
+
+    rule    mergeConfigsBase(
+                config( 
+                        C1:Bag                   
+                        <mem> M1 </mem>),
+                config(
+                        C2:Bag
+                        <mem> M2 </mem>)) =>
+
+                updateConfig(config(
+                        C1 // TODO: add other stuff               
+                        <mem> mergeMem(0,M1,M2) </mem>))                  
+                    [transition]
+
+    syntax  Bag ::= "mergeMem" "(" Int ","Bag "," Bag ")"       [function]
+
+    rule    mergeMem(_,
+                <scopes> 
+                    <currentScope> L1 </currentScope>
+                    <globalScope> L2 </globalScope>
+                    <globalStaticScope> L3 </globalStaticScope>
+                    <superGlobalScope> L4 </superGlobalScope> 
+                </scopes> 
+                <heap> H1 </heap>,
+
+                <scopes> 
+                    <currentScope> L1' </currentScope>
+                    <globalScope> L2' </globalScope>
+                    <globalStaticScope> L3' </globalStaticScope>
+                    <superGlobalScope> L4' </superGlobalScope>   
+                </scopes> 
+                <heap> H2 </heap>) => 
+
+                <scopes>
+                    <currentScope> L1 </currentScope>
+                    <globalScope> L2 </globalScope>
+                    <globalStaticScope> L3 </globalStaticScope>
+                    <superGlobalScope> L4 </superGlobalScope>  
+                </scopes>
+                <heap> 
+                    mergeArray(L1,heap_read(H1,L1),H1,heap_read(H2,L1'),H2,.List,.Map)
+                    //mergeArray(L4,heap_read(H1,L4),H1,heap_read(H2,L4'),H2,.List,.Map)
+                </heap>
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Merge
+    ///////////////////////////////////////////////////////////////////////////
+
+    syntax  Bool ::= "isScalar_zval" "(" Zval ")" [predicate]
+
+    rule    isScalar_zval(zval(V,_,_,_)) => isScalarValue(V)
+    
+
+    syntax  Map ::= "mergeArray" "(" Loc "," Zval "," Map "," Zval "," Map "," List "," Map ")" [function]
+
+    rule    mergeArray(L,
+                zval(Array(_,A1),_,_,_),
+                H1,
+                zval(Array(_,A2),_,_,_),
+                H2,                
+                A,
+                H) => mergeArray1(L,A1,H1,A2,H2,A,H)
+
+    syntax  Map ::= "mergeArray1" "(" Loc "," List "," Map "," List "," Map "," List "," Map ")" [function]
+            
+    // base case
+    // TODO: should merge the 2 heaps (as done in IMP)? 
+    rule    mergeArray1(L,.List,_,.List,_:Map,A,H) => 
+                (L |-> zval(Array(head(A),A),array,1,false)) H 
+
+    // field exists only in one of the two arrays, scalar case 
+
+    rule   mergeArray1(L,
+                ListItem([X,Vis,L1]) M1,
+                (L1 |-> V1) S1,
+                M2,S2,V,S) => 
+            mergeArray1(L,M1,S1,M2,S2,
+                ListItem([X,Vis,N]) V,
+                (N |-> V1) S)
+            when (notBool (M2 hasProperty X)) andBool 
+                 isScalar_zval(V1) andBool
+                 fresh(N:Loc) 
+
+    rule   mergeArray1(L,
+                M1,S1,
+                ListItem([X,Vis,L2]) M2,
+                (L2 |-> V2) S2,
+                V,S)=> 
+            mergeArray1(L,M1,S1,M2,S2,
+                ListItem([X,Vis,N]) V,
+                (N |-> V2) S)
+            when (notBool (M1 hasProperty X)) andBool 
+                 isScalar_zval(V2) andBool
+                 fresh(N:Loc)
+
+    // field exists only in one of the two arrays, array case 
+
+    rule   mergeArray1(L,
+                ListItem([X,Vis,L1]) M1,
+                (L1 |-> Array(_,V1)) S1,
+                M2,S2,V,S) => 
+            mergeArray1(L,M1,S1,M2,S2,
+                ListItem([X,Vis,N]) V,
+                mergeArray1(N,V1,S1,.List,.Map,.List,.Map) S)
+            when (notBool (M2 hasProperty X)) andBool
+                 fresh(N:Loc)
+
+    rule   mergeArray1(L,
+                M1,S1,
+                ListItem([X,Vis,L2]) M2,
+                (L2 |-> Array(_,V2)) S2,
+                V,S)=> 
+            mergeArray1(L,M1,S1,M2,S2,
+                ListItem([X,Vis,N]) V,
+                mergeArray1(N,V2,S2,.List,.Map,.List,.Map) S)
+            when (notBool (M1 hasProperty X)) andBool
+                 fresh(N:Loc)
+
+    // field exists in both arrays
+    rule    mergeArray1(L,
+                ListItem([X,Vis,L1]) M1,
+                (L1 |-> V1) S1,
+                M2, 
+                S2,
+                V,S) => 
+
+            mergeArray1(L,M1,(L1 |-> V1) S1,(arrayRemove(M2,X)),S2,
+                ListItem(merge_ArrayItem(N,[X,Vis,L1],array_read(M2,X))) V,
+                mergeZval(N,V1,(L1 |-> V1) S1,heap_read(S2,array_read_v(M2,X)),S2) S)
+            when (M2 hasProperty X) andBool (fresh(N:Loc))
+
+
+    // merges two "array entries" (TODO properly)
+    syntax  ArrayItem ::= "merge_ArrayItem" "(" Loc "," ArrayItem "," ArrayItem ")" [function]
+
+    rule    merge_ArrayItem(L,[X,V1,_],[X,V2,_]) => [X,V1,L]
+                        
+    // merges two zvals V1 and V2, then creates the entry L |-> lub(V1,V2)
+    syntax  Map ::= "mergeZval" "(" Loc "," Zval "," Map "," Zval "," Map ")" [function]
+
+    // scalar case
+    rule    mergeZval(L,zval(V,T,R,I),_,zval(V',T',R',I'),_) => (L |-> zval(lub(V,V'),T,R,I))  
+            when (isScalarValue(V) ==K true) orBool (isScalarValue(V') ==K true)
+
+    // array case
+    rule    mergeZval(L,zval(Array(_,V.),T,R,I),H1,zval(Array(_,V'),T',R',I'),H2) => 
+                mergeArray1(L,V,H1,V',H2,.List,.Map)
+
 endmodule 

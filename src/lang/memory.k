@@ -24,7 +24,6 @@ syntax CompoundValue ::= Object | Array
 syntax Null ::= "NULL"
 syntax SpecialValue ::= Null
 
-
 // We represent objects as triples consisting of the name of the class, the instance no.
 // (which is completely implementation-dependent) and a Table.
 syntax Object ::= "OID" "(" Loc "," Id "," Int ")"
@@ -88,6 +87,15 @@ syntax OptionInt ::= Int | None
 syntax OptionString ::= String | None
 syntax OptionArrayItem ::= ArrayItem | None
 syntax OptionArrayCrntElem ::= ArrayCrntElem | None
+
+
+// ---------------------------------------------------------------------------------------------
+/*@ \subsection{Lub} */
+
+syntax PlainLanguageValue ::= "lub" "(" PlainLanguageValue "," PlainLanguageValue ")"
+
+// ---------------------------------------------------------------------------------------------
+
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Types} 
@@ -514,6 +522,34 @@ rule [array-write-current-some]:
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Auxiliary List and arithmetic ops} */
 // ---------------------------------------------------------------------------------------------
+
+// "raw" reading operations (TODO move) 
+
+syntax  Zval ::= "heap_read" "(" Map "," Loc ")" [function]
+rule    heap_read(_ L |-> V _,L) => V 
+
+syntax  ArrayItem ::= "array_read" "(" List "," Key ")" [function]
+
+rule array_read((ListItem([K,V,L]) A:List),K) => [K,V,L]
+rule array_read((ListItem([K',_,_]) A:List),K) => array_read(A,K)
+    when K =/=K K'
+
+syntax  Loc ::= "array_read_v" "(" List "," Key ")" [function]
+
+rule    array_read_v(A,K) => arrayItem2Loc(array_read(A,K))
+
+syntax  List ::= "arrayRemove" "(" List "," Key ")" [function]
+
+rule    arrayRemove(ListItem([K,V,L]) A,K1) => ListItem([K,V,L]) arrayRemove(A,K)
+        when (K =/=K K1)
+
+rule    arrayRemove(ListItem([K,V,L]) A,K) => arrayRemove(A,K)
+
+rule    arrayRemove(.List,_) => .List
+
+syntax  Loc ::= "arrayItem2Loc" "(" ArrayItem ")" [function]
+
+rule    arrayItem2Loc([_,_,L]) => L
 
 // Membership operations
 
