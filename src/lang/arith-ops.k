@@ -15,9 +15,26 @@ module ARITH-OPS
 /*@ \subsection{Negation} */
 // ---------------------------------------------------------------------------------------------
 
-rule [negative]:
+/* TODO: remove when done with new rule
+eule [negative]:
 	<k> 'Negative(X:K) => 'Min(0,,X) ... </k>
 	[structural]
+*/
+
+context 'Negative(HOLE) 
+
+rule [negative-arg2LangValue]:
+	<k> 'Negative(R:ConvertibleToLanguageValue 
+		=> convertToLanguageValue(R)) ... </k> 
+
+rule [negative]:
+	<k> 'Negative(X:PlainLanguageValue) => negative(X) ... </k>
+	[structural]
+
+// connection to abstract domain
+syntax 	PlainLanguageValue ::= "negative" "(" PlainLanguageValue ")"
+rule	negative(V:AInt) => negative_AInt(V) 
+rule	negative(V:AFloat) => negative_AFloat(V)
 	
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Positive} 
@@ -40,10 +57,17 @@ rule [plus]:
 	<trace> Trace:List => Trace ListItem("plus") </trace>
 	[step]
 
+/*
 rule [min]: 
 	<k> 'Min(L:K,, R:K)  => BinOp(min, L, R) ... </k>
 	<trace> Trace:List => Trace ListItem("min") </trace>
 	[step]
+*/
+
+rule [min]: 
+	<k> 'Min(L:K,, R:K)  => 'Plus(L,,'Negative(R))... </k>
+	[step]
+
 
 rule [mul]:
 	<k> 'Mul(L:K,, R:K)  => BinOp(mul, L, R) ... </k>

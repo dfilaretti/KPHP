@@ -203,11 +203,20 @@ rule [alt-while]:
 	<trace> Trace:List => Trace ListItem("alt-while") </trace>
 	[structural]
 
+
+
+
+
+
+
+
+
 /*@ In order to allow the use of break, we need to push an item in the loop stack 
 	at the beginning of the loop, and pop it when it's done. We do this with the 
 	following rule. Note that the actual semantics of while is give in the next rule, 
 	which is an internal operation. */
 
+/* NOTE: this is the old definition of WHILE
 rule [while]: 	
 	<k> 'While(Cond:K,, Body:K) ~> K:K =>
 	pushLoopContext(loopFrame(K,none)) ~> 
@@ -216,7 +225,7 @@ rule [while]:
 	<trace> Trace:List => Trace ListItem("while") </trace>
 	[step]
 
-/*@ Internal operation modelling the semantics of while. */
+// Internal operation modelling the semantics of while.
 
 syntax K ::= "while" "(" K "," K ")"
 
@@ -230,6 +239,46 @@ rule [while-spec]:
 	) ... </k>
 	<trace> Trace:List => Trace ListItem("while-spec") </trace>
 	[structural]
+*/
+
+
+// WHILE semantics adapted from the IMP analyser
+
+// NOTE: in the following we are ignoring break/continue support
+rule    
+	<k> 'While(B:K,,S:K) => 
+                LFP(none, #whileStep(B,S)) ~> moveOnFromLoop(B) ... </k>		
+            //<niter> _ => 0 </niter> TODO 
+		[transition]
+
+//@ compute a "single step" of while loop
+syntax K ::= "#whileStep" "(" K "," K ")" 
+
+rule    <k> #whileStep(B,S) => 
+ 		mergeConfigs(
+			runAndGetConfig(runInMem(Abexp(B, some(E)), S)),
+                    	runAndGetConfig(runInMem(Abexp('Not(B), some(E)), .K))) ... </k>
+        <mem> E </mem>         
+        //<niter> N => N +Int 1 </niter> 
+      	[transition] 
+
+syntax  K ::= "moveOnFromLoop" "(" K ")" [strict]
+
+rule	<k> moveOnFromLoop(V:KResult) => . ... </k>
+	<status> _ => NEXT </status>
+ 	//<niter> _ => 0 </niter> 
+ 	when notBool (valid(V)) 
+
+rule    <k> moveOnFromLoop(V:KResult) => . ... </k>      
+	<status> _ => LOOP </status>
+ 	//<niter> _ => 0 </niter>  
+ 	when valid(V)  
+
+
+
+
+
+
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{For} 
@@ -257,6 +306,7 @@ rule [for]:
 
 syntax K ::= "for" "(" K "," K "," K "," K ")"
 
+/* TODO: broken after WHILE semantics has chnaged
 rule [for-spec]: 	
 	for(Init:K, 'ListWrap(Guard:K), Increment:K, Body:K) => 
 	'ListWrap(
@@ -265,6 +315,7 @@ rule [for-spec]:
 			Guard,
 			'ListWrap(Body) ~> makeForInit(Increment))) 	
 	[structural]
+*/
 
 syntax K ::= "makeForInit" "(" K ")"
 
@@ -452,6 +503,7 @@ syntax K ::= "foreach" "(" Loc "," K "," K ")"  [strict(1)]
 // TODO: replace 'crnt' with some variable name which will not interfere with 
 //       user-defined variables
 
+/* TODO: broken after WHILE rule changed
 rule [foreach-spec]:
 	<k> foreach(L:Loc, Pattern:K, Stmt:K) => 
 		'ListWrap(
@@ -482,6 +534,7 @@ rule [foreach-spec]:
 	<trace> Trace:List => Trace ListItem("foreach-spec") </trace>
 	when (V isCompoundValue)
 	[internal]
+*/
 
 syntax K ::= "ArrayCrnt2None" "(" Loc ")"
 
@@ -731,6 +784,7 @@ rule [is-crnt-visib-obj-private-false]:
 
     rule    mergeConfigs(config(A), config(B)) => mergeConfigsBase(config(A),config(B))
             when  notBool isSpecialMergeCase(configGetStatus(A),configGetStatus(B))  
+		[transition]
  
     //@ decide wether our merging task is special or not
     syntax Bool ::= "isSpecialMergeCase" "(" ReturnCode "," ReturnCode ")" [predicate]
@@ -831,9 +885,44 @@ rule [is-crnt-visib-obj-private-false]:
                     <superGlobalScope> L4 </superGlobalScope>  
                 </scopes>
                 <heap> 
-                    mergeArray(L1,heap_read(H1,L1),H1,heap_read(H2,L1'),H2,.List,.Map)
-                    //mergeArray(L4,heap_read(H1,L4),H1,heap_read(H2,L4'),H2,.List,.Map)
+                    mergeArray(L4,heap_read(H1,L4),H1,heap_read(H2,L4'),H2,.List,.Map)
+                    mergeArray(L3,heap_read(H1,L3),H1,heap_read(H2,L3'),H2,.List,.Map)
+		    mergeArray(L1,heap_read(H1,L1),H1,heap_read(H2,L1'),H2,.List,.Map)
                 </heap>
+		when (L1 =/=K L2) 
+
+    // TODO: factorise with prevuous case using a conditional!!!
+    rule    mergeMem(_,
+                <scopes> 
+                    <currentScope> L1 </currentScope>
+                    <globalScope> L2 </globalScope>
+                    <globalStaticScope> L3 </globalStaticScope>
+                    <superGlobalScope> L4 </superGlobalScope> 
+                </scopes> 
+                <heap> H1 </heap>,
+
+                <scopes> 
+                    <currentScope> L1' </currentScope>
+                    <globalScope> L2' </globalScope>
+                    <globalStaticScope> L3' </globalStaticScope>
+                    <superGlobalScope> L4' </superGlobalScope>   
+                </scopes> 
+                <heap> H2 </heap>) => 
+
+                <scopes>
+                    <currentScope> L1 </currentScope>
+                    <globalScope> L2 </globalScope>
+                    <globalStaticScope> L3 </globalStaticScope>
+                    <superGlobalScope> L4 </superGlobalScope>  
+                </scopes>
+                <heap> 
+                    mergeArray(L4,heap_read(H1,L4),H1,heap_read(H2,L4'),H2,.List,.Map)
+                    mergeArray(L3,heap_read(H1,L3),H1,heap_read(H2,L3'),H2,.List,.Map)
+		    //mergeArray(L1,heap_read(H1,L1),H1,heap_read(H2,L1'),H2,.List,.Map)
+                </heap>
+		when (L1 ==K L2) 
+
+
 
     ///////////////////////////////////////////////////////////////////////////
     // Merge

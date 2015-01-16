@@ -57,14 +57,11 @@ syntax Loc ::= "locNull"
 // consisting of a location which contains an array (note that the variable environments are
 // treated as arrays here) and a key. Keys can be integer or string. 
 // Also, for semantic purposes, we allow the NULL key. 
+
 syntax RefType  ::= "arr" | "obj" | "nul"
-
-syntax Ref 		::= BasicRef
-			 	  | LRef
-			 	  | "refNull"
-
-syntax BasicRef ::= "ref" "(" Loc "," Key ")"				[strict(1), klabel('ref)] 
-syntax LRef 	::= "lref" "(" Ref "," Key "," RefType ")"	[strict(1), klabel('lref)]  
+syntax Ref ::= BasicRef | LRef | "refNull"
+syntax BasicRef ::= "ref" "(" Loc "," Key ")" [strict(1), klabel('ref)] 
+syntax LRef 	::= "lref" "(" Ref "," Key "," RefType ")" [strict(1), klabel('lref)]  
 
 // Literal values are used in order to delay the evaluation of literal arrays and 
 // object creation (new construct). The parameter has type K (i.e. the most general 
@@ -92,7 +89,10 @@ syntax OptionArrayCrntElem ::= ArrayCrntElem | None
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Lub} */
 
-syntax PlainLanguageValue ::= "lub" "(" PlainLanguageValue "," PlainLanguageValue ")"
+syntax PlainLanguageValue ::= "lub" "(" PlainLanguageValue "," PlainLanguageValue ")" [function]
+
+rule lub(V1:AInt,V2:AInt) => lub_AInt(V1,V2)
+rule lub(V1:AString,V2:AString) => lub_AString(V1,V2)
 
 // ---------------------------------------------------------------------------------------------
 

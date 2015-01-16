@@ -7,9 +7,9 @@ require "../domains/mySigns/mySigns-domain.k"
 
 module CORE 
 	imports SHARED
-    imports PROGRAM-TRANSFORMATIONS
+	imports PROGRAM-TRANSFORMATIONS
 	imports BUILTIN-FUNCTIONS
-    //imports EMPTY-DOMAIN
+//	imports EMPTY-DOMAIN
     imports MYSIGNS-DOMAIN
     	
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=

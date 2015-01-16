@@ -363,7 +363,7 @@ rule [extract-int-substring-6]:
 /*@ to string */
 
 
-syntax K ::= "*toString" "(" LanguageValue ")"  
+//syntax K ::= "*toString" "(" LanguageValue ")"  
 
 /* TODO: move to domain
 rule [toString-true]:
