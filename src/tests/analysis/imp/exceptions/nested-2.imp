@@ -1,0 +1,22 @@
+// Concrete: [x |-> 1, z |-> 1, u |-> 12]
+// Signs: [x |-> Pos, z |-> Pos, u |-> Pos] 
+
+try {
+    x = 1;
+    try {
+        throw ArithError;
+        y = 2;
+    }
+    catch(e) {
+        try {
+            u = 12;
+        }
+        catch(e) {
+            w = 99;
+        }
+        z = 1;
+    }
+}
+catch (e) {
+    q = 2;
+}

@@ -1,0 +1,6 @@
+try {
+    throw GenericError; 
+}
+catch(e) {
+    print(input_string());
+}

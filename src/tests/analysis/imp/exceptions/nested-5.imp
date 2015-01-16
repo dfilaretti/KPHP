@@ -1,0 +1,27 @@
+// Concrete: [x |-> 1, w |-> 99, z |-> 1]
+// Signs: [x |-> Pos, w |-> Pos, z |-> Pos]
+ 
+function foo(n) {
+    throw ArithError;
+}
+
+try {
+    x = 1;
+    try {
+        foo(1);
+        y = 2;
+    }
+    catch(e) {
+        try {
+            foo(3);
+            u = 12;
+        }
+        catch(e) {
+            w = 99;
+        }
+        z = 1;
+    }
+}
+catch (e) {
+    q = 2;
+}

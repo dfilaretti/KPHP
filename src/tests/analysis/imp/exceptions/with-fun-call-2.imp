@@ -1,0 +1,21 @@
+// Concrete  : [x |-> 1] ('cause we use integer div)
+// Signs     : [x |-> Pos]
+
+function inv(x) {
+    if (x == 0) then {
+        throw ArithError;
+    }
+    else {
+        return(1/x);
+    }
+}
+
+try {
+    x = 1;
+    // Exception never triggered 
+    // (also SIGNS knows that Zero =/= Pos)
+    inv(1);
+}
+catch (e) {
+    x = -1;
+}

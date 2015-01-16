@@ -1,0 +1,14 @@
+// Expected
+// [z |-> 1]   (concrete)
+// [z |-> Pos] (signs)
+
+function f(x) {
+    if (x == 5) then {
+        return(1);
+    }
+    else {
+        return(2);
+    }
+}
+
+z = f(5);

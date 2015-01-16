@@ -1,0 +1,17 @@
+
+// If the following line is commented, variable 'a'
+// is allocated in both branches and in the merge 
+// we keep track of the two.
+// If instead the line is decommented, the two branches 
+// only update the variable, without allocating it 
+// (i.e. 'a' has same address in both branches). 
+// The merge is then less precise. Is it ok? 
+
+//a = 0;
+
+if (x == 0) then {
+    a = 1;
+} 
+else {
+    a = -1;
+}

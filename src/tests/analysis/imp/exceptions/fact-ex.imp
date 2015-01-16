@@ -1,0 +1,13 @@
+// Expected
+// Concrete: Exception thrown
+// Signs: Exception thrown
+function fact(n) {
+    if (n == 0) then {
+        throw ArithError;
+    }
+    else {
+        return(fact(n + -1));
+    }
+}
+
+x = fact(4);

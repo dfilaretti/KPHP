@@ -1,0 +1,12 @@
+// Concrete   : [x |-> -1, q |-> 123]
+// Signs      : [x |-> Neg, q |-> Pos]
+
+try {
+    x = 1;
+    throw GenericError;
+    z = 2;
+}
+catch (e) {
+    x = -1;
+}
+q = 123;

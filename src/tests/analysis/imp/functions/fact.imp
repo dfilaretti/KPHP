@@ -1,0 +1,16 @@
+// Concrete: [q |-> 120]
+// Abstract: [q |-> Top]
+
+// Note that the abstract result is inaccurate because in the Signs domain, 
+// we have that Pos + Neg = Top
+
+function fact(n) {
+    if (n == 0) then {
+        return(1);
+    }
+    else {
+        return(n * fact(n + -1));
+    }
+}
+
+q = fact(5);

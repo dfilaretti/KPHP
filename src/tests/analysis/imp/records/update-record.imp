@@ -1,0 +1,13 @@
+function incAge(rec) {
+    updatedRec = rec; 
+    updatedRec["age"] = rec["age"] + 1;
+    return(updatedRec);
+}
+
+
+data = & record(
+    "name": "Daniele",
+    "age" : 18
+);
+
+data2 = incAge(data);

@@ -1,0 +1,10 @@
+function foo(x) {
+    return(x + 1);
+}
+
+if (foo(2) == 66) then {
+    z = 1;
+}
+else {
+    z = -1;
+}

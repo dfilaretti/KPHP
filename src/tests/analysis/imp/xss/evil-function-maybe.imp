@@ -1,0 +1,14 @@
+x = input_int();
+
+function evil(x) {
+    evil = input_string();
+    if (x == 1) then {
+        return(evil);
+    }
+    else {
+        return(sanitize(evil));
+    }
+}
+
+// Maybe XSS
+print(evil(0));

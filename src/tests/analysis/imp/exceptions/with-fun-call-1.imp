@@ -1,0 +1,20 @@
+// Concrete  : [x |-> -1]
+// Signs     : [x |-> Neg]
+
+function inv(x) {
+    if (x == 0) then {
+        throw ArithError;
+    }
+    else {
+        return(1/x);
+    }
+}
+
+try {
+    x = 1;
+    // Triggers Exception
+    inv(0); 
+}
+catch (e) {
+    x = -1;
+}

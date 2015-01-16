@@ -194,25 +194,46 @@ rule [block]:
 	<trace> Trace:List => Trace ListItem("block") </trace>
 	[structural]
 
-// ---------------------------------------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////
 /*@ \subsection{Sequential composition} 
-		Sequential composition is defined in standard K style. */
-// ---------------------------------------------------------------------------------------------
+        Statements are avaluated conditionally, depending on the status of the 
+        machine. For example, if the status is NEXT, statements are executed 
+        normally, but if the status is e.g. RET or ERR, statements are not 
+        executed. */
+///////////////////////////////////////////////////////////////////////////////
 
 rule [seq-cons]:
-	<k> 'ListWrap(S:K,, Ss:KList) => S ~> 'ListWrap(Ss)	... </k>	
-	<trace> Trace:List => Trace ListItem("seq-cons") </trace>
+	<k> 'ListWrap(S:K,, Ss:KList) => S ~> runStmt('ListWrap(Ss)) ... </k>	
 	[structural]
 
 rule [seq-empty]:
 	<k> 'ListWrap(.KList) => . ... </k>
-	<trace> Trace:List => Trace ListItem("seq-empty") </trace>
 	[structural]
 
 rule [empty]:	
-	<k> 'Empty(.KList) => . ... </k>									
-	<trace> Trace:List => Trace ListItem("empty") </trace>
+	<k> 'Empty(.KList) => . ... </k>
 	[structural]
+
+//@ statements might or might not be executed, depending on the status 
+syntax K ::= "runStmt" "(" K ")"
+
+rule    <k> runStmt(S) => S ... </k>
+        <status> NEXT </status> 
+        [transition]
+
+rule    <k> runStmt(S) => . ... </k>
+        <status> RET </status> 
+        [transition]
+
+rule    <k> runStmt(S) => . ... </k>
+        <status> ERR </status> 
+        [transition]
+
+rule    <k> runStmt(S) ~> K => . ... </k>
+        <status> LOOP </status> 
+        [transition]
+
+
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Expression as a statement} */

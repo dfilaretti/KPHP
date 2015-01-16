@@ -114,34 +114,22 @@ rule [func-call-func-not-defined]:
 	when notBool (FName in keys(F)) 
 	[step, error]
 	
-// ---------------------------------------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////
 /*@ \subsection{Return} */
-// ---------------------------------------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////
 
 context [return-strict]: 
 	'Return(HOLE)
 	[structural]
 	
+// TODO: (re)move
 context [some-strict]:
 	'Some(HOLE)
 	[structural]
 	
-/* TODO: remove
-rule
-	<k> 'Some(V:KResult) => V ... </k>
-	<trace> Trace:List => Trace ListItem("some") </trace>
-	[structural]
-
-rule 
-	<k> 'Return('Some(V:KResult)) => 'Return(V) ... </k>
-	<trace> Trace:List => Trace ListItem("return-some") </trace>
-	[structural]
-*/
-
 syntax Returnable ::= LanguageValue | Loc
 
 syntax Bool ::= "isRetValueLoc" "(" Returnable ")" [function]
-
 rule isRetValueLoc(L:Loc) => true 
 rule isRetValueLoc(V:LanguageValue) => false 
 
@@ -150,8 +138,7 @@ rule isRetValueLoc(V:LanguageValue) => false
 
 rule [return-arg2Loc]:    
 	<k> 'Return (R:Ref => convertToLoc(R,r)) ... </k> 
-	<functionStack> ListItem(_:StackFrame) ... </functionStack>
-	<trace> Trace:List => Trace ListItem("return-arg2Loc") </trace>
+	<functionStack> ListItem(_:StackFrame) ... </functionStack> // is this necessary?
 	[intermediate]
 
 // If the function returns by value, we perform a further reading step, so that 
@@ -164,63 +151,74 @@ rule [return-arg2Loc]:
 // The reson why that would not work if the array is returned by value, is that 
 // foreach expects a location as argument.
 
+
 rule [return-arg2LangValue-not-compound]:    
 	<k> 'Return (L:Loc => convertToLanguageValue(L)) ... </k> 
 	<functionStack> ListItem(sf(_,_,_,_,_,@byValue,_)) ... </functionStack>
 	<heap> ... L |-> zval(V,_,_,_) ... </heap>
-	<trace> Trace:List => Trace ListItem("return-arg2LangValue-not-compound") </trace>
 	when notBool (V isCompoundValue)
 	[intermediate]
 
+rule [return]:   
+	<k> 'Return(V:PlainLanguageValue) => . ... </k>
+	<status> _ => RET </status>
+	<returns> R => lub(R,V) </returns>
+	//when notBool(isLValue(V))
+	[transition]
+
+/*
 rule [return]:    
-	<k> 'Return (V:Returnable) ~> _ => 
-			*Cond(
-				(RefMode ==K @byRef) andBool (notBool isRetValueLoc(V)),
-                NOTICE("Only variable references should be returned by reference in %s on line %d\n"),.) ~>         	
+	<k> 'Return(V:Returnable) ~> _ => 
+		*Cond(
+			(RefMode ==K @byRef) andBool (notBool isRetValueLoc(V)),
+                	NOTICE("Only variable references should be returned by reference in %s on line %d\n"),.
+		) ~>         	
                 setCrntScope(CallerScope) ~>
                 setCrntClass(CallerClass) ~>
                 setCrntObj(CallerObj) ~>
                 decRefCount(LocalScope) ~>
                 popStackFrame ~>
-                V ~> K </k>
-        	<functionStack> ListItem(sf(_:String,K, CallerScope, CallerClass, CallerObj:K, RefMode, D)) ... </functionStack>
-        	<currentScope> LocalScope:Loc </currentScope>
+                V ~> K 
+	</k>
+        <functionStack> ListItem(sf(_:String,K, CallerScope, CallerClass, CallerObj:K, RefMode, D)) ... </functionStack>
+        <currentScope> LocalScope:Loc </currentScope>
         <heap> ... LocalScope |-> zval(Array(_,Elems:List),_,_,_) ... </heap>
-		<functionArgumentsDeclaration> _ => D </functionArgumentsDeclaration>
-	<trace> Trace:List => Trace ListItem("return") </trace>
+	<functionArgumentsDeclaration> _ => D </functionArgumentsDeclaration>
 	[step]
-		
-// ---------------------------------------------------------------------------------------------
-/*@ \subsection{The static construct} */
-// ---------------------------------------------------------------------------------------------
-
-/* TODO: remove if ok
-context //[static-args-strict]: 
-	'DeclareStatic('ListWrap('StaticVariable(_,, HOLE),, Gs:KList))
-	[structural]
-
-rule //[static-no-init-value]: 	
-	<k> 'DeclareStatic('ListWrap('StaticVariable(G:K),, Gs:KList)) => 
-		'DeclareStatic('ListWrap('StaticVariable(G:K,, NULL),, Gs:KList)) ... </k>
-	//<trace> Trace:List => Trace ListItem("static-no-init-value") </trace>
-	[structural]
-
-rule //[static-cons]: 	
-	<k> 'DeclareStatic('ListWrap('StaticVariable(G:K,, V:Value),, Gs:KList)) => 
-	declareStatic(G, V) ~> 'DeclareStatic('ListWrap(Gs)) ... </k>
-	//<trace> Trace:List => Trace ListItem("static-cons") </trace>
-	[structural]
-
-rule //[static-nil]:
-	<k> 'DeclareStatic('ListWrap(.KList)) => . ... </k>
-	//<trace> Trace:List => Trace ListItem("static-nil") </trace>
-	[step]
-
-syntax K ::= "declareStatic" "(" K "," Value ")"
-
-rule //[declare-static]: 
-	<k> declareStatic('Variable('Simple(X:String)), V:Value) => 'Expr('Assign('Variable('Simple(X)),,V)) ... </k>
 */
+
+
+
+	
+    ///////////////////////////////////////////////////////////////////////////
+    //@ POP
+    ///////////////////////////////////////////////////////////////////////////
+
+    /*@ POP does what a conventional return in K usually does... It pops the frame
+    from the stack and resumes the suspended computation with the return value.
+    If no return was provided, a default one is used as whown below... */ 
+
+    syntax K ::= "POP" // "(" K ")" TODO 
+
+    rule    <k> POP => *Cond(
+			(RefMode ==K @byRef) andBool (notBool isRetValueLoc(V)),
+                	NOTICE("Only variable references should be returned by reference in %s on line %d\n"),.
+		) ~>         	
+                setCrntScope(CallerScope) ~>
+                setCrntClass(CallerClass) ~>
+                setCrntObj(CallerObj) ~>
+                decRefCount(LocalScope) ~>
+                popStackFrame ~>
+                V ~> K   </k> 
+            <functionStack> ListItem(sf(_:String,K, CallerScope, CallerClass, CallerObj:K, RefMode, D)) ... </functionStack>
+ 
+	<currentScope> LocalScope:Loc </currentScope>
+        <heap> ... LocalScope |-> zval(Array(_,Elems:List),_,_,_) ... </heap>
+	<functionArgumentsDeclaration> _ => D </functionArgumentsDeclaration>
+	<status> S => NEXT </status> 
+	<returns> V => Bot </returns> // TODO 
+	[transition]
+	
 	
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{The global construct} */
@@ -484,6 +482,7 @@ syntax K ::= "runFunction" "(" String "," FunDef "," K "," OptionId "," OptionLo
 
 rule [run-function]:	
 	<k> runFunction(FName:String, f(Parameters:K, Body:K, RetType:K, LStatic:Loc), Args:K, Class:OptionId, Obj:OptionLoc, Static:Bool) ~> K:K =>
+
 			*Cond(
 				(notBool Static) andBool ((Obj ==K none) andBool (CurrentObj ==K .K)),
 				NOTICE("Non-static method should not be called statically\n"),.) ~>
@@ -495,12 +494,11 @@ rule [run-function]:
 			setCrntClass(Class) ~> 
 			*Cond(Obj =/=K none, allocCrntObj(Obj), .K) ~>
 			CopyFunctionArgs ~> 
-			Body ~> 'Return(NULL) </k>
+			'ListWrap(Body,, 'Return(NULL)) ~> POP </k>
 	<functionArgumentsDeclaration> D:K => . </functionArgumentsDeclaration>
 	<currentScope> L:Loc </currentScope>
 	<class> CurrentClass:K </class>
 	<object> CurrentObj:K </object>
-	<trace> Trace:List => Trace ListItem("run-function") </trace>
 	when fresh(L1:Loc)
 	[internal]
 

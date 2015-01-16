@@ -1,0 +1,18 @@
+// Concrete: [x |-> 99]
+// Signs: [x |-> Top]
+
+function inv(x) {
+    if (x == 9) then {
+        throw ArithError;
+    }
+    else {
+        return(99);
+    }
+}
+
+try {
+    x = inv(3);
+}
+catch (e) {
+    x = -1;
+}

@@ -1,0 +1,16 @@
+// Concrete   : [x |-> 1, y |-> 2, t |-> 3]
+// Signs      : [x |-> Top, y |-> Pos, t |-> Pos]
+ 
+try {
+    x = 1;
+    if (x == 5) then {
+        throw GenericError; 
+    }
+    else {
+        y = 2;
+    }
+    t = 3;
+}
+catch (e) {
+    x = -1;
+}

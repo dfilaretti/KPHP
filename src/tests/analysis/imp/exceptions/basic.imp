@@ -1,0 +1,10 @@
+// Concrete   : [x |-> 1, q |-> 123]
+// Signs      : [x |-> Pos, q |-> Pos]
+
+try {
+    x = 1;
+}
+catch (e) {
+    x = -1;
+}
+q = 123;

@@ -1,0 +1,35 @@
+// ----- a factorial function that passes the argument in an array 
+// Concrete: n! 
+// Signs: Pos
+
+
+
+/*
+x = & record(
+        "name": "Daniele", 
+        "data": record(
+            "age": 29,
+            "sex": "M"));
+
+x = & record(
+        "name": "Daniele", 
+        "data": 1999);
+
+y = x;
+*/
+
+
+
+function fact(n) {
+    if (n["data"]["n"] == 0) then {
+        return(1);
+    }
+    else {
+        return(n["data"]["n"] * 
+            fact(record("data": record("n": n["data"]["n"] + -1))));
+    }
+}
+
+n = & record("data": record("n": 5));
+
+res = fact(n);

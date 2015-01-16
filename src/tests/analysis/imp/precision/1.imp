@@ -1,0 +1,14 @@
+// { . } 
+x = input_int();
+// { x |-> Top }
+if (x == 1) then {
+    // { x |-> Pos }
+    z = x;
+    // { x |-> Pos, z |-> Pos }
+}
+else {
+    // { x |-> Top} 
+    q = x;
+    // { x |-> Top, q |-> Top }
+}
+// { x |-> Top, z |-> Pos, q |-> Top }

@@ -1,0 +1,6 @@
+function evil(x) {
+    // returns untrusted input
+    return(input_string());
+}
+// XSS
+print(evil(0));

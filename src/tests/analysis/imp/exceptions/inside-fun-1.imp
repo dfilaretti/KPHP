@@ -1,0 +1,13 @@
+// Concrete: [y |-> 5]
+// Signs: [y |-> Pos]
+
+function foo(n) {
+    try {
+        throw ArithError;
+    }
+    catch(e) {
+        return(n + 1);
+    }
+}
+
+y = foo(4);

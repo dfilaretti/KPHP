@@ -1,0 +1,18 @@
+// Concrete: [y |-> 0]
+// Signs: [y |-> Zero]
+
+function foo(n) {
+    try {
+        if (n == 2) then {
+            throw ArithError;
+        }
+        else {
+            x = 123;
+        }
+    }
+    catch(e) {
+        y = 123;
+    }
+}
+
+y = foo(4);

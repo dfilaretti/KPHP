@@ -33,7 +33,8 @@ configuration
 		<heap color="red"> .Map </heap>
         </mem>
 		<br/>
-        <status> .K </status> 
+        <status> NEXT </status> 
+	<returns> Bot </returns>
 		<control color="cyan">	
 			<functionStack> .List </functionStack>
 			<exceptionStack> .List </exceptionStack>

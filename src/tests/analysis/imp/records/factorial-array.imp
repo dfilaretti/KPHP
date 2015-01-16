@@ -1,0 +1,12 @@
+function fact(n) {
+    if (n["data"] == 0) then {
+        return(1);
+    }
+    else {
+        return(n["data"] * fact(record("data": n["data"] + -1)));
+    }
+}
+
+n = & record("data": 5);
+
+res = fact(n);

@@ -1,0 +1,5 @@
+// BUG: loop behaviour not detected anymore
+
+while (true) {
+    skip;
+}

@@ -1,0 +1,28 @@
+// same == 1   iff x, y and z are the same
+//         0   otherwise
+
+print("Enter first number: ");
+x = input_int();
+print("Enter second number: ");
+y = input_int();
+print("Enter third number: ");
+z = input_int();
+
+if (x == y) then {
+    if (y == z) then {
+        same = 1;
+    }
+    else {
+        same = -1;
+    }
+}
+else {
+    same = -1;
+}
+
+if (same == 1) then {
+    print("Same numbers!");
+}
+else {
+    print("Fail...");
+}

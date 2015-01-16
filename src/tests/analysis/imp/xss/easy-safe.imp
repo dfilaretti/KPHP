@@ -1,0 +1,8 @@
+x = input_int();  
+if (x == 0) then {
+    msg = input_int();
+}
+else {
+    msg = "safe";
+}
+print(msg); 

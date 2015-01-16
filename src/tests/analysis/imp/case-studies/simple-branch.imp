@@ -1,0 +1,12 @@
+// Concrete  : the user enters an INT. P
+// Signs     : { z |-> Top }
+// Intervals : { z |-> [-1,1] }
+
+x = input_int();
+
+if (x == 0) then {
+    z = -1;
+}
+else {
+    z = 1;
+}

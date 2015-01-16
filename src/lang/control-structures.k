@@ -848,16 +848,57 @@ rule [is-crnt-visib-obj-private-false]:
 
     rule    mergeConfigsBase(
                 config( 
-                        C1:Bag                   
+                        C1:Bag
+			<returns> R1 </returns>  
+			<status> S1 </status> 	                 
                         <mem> M1 </mem>),
                 config(
                         C2:Bag
+			<returns> R2 </returns> 	
+			<status> S2 </status> 	
                         <mem> M2 </mem>)) =>
 
                 updateConfig(config(
-                        C1 // TODO: add other stuff               
+                        C1 // TODO: add other stuff  
+			<returns> mergeReturns(R1,R2) </returns> 
+			<status> mergeStatus(S1,S2) </status>
                         <mem> mergeMem(0,M1,M2) </mem>))                  
                     [transition]
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*@ \subsection{Merging the status cell} */
+    ///////////////////////////////////////////////////////////////////////////
+
+    //@ Merging of return codes
+    syntax ReturnCode ::= "mergeStatus" "(" ReturnCode "," ReturnCode ")" [function]
+
+    rule    mergeStatus(NEXT,NEXT)  => NEXT
+    rule    mergeStatus(RET,RET)    => RET
+    rule    mergeStatus(NEXT,DONE)  => NEXT
+    rule    mergeStatus(DONE,NEXT)  => NEXT
+    rule    mergeStatus(RET,NEXT)   => NEXT
+    rule    mergeStatus(NEXT,RET)   => NEXT
+    rule    mergeStatus(NEXT,ERR)   => NEXT
+    rule    mergeStatus(ERR,NEXT)   => NEXT
+    rule    mergeStatus(ERR,ERR)    => ERR
+    // are we sure?
+    rule    mergeStatus(ERR,RET)    => RET
+    rule    mergeStatus(RET,ERR)    => RET
+    // ...
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*@ \subsection{Merging returns} */
+    ///////////////////////////////////////////////////////////////////////////
+
+    syntax  K ::= "mergeReturns" "(" K "," K ")"         [function] 
+    rule    mergeReturns(V1, V2) => lub(V1,V2)
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*@ \subsection{Merging memories} */
+    ///////////////////////////////////////////////////////////////////////////
+
 
     syntax  Bag ::= "mergeMem" "(" Int ","Bag "," Bag ")"       [function]
 
@@ -999,6 +1040,8 @@ rule [is-crnt-visib-obj-private-false]:
                  fresh(N:Loc)
 
     // field exists in both arrays
+
+/*
     rule    mergeArray1(L,
                 ListItem([X,Vis,L1]) M1,
                 (L1 |-> V1) S1,
@@ -1010,7 +1053,19 @@ rule [is-crnt-visib-obj-private-false]:
                 ListItem(merge_ArrayItem(N,[X,Vis,L1],array_read(M2,X))) V,
                 mergeZval(N,V1,(L1 |-> V1) S1,heap_read(S2,array_read_v(M2,X)),S2) S)
             when (M2 hasProperty X) andBool (fresh(N:Loc))
+*/
 
+    rule    mergeArray1(L,
+                ListItem([X,Vis,L1]) M1,
+                (L1 |-> V1) S1,
+                M2, 
+                S2,
+                V,S) => 
+
+            mergeArray1(L,M1,(L1 |-> V1) S1,(arrayRemove(M2,X)),S2,
+                ListItem(merge_ArrayItem(L1,[X,Vis,L1],array_read(M2,X))) V,
+                mergeZval(L1,V1,(L1 |-> V1) S1,heap_read(S2,array_read_v(M2,X)),S2) S)
+            when (M2 hasProperty X) //andBool (fresh(N:Loc))
 
     // merges two "array entries" (TODO properly)
     syntax  ArrayItem ::= "merge_ArrayItem" "(" Loc "," ArrayItem "," ArrayItem ")" [function]
