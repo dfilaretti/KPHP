@@ -1,89 +1,28 @@
 <?php
 
 /*
-$x = 0;
+	function bar($x) {
+		return $x + 1;
+	}
+	function foo($x) {
+		bar($x);
+	}
+	$z = foo(4);
 
-while(true) {
-	echo "1";
-	$x = $x + 1;
-}
-*/
-
-/////////////////////////////////////////////////////////////////////
-
-
-/*
-$x = 1;
-
-while ($x < 20) {
-	echo "x\n";
-	$x = $x + 1;
-}
 */
 
 
-/////////////////////////////////////////////////////////////////////
-
-/*
-$y = user_input();
-
-if ($y) {
-    $q = 0;
-    //$z = array(array(2));
-}
-else {
-    $q = 0;
-    //$z = array(array(0));
-}
-*/
-
-
-/////////////////////////////////////////////////////////////////////
-
-/*
-function foo($x) {
-	$y = user_input();
-	if ($y) {
-    		$q = 20;
+	function fact($n) {
+		echo "[[ABA]]";
+		if ($n == 0) {
+			return 1;
+		}
+		else {
+			return $n * fact($n - 1);
+		}
 	}
-	else {
-    		$q = -10;
-	}
-	return $q;
-}
-$res = foo(4);
-*/
-
-/////////////////////////////////////////////////////////////////////
-
-/*
-function foo($x) {
-	$y = user_input();
-	if ($y) {
-    		return -98;
-	}
-	else {
-    		return "hello";
-	}
-}
-
-$y = foo(4);
-*/
-
-/////////////////////////////////////////////////////////////////////
 
 
-function foo($x) {
-	$y = user_input();
-	if ($y) {
-    		//return -98;
-	}
-	else {
-    		return "hello";
-	}
-	return "wow";
-}
-
-$y = foo(4);
+	$y = fact(5);
 
 ?>

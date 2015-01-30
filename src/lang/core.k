@@ -9,8 +9,8 @@ module CORE
 	imports SHARED
 	imports PROGRAM-TRANSFORMATIONS
 	imports BUILTIN-FUNCTIONS
-//	imports EMPTY-DOMAIN
-    imports MYSIGNS-DOMAIN
+	//imports EMPTY-DOMAIN
+    	imports MYSIGNS-DOMAIN
     	
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
@@ -33,7 +33,11 @@ module CORE
 
 syntax K ::= "runScript" "(" K ")" 
 
-rule runScript(Prog:K) =>  refactor(Prog) ~> detectDeprecated ~> initStatic
+rule runScript(Prog:K) => 
+		addSourceLabels(Prog)  
+		~> refactor 		
+		~> detectDeprecated 
+		~> initStatic
 
 syntax K ::= "detectDeprecated"
 

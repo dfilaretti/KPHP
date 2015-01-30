@@ -407,10 +407,13 @@ rule [vardump-unroll-cons]:
 	[structural]
 	
 rule [func-call-vardump]:
-	<k> 'FunctionCall(FName:String,,'ListWrap(Arg:K)) => 
-		runFunction(FName, FunDef, 'ListWrap(Arg), none, none, true) ... </k>
+	<k> 'FunctionCall(FName:String,,'ListWrap(Arg:K),,Lab) => 
+		runFunction(FName, FunDef,'ListWrap(Arg),none,none,true,Lab,sf(FName,L,CurrentClass,CurrentObj,retTypeOfFunDef(FunDef),D,Lab)) ... </k>
 	<functions> ... FName |-> FunDef ... </functions>
-	<trace> Trace:List => Trace ListItem("func-call-vardump") </trace>
+	<functionArgumentsDeclaration> D:K => . </functionArgumentsDeclaration>
+	<currentScope> L:Loc </currentScope>
+	<class> CurrentClass:K </class>
+	<object> CurrentObj:K </object>
 	when (FName ==String "var_dump") 
 	[step]
 

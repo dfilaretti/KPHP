@@ -925,14 +925,16 @@ rule [is-crnt-visib-obj-private-false]:
                     <globalStaticScope> L3 </globalStaticScope>
                     <superGlobalScope> L4 </superGlobalScope>  
                 </scopes>
-                <heap> 
-                    mergeArray(L4,heap_read(H1,L4),H1,heap_read(H2,L4'),H2,.List,.Map)
-                    mergeArray(L3,heap_read(H1,L3),H1,heap_read(H2,L3'),H2,.List,.Map)
-		    mergeArray(L1,heap_read(H1,L1),H1,heap_read(H2,L1'),H2,.List,.Map)
+                <heap>
+                	mergeArray(L4,heap_read(H1,L4),H1,heap_read(H2,L4'),H2,.List,.Map)
+                    	mergeArray(L3,heap_read(H1,L3),H1,heap_read(H2,L3'),H2,.List,.Map)
+		        mergeArray(L1,heap_read(H1,L1),H1,heap_read(H2,L1'),H2,.List,.Map)
+		
                 </heap>
-		when (L1 =/=K L2) 
+		//when (L1 =/=K L2) 
 
     // TODO: factorise with prevuous case using a conditional!!!
+/*
     rule    mergeMem(_,
                 <scopes> 
                     <currentScope> L1 </currentScope>
@@ -956,13 +958,18 @@ rule [is-crnt-visib-obj-private-false]:
                     <globalStaticScope> L3 </globalStaticScope>
                     <superGlobalScope> L4 </superGlobalScope>  
                 </scopes>
-                <heap> 
-                    mergeArray(L4,heap_read(H1,L4),H1,heap_read(H2,L4'),H2,.List,.Map)
-                    mergeArray(L3,heap_read(H1,L3),H1,heap_read(H2,L3'),H2,.List,.Map)
+                <heap>
+		mergeArray(L1,heap_read(H1,L1),H1,heap_read(H2,L1'),H2,.List,.Map)
+	
+		
+		    mapUnion( 
+                    mergeArray(L4,heap_read(H1,L4),H1,heap_read(H2,L4'),H2,.List,.Map),
+                    mergeArray(L3,heap_read(H1,L3),H1,heap_read(H2,L3'),H2,.List,.Map))
 		    //mergeArray(L1,heap_read(H1,L1),H1,heap_read(H2,L1'),H2,.List,.Map)
+		
                 </heap>
 		when (L1 ==K L2) 
-
+*/
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -988,8 +995,8 @@ rule [is-crnt-visib-obj-private-false]:
             
     // base case
     // TODO: should merge the 2 heaps (as done in IMP)? 
-    rule    mergeArray1(L,.List,_,.List,_:Map,A,H) => 
-                (L |-> zval(Array(head(A),A),array,1,false)) H 
+    rule    mergeArray1(L,.List,M1,.List,M2,A,H) => 
+                (L |-> zval(Array(head(A),A),array,1,false)) mapUnion(H,M1)
 
     // field exists only in one of the two arrays, scalar case 
 
@@ -1041,7 +1048,7 @@ rule [is-crnt-visib-obj-private-false]:
 
     // field exists in both arrays
 
-/*
+/* OLD
     rule    mergeArray1(L,
                 ListItem([X,Vis,L1]) M1,
                 (L1 |-> V1) S1,
@@ -1055,6 +1062,7 @@ rule [is-crnt-visib-obj-private-false]:
             when (M2 hasProperty X) andBool (fresh(N:Loc))
 */
 
+
     rule    mergeArray1(L,
                 ListItem([X,Vis,L1]) M1,
                 (L1 |-> V1) S1,
@@ -1063,9 +1071,11 @@ rule [is-crnt-visib-obj-private-false]:
                 V,S) => 
 
             mergeArray1(L,M1,(L1 |-> V1) S1,(arrayRemove(M2,X)),S2,
-                ListItem(merge_ArrayItem(L1,[X,Vis,L1],array_read(M2,X))) V,
+                V ListItem(merge_ArrayItem(L1,[X,Vis,L1],array_read(M2,X))),
                 mergeZval(L1,V1,(L1 |-> V1) S1,heap_read(S2,array_read_v(M2,X)),S2) S)
             when (M2 hasProperty X) //andBool (fresh(N:Loc))
+
+
 
     // merges two "array entries" (TODO properly)
     syntax  ArrayItem ::= "merge_ArrayItem" "(" Loc "," ArrayItem "," ArrayItem ")" [function]

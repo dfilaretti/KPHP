@@ -266,26 +266,26 @@ rule 	'ObjectProperty('Braced(V:LanguageValue)) => *toString(V)
 // ---------------------------------------------------------------------------------------------
 
 context [meth-call-name-strict]:	
-	'FunctionCall(_:K,,HOLE,,_:K) 
+	'FunctionCall(_:K,,HOLE,,_:K,,_:Int) 
 	[structural]
 
 context	[meth-call-obj-strict]:	
-	'FunctionCall(HOLE,,_:K,,_:K) 
+	'FunctionCall(HOLE,,_:K,,_:K,,_:Int) 
 	[structural]
 
 rule [meth-call-obj2Loc]:	
-	<k> 'FunctionCall(((R:ConvertibleToLoc => convertToLoc(R,r)),,_:K,,_:K)) ... </k>
+	<k> 'FunctionCall(((R:ConvertibleToLoc => convertToLoc(R,r)),,_:K,,_:K,,_:Int)) ... </k>
 	<trace> Trace:List => Trace ListItem("meth-call-obj2Loc") </trace>
 	[intermediate]
 	
 rule [meth-call-name2LangValue]:	
-	<k> 'FunctionCall(_:K,,(R:ConvertibleToLanguageValue => convertToLanguageValue(R)),,_:K) ... </k>
+	<k> 'FunctionCall(_:K,,(R:ConvertibleToLanguageValue => convertToLanguageValue(R)),,_:K,,_:Int) ... </k>
 	<trace> Trace:List => Trace ListItem("meth-call-name2LangValue") </trace>
 	[intermediate]
 
 rule [meth-call]: 	
-	<k> 'FunctionCall(L,, MethodName:String,, 'ListWrap(Args:KList)) =>
-		methRunIfVisible(methodLookup(ObjClass, MethodName), 'ListWrap(Args), L) ... </k>
+	<k> 'FunctionCall(L,,MethodName:String,,'ListWrap(Args:KList),,Lab:Int) =>
+		methRunIfVisible(methodLookup(ObjClass,MethodName),'ListWrap(Args),L,Lab) ... </k>
 	<heap> ... L  |-> zval(OID(L1:Loc,ObjClass:Id,_),_,_,_) ...  </heap>
 	<trace> Trace:List => Trace ListItem("meth-call") </trace>
 	[step]
@@ -337,13 +337,13 @@ rule
 /*@ \subsection{Run the method is visibility constraints are met} */
 // ---------------------------------------------------------------------------------------------
 
-syntax K ::= "methRunIfVisible" "(" K "," K "," OptionLoc ")" [strict(1)]
+syntax K ::= "methRunIfVisible" "(" K "," K "," OptionLoc "," Int ")" [strict(1)]
 
 // Calling a non static method 
 
 rule [meth-run-if-visib-non-static]:
-	<k> methRunIfVisible(methodInfo(Class:Id, Name:String, Visibility:ArrayItemVisibility, false), Args:K, Obj) =>  
-		*Cond(isVisible(Class, CurrentClass, Visibility), methExecute(Class, Name, Args, Obj), 99)
+	<k> methRunIfVisible(methodInfo(Class:Id, Name:String, Visibility:ArrayItemVisibility, false), Args:K, Obj,Lab) =>  
+		*Cond(isVisible(Class, CurrentClass, Visibility), methExecute(Class, Name, Args, Obj,Lab), 99)
 	... </k>
 	<class> CurrentClass:K </class>
 	<trace> Trace:List => Trace ListItem("meth-run-if-visib-non-static") </trace>
@@ -352,8 +352,8 @@ rule [meth-run-if-visib-non-static]:
 // Calling a static method as non static -- the call is desugared to a static call
 
 rule [meth-run-if-visib-static]:
-	<k> methRunIfVisible(methodInfo(Class:Id, Name:String, Visibility:ArrayItemVisibility, true), Args:K, Obj) =>  
-		*Cond(isVisible(Class, CurrentClass, Visibility), methExecute(Class, Name, Args, none), 99)
+	<k> methRunIfVisible(methodInfo(Class:Id, Name:String, Visibility:ArrayItemVisibility, true), Args:K, Obj,Lab) =>  
+		*Cond(isVisible(Class, CurrentClass, Visibility), methExecute(Class, Name, Args, none,Lab), 99)
 	... </k>
 	<class> CurrentClass:K </class>
 	<trace> Trace:List => Trace ListItem("meth-run-if-visib-static") </trace>
@@ -363,12 +363,15 @@ rule [meth-run-if-visib-static]:
 /*@ \subsection{Run a method} */
 // ---------------------------------------------------------------------------------------------
 
-syntax K ::= "methExecute" "(" Id "," String "," K "," OptionLoc ")"         
+syntax K ::= "methExecute" "(" Id "," String "," K "," OptionLoc "," Int ")"         
 
 rule [meth-exec]:    
-	<k> methExecute(Class:Id, MethName:String, Args:K, Obj:OptionLoc) => runFunction(MethName,FunDef,Args,Class,Obj,Static) ... </k>
+	<k> methExecute(Class:Id,MethName:String,Args:K,Obj:OptionLoc,Lab) => runFunction(MethName,FunDef,Args,Class,Obj,Static,Lab,sf(MethName,L,CurrentClass,CurrentObj,(retTypeOfFunDef(FunDef)),D,Lab)) ... </k>
 	<classes> ... Class |-> class(_,_,Meths:Map(MethName |-> method(FunDef:K,_,Static)),_) ... </classes>
-	<trace> Trace:List => Trace ListItem("meth-exec") </trace>
+	<functionArgumentsDeclaration> D:K => . </functionArgumentsDeclaration>
+	<currentScope> L:Loc </currentScope>
+	<class> CurrentClass:K </class>
+	<object> CurrentObj:K </object>
 	[internal]
 
 // ---------------------------------------------------------------------------------------------

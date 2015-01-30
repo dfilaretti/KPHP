@@ -119,7 +119,14 @@ rule [make-static-decl]:
 		program, also before declaration. */
 // ---------------------------------------------------------------------------------------------
 
-syntax K ::= "refactor" "(" K ")"
+
+syntax K ::= "refactor" "(" K ")" | "refactor" // [strict]
+
+
+rule [refactor-previous-processed]:
+	<k> (visitedK(X) ~> refactor) => refactor(X) ... </k>
+	[intermediate]
+
 
 rule [refactor-cons-fun]:
 	<k> refactor('ListWrap(K:KList,, D:K)) => refactor('ListWrap(K)) ... </k>
@@ -189,4 +196,60 @@ rule [make-deprecated-warning]:
 		=> DEPRECATED("Assigning the return value of new by reference is deprecated in %s on line %d\n") ~> visitedK(K) ... </k>
 	<trace> Trace:List => Trace ListItem("make-deprecated-warning") </trace>
 	[internal]
+
+
+
+
+
+
+
+
+/* Addition of labels to function calls */
+
+
+syntax  K ::= "addSourceLabels" "(" K ")"
+rule    addSourceLabels(P:K) => visit P applying 'addLabel if 'functionCallFound
+
+syntax  Bool ::= functionCallFound(K)       [klabel('functionCallFound), predicate]
+
+rule    functionCallFound(K) => true        
+		when getKLabel(K) ==KLabel 'FunctionCall
+rule    functionCallFound(K) => false       
+		when getKLabel(K) =/=KLabel 'FunctionCall
+
+syntax  K ::= "addLabel" "(" K ")"          [klabel('addLabel)]
+
+// TODO: extend so that it adds a label to everything! (not only functions!) 
+rule    addLabel('FunctionCall(Name,,Args)) => 
+            visitedK('FunctionCall(Name,,Args,,Lab))
+        when fresh(Lab:Int) 
+
+// shouldn't need this :/
+syntax K ::= "removeVisitedK" "(" K ")" [strict]
+rule removeVisitedK(visitedK(K)) => K 
+
+
+/*
+syntax  K ::= "addSourceLabels" "(" K ")"
+rule    addSourceLabels(P:K) => visit P applying 'addLabel if 'myPredicate
+
+
+syntax  Bool ::= myPredicate(K)       [klabel('myPredicate), predicate]
+rule  	myPredicate(_) => true       
+
+// TODO: add 3-arg version for methods
+syntax  K ::= "addLabel" "(" K ")"          [klabel('addLabel)]
+rule    addLabel(X:KLabel(Args)) => 
+            visitedK(X(1))
+        when fresh(Lab:Int) 
+
+// shouldn't need this :/
+syntax K ::= "removeVisitedK" "(" K ")" [strict]
+rule removeVisitedK(visitedK(K)) => K 
+*/
+
+
+
+
+
 endmodule

@@ -9,13 +9,30 @@ module FUNCTIONS
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 
+
+
+
+
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Internal Representation} */
 // ---------------------------------------------------------------------------------------------
 
-syntax FunReturnType ::= "@byValue" | "@byRef"
-syntax FunDef ::= "f" "(" K "," K "," FunReturnType "," Loc ")"
-syntax StackFrame ::= "sf" "(" String "," K "," Loc "," K "," K "," K "," K ")"	
+// Function definitions
+syntax 	FunReturnType ::= "@byValue" | "@byRef"
+syntax 	FunDef ::= "f" "(" K "," K "," FunReturnType "," Loc ")"
+syntax 	FunReturnType ::= "retTypeOfFunDef" "(" FunDef ")" [function]
+rule	retTypeOfFunDef(f(_,_,R:FunReturnType,_)) => R
+
+
+// Stack frames
+syntax 	StackFrame ::= "sf" "(" String "," Loc "," K "," K "," K "," K "," Int ")"	
+
+syntax  Int ::= "labelOf" "(" StackFrame ")" [function]
+rule	labelOf(sf(_,_,_,_,_,_,Lab)) => Lab
+
+syntax  Loc ::= "memOf" "(" StackFrame ")" [function]
+rule	labelOf(sf(_:String,L:Loc,_,_,_,_,_:Int)) => L
+
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Function Declaration} */
@@ -86,28 +103,31 @@ rule [function-decl-type-hint-not-supported-4]:
 
 rule [function-name]:
 	<k> 'FunctionName(FName:String) => FName ... </k>
-	<trace> Trace:List => Trace ListItem("function-name") </trace>
 	[step]
 
 context [func-call-fname-strict]: 
-	'FunctionCall(HOLE,,_:K)
+	'FunctionCall(HOLE,,_:K,,_:Int)
 	[structural]
 
 rule [func-call-fname2LangValue]:
-	<k> 'FunctionCall((R:ConvertibleToLanguageValue => convertToLanguageValue(R)),,_:K) ... </k>
-	<trace> Trace:List => Trace ListItem("func-call-fname2LangValue") </trace>
+	<k> 'FunctionCall(
+		(R:ConvertibleToLanguageValue => convertToLanguageValue(R)),,
+		_:K,,_) ... </k>
 	[intermediate]
 
 rule [func-call]:
-	<k> 'FunctionCall(FName:String,,'ListWrap(Args:KList)) => 
-		runFunction(FName, FunDef, 'ListWrap(Args), none, none, true) ... </k>
+	<k> 'FunctionCall(FName:String,,'ListWrap(Args:KList),,Lab) => 
+		runFunction(FName,FunDef,'ListWrap(Args),none,none,true,Lab,sf(FName,L,CurrentClass,CurrentObj,retTypeOfFunDef(FunDef),D,Lab)) ... </k>
 	<functions> ... FName |-> FunDef ... </functions>
-	<trace> Trace:List => Trace ListItem("func-call") </trace>
+	<functionArgumentsDeclaration> D:K => . </functionArgumentsDeclaration>
+	<currentScope> L:Loc </currentScope>
+	<class> CurrentClass:K </class>
+	<object> CurrentObj:K </object>
 	when notBool (FName ==String "var_dump") 
 	[step]
 
 rule [func-call-func-not-defined]: 
-	<k> 'FunctionCall(FName:String,, 'ListWrap(Args:KList)) => 
+	<k> 'FunctionCall(FName:String,,'ListWrap(Args:KList),,_) => 
 		NOT-SUPPORTED("'" +String FName +String "' not defined!") ... </k>
 	<functions> F:Map </functions>
 	<trace> Trace:List => Trace ListItem("func-call-func-not-defined") </trace>
@@ -154,7 +174,7 @@ rule [return-arg2Loc]:
 
 rule [return-arg2LangValue-not-compound]:    
 	<k> 'Return (L:Loc => convertToLanguageValue(L)) ... </k> 
-	<functionStack> ListItem(sf(_,_,_,_,_,@byValue,_)) ... </functionStack>
+	<functionStack> ListItem(sf(_,_,_,_,@byValue,_,_)) ... </functionStack>
 	<heap> ... L |-> zval(V,_,_,_) ... </heap>
 	when notBool (V isCompoundValue)
 	[intermediate]
@@ -198,9 +218,9 @@ rule [return]:
     from the stack and resumes the suspended computation with the return value.
     If no return was provided, a default one is used as whown below... */ 
 
-    syntax K ::= "POP" // "(" K ")" TODO 
+    syntax K ::= "POP"  "(" K ")" 
 
-    rule    <k> POP => *Cond(
+    rule    <k> POP(K) => *Cond(
 			(RefMode ==K @byRef) andBool (notBool isRetValueLoc(V)),
                 	NOTICE("Only variable references should be returned by reference in %s on line %d\n"),.
 		) ~>         	
@@ -210,7 +230,7 @@ rule [return]:
                 decRefCount(LocalScope) ~>
                 popStackFrame ~>
                 V ~> K   </k> 
-            <functionStack> ListItem(sf(_:String,K, CallerScope, CallerClass, CallerObj:K, RefMode, D)) ... </functionStack>
+            <functionStack> ListItem(sf(_:String,CallerScope,CallerClass,CallerObj:K, RefMode, D,_)) ... </functionStack>
  
 	<currentScope> LocalScope:Loc </currentScope>
         <heap> ... LocalScope |-> zval(Array(_,Elems:List),_,_,_) ... </heap>
@@ -327,13 +347,23 @@ rule [set-crnt-class]:
 /*@ \subsection{Pushing a stack frame} */
 // ---------------------------------------------------------------------------------------------
 
-syntax K ::= "pushStackFrame" "(" String "," K "," Loc "," K "," K "," K "," K ")"
+syntax K ::= "pushStackFrame" "(" StackFrame ")"
 
 rule [push-stack-frame]: 	
-	<k> pushStackFrame(FName:String, K:K, OldScope:Loc, Class:K, Obj:K, RetType:K,D) => .K ... </k>
-	<functionStack> . => ListItem(sf(FName, K, OldScope, Class, Obj, RetType, D)) ... </functionStack>
+	<k> pushStackFrame(Sf) => .K ... </k>
+	<functionStack> . => ListItem(Sf) ... </functionStack>
 	<trace> Trace:List => Trace ListItem("push-stack-frame") </trace>
 	[internal]
+
+/*
+syntax K ::= "pushStackFrame" "(" String "," K "," Loc "," K "," K "," K "," K "," Int ")"
+
+rule [push-stack-frame]: 	
+	<k> pushStackFrame(FName:String, K:K, OldScope:Loc, Class:K, Obj:K, RetType:K,D,Lab) => .K ... </k>
+	<functionStack> . => ListItem(sf(FName,K,OldScope,Class,Obj,RetType,D,Lab)) ... </functionStack>
+	<trace> Trace:List => Trace ListItem("push-stack-frame") </trace>
+	[internal]
+*/
 	
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Popping a stack frame} */
@@ -478,29 +508,64 @@ rule
 /*@ \subsection{Internal function and method call operation} */
 // ---------------------------------------------------------------------------------------------
 
-syntax K ::= "runFunction" "(" String "," FunDef "," K "," OptionId "," OptionLoc "," Bool ")"
+syntax K ::= "runFunction" "(" String "," FunDef "," K "," OptionId "," OptionLoc "," Bool "," Int "," StackFrame ")"
+
 
 rule [run-function]:	
-	<k> runFunction(FName:String, f(Parameters:K, Body:K, RetType:K, LStatic:Loc), Args:K, Class:OptionId, Obj:OptionLoc, Static:Bool) ~> K:K =>
-
+	<k> runFunction(FName:String, f(Parameters:K, Body:K, RetType:K, LStatic:Loc), Args:K, Class:OptionId,Obj:OptionLoc,Static:Bool,Lab,Sf:StackFrame) ~> K:K =>
 			*Cond(
 				(notBool Static) andBool ((Obj ==K none) andBool (CurrentObj ==K .K)),
 				NOTICE("Non-static method should not be called statically\n"),.) ~>
 			processFunArgs(Parameters, Args) ~> 
-			pushStackFrame(FName, K, L, CurrentClass, CurrentObj, RetType, D) ~> 
+			pushStackFrame(Sf) ~> 	
 			ArrayCreateEmpty(L1) ~>
 			setCrntScope(L1) ~>
 			incRefCount(L1) ~> 
 			setCrntClass(Class) ~> 
 			*Cond(Obj =/=K none, allocCrntObj(Obj), .K) ~>
 			CopyFunctionArgs ~> 
-			'ListWrap(Body,, 'Return(NULL)) ~> POP </k>
+			'ListWrap(Body,, 'Return(NULL)) ~> POP(K) </k>
 	<functionArgumentsDeclaration> D:K => . </functionArgumentsDeclaration>
 	<currentScope> L:Loc </currentScope>
+	<heap> H:Map </heap>
 	<class> CurrentClass:K </class>
+	<functionStack> S:List </functionStack>
 	<object> CurrentObj:K </object>
-	when fresh(L1:Loc)
+	when (fresh(L1:Loc)) andBool (notBool(H |- Sf isIn S)) 
 	[internal]
+
+rule [run-function]:	
+	<k> (runFunction(FName:String, f(Parameters:K, Body:K, RetType:K, LStatic:Loc), Args:K, Class:OptionId,Obj:OptionLoc,Static:Bool,Lab,Sf) ~> K:K) => R ~> K </k>
+	<returns> R </returns>
+	<heap> H:Map </heap>
+	<functionStack> S:List </functionStack>
+	when H |- Sf isIn S
+	[internal]
+
+
+
+/* Old IMP's stuff
+    //@ stack frame already present, function is not called
+    rule    <k> invoke(_,_,Sf,K) => R ~> K ... </k>
+            <returns> R </returns>
+            <stack> S </stack>
+            <store> Sto </store>
+            when Sto |- Sf isIn S
+            [transition]
+
+    //@ stack frame not present, function is called normally
+    rule    <k> invoke(F,V:KResult,Sf,K) => Param = V; Body return(0); ~> POP(K) ... </k>
+            <functions> ... F |-> function(Param, Body) ... </functions> 
+            <env> _ => . </env>
+            <stack> S => S ListItem(Sf) </stack>
+            <store> Sto </store>
+            when notBool(Sto |- Sf isIn S)
+            [transition]
+*/
+
+
+
+
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Getting the function arguments} */

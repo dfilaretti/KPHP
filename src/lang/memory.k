@@ -520,7 +520,21 @@ rule [array-write-current-some]:
 // "raw" reading operations (TODO move) 
 
 syntax  Zval ::= "heap_read" "(" Map "," Loc ")" [function]
-rule    heap_read(_ L |-> V _,L) => V 
+
+rule	heap_read(H,L) => heap_read1(H,L)
+	when (L in keys(H))
+
+/*
+rule	heap_read(H,L) => zval(Array(none,.List),array,1,false)	
+	when notBool(L in keys(H))
+*/
+
+syntax  Zval ::= "heap_read1" "(" Map "," Loc ")" [function]
+
+rule    heap_read1(_:Map (L:Loc |-> V:Zval) _:Map,L:Loc) => V 
+
+
+
 
 syntax  ArrayItem ::= "array_read" "(" List "," Key ")" [function]
 

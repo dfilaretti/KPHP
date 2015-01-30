@@ -29,7 +29,7 @@ syntax  Internal ::= "buildInitState"
 
 rule [built-init-state]:	
 	<k> buildInitState =>
-        initStatus ~> 
+        	initStatus ~> 
 		initScopes ~>
 		initBuiltinFunctions ~>
 		initBuiltinClasses ~>

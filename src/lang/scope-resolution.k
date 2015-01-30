@@ -53,7 +53,7 @@ rule [static-fun-fname2LangValue]:
 
 rule [static-fun]: 	
 	<k> 'StaticFunctionCall(ClassName:String,,MethName:String,,'ListWrap(Args:KList)) => 
-		methRunIfVisible(methodLookup(String2Id(ClassName), MethName), 'ListWrap(Args), none) ... </k>
+		methRunIfVisible(methodLookup(String2Id(ClassName), MethName), 'ListWrap(Args), none,123) ... </k> // TODO: fix label!!!
 	<trace> Trace:List => Trace ListItem("static-fun") </trace>
 	when isKResult(Args) 
 	[step]
