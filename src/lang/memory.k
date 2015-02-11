@@ -425,6 +425,11 @@ rule [dec-refCount-array-elems-nil]:
 syntax Array ::= "emptyArray" [function]
 rule	emptyArray => Array(none,.List)
 
+
+syntax  Zval ::= "emptyArrayZval" [function]
+ rule    emptyArrayZval => zval(emptyArray,array,0,false)
+
+
 /* Creating an empty array at a given location */
 
 syntax K ::= "ArrayCreateEmpty" "(" Loc ")" 

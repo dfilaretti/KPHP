@@ -1,28 +1,45 @@
 <?php
+// This causes issues with refcounting
+
+
+$x = 123;
+function &foo() {
+	global $x;
+	$y = 1;
+	if (2 == 4)  {
+		return $x;
+	} 
+	else {
+		return $y;
+	}
+}
+$result = &foo();
+
 
 /*
-	function bar($x) {
-		return $x + 1;
+$val = 123;
+function &foo(&$x) {
+	$y = 1;
+	if (2 == 4)  {
+		return $x;
+	} 
+	else {
+		return $y;
 	}
-	function foo($x) {
-		bar($x);
-	}
-	$z = foo(4);
-
+}
+$result = &foo($val);
 */
 
-
-	function fact($n) {
-		echo "[[ABA]]";
-		if ($n == 0) {
-			return 1;
-		}
-		else {
-			return $n * fact($n - 1);
-		}
+/*
+function &foo() {
+	$x = -1;
+	$y = 1;
+	if (2 == 4)  {
+		return $x;
+	} 
+	else {
+		return $y;
 	}
-
-
-	$y = fact(5);
-
-?>
+}
+$result = &foo();
+*/

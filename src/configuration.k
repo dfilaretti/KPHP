@@ -35,6 +35,8 @@ configuration
 		<br/>
         <status> NEXT </status> 
 	<returns> Bot </returns>
+	<returns-loc> .Set </returns-loc>
+
 		<control color="cyan">	
 			<functionStack> .List </functionStack>
 			<exceptionStack> .List </exceptionStack>

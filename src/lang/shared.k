@@ -118,4 +118,18 @@ rule visibility2String(public) => "public"
 rule visibility2String(protected) => "protected"
 rule visibility2String(private(_)) => "private"
 
+
+
+
+//////// LIST OPS
+syntax Int ::= "listLen" "(" List ")" [function]
+rule	listLen(.List) => 0
+rule	listLen(ListItem(_) L:List) => 1 +Int listLen(L)
+
+
+
+
+
+
+
 endmodule

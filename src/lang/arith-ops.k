@@ -159,8 +159,12 @@ rule    [binop-min-float]:
 	    [step]
 
 // mul
+
+rule    <k> BinOp(mul,Bot,_) => Bot ... </k>
+rule    <k> BinOp(mul,_,Bot) => Bot ... </k>
+
 rule    [binop-mul-int]:    
-	    <k> BinOp(mul,I1:AInt,I2:AInt) => I1 *AInt I2 ... </k>
+	<k> BinOp(mul,I1:AInt,I2:AInt) => I1 *AInt I2 ... </k>
 	    [step]
 
 rule    [binop-mul-float]:    

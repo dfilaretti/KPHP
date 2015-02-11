@@ -183,7 +183,12 @@ rule [return]:
 	<k> 'Return(V:PlainLanguageValue) => . ... </k>
 	<status> _ => RET </status>
 	<returns> R => lub(R,V) </returns>
-	//when notBool(isLValue(V))
+	[transition]
+
+rule [return-loc]:   
+	<k> 'Return(L:Loc) => . ... </k>
+	<status> _ => RET </status>
+	<returns-loc> . => SetItem(L) ... </returns-loc>
 	[transition]
 
 /*
@@ -220,6 +225,7 @@ rule [return]:
 
     syntax K ::= "POP"  "(" K ")" 
 
+/*
     rule    <k> POP(K) => *Cond(
 			(RefMode ==K @byRef) andBool (notBool isRetValueLoc(V)),
                 	NOTICE("Only variable references should be returned by reference in %s on line %d\n"),.
@@ -237,9 +243,139 @@ rule [return]:
 	<functionArgumentsDeclaration> _ => D </functionArgumentsDeclaration>
 	<status> S => NEXT </status> 
 	<returns> V => Bot </returns> // TODO 
-	[transition]
-	
-	
+	[transition]	
+*/	
+
+    rule    <k> POP(K) =>	
+                setCrntScope(CallerScope) ~>
+                setCrntClass(CallerClass) ~>
+                setCrntObj(CallerObj) ~>
+                decRefCount(LocalScope) ~>
+                popStackFrame ~>
+                makeReturnValue(V,VL,RefMode) ~> K   </k> 
+            <functionStack> ListItem(sf(_:String,CallerScope,CallerClass,CallerObj:K, RefMode, D,_)) ... </functionStack>
+ 
+	<currentScope> LocalScope:Loc </currentScope>
+        <heap> ... LocalScope |-> zval(Array(_,Elems:List),_,_,_) ... </heap>
+	<functionArgumentsDeclaration> _ => D </functionArgumentsDeclaration>
+	<status> S => NEXT </status> 
+	<returns> V => Bot </returns> 
+	<returns-loc> VL => .Set </returns-loc>
+	[transition]	
+
+
+syntax Returnable ::= "makeReturnValue" "(" LanguageValue "," Set "," FunReturnType ")"
+
+// return by value
+rule makeReturnValue(V,.Set,@byValue) => V
+
+// return by ref / all values
+rule makeReturnValue(V,.Set,@byRef) => 
+	NOTICE("Only variable references should be returned by reference in %s on line %d\n") ~>
+	V
+
+// return by ref / all locs
+rule makeReturnValue(Bot,VL,@byRef) => mergeLocSet(VL)
+    
+syntax K ::= "mergeLocSet" "(" Set ")"
+
+rule mergeLocSet(SetItem(L)) => L
+rule <k> mergeLocSet(SetItem(L1) SetItem(L2) S) => 
+      	 mergeLocSet(SetItem(L) S) ... </k>
+     <heap> H => H mergeZval(L,heap_read(H,L1),H,heap_read(H,L2),H)</heap>
+     when fresh(L:Loc) // broken?
+
+// return by ref / mixed refs and values
+rule makeReturnValue(V,VL,@byRef) => 
+	NOTICE("Only variable references should be returned by reference in %s on line %d\n") ~>
+	mergeLocSet(VL) // TODO; lub with scalar value
+
+
+
+
+
+/*
+    // by value
+    rule    <k> POP(K) =>     	
+                setCrntScope(CallerScope) ~>
+                setCrntClass(CallerClass) ~>
+                setCrntObj(CallerObj) ~>
+                decRefCount(LocalScope) ~>
+                popStackFrame ~>
+                V ~> K   </k> 
+            <functionStack> 
+		ListItem(sf(_:String,CallerScope,CallerClass,CallerObj:K,@byValue, D,_)) ... 	
+	    </functionStack> 
+	<currentScope> LocalScope:Loc </currentScope>
+        <heap> ... LocalScope |-> zval(Array(_,Elems:List),_,_,_) ... </heap>
+	<functionArgumentsDeclaration> _ => D </functionArgumentsDeclaration>
+	<status> S => NEXT </status> 
+	<returns> V => Bot </returns>
+	<returns-loc> .Set </returns-loc> // NOTE: this is only a sanity check
+	[transition]	
+
+    // by ref - all values
+    rule    <k> POP(K) => 
+                NOTICE("Only variable references should be returned by reference in %s on line %d\n") ~>
+                setCrntScope(CallerScope) ~>
+                setCrntClass(CallerClass) ~>
+                setCrntObj(CallerObj) ~>
+                decRefCount(LocalScope) ~>
+                popStackFrame ~>
+                V ~> K   </k> 
+            <functionStack> 
+		ListItem(sf(_:String,CallerScope,CallerClass,CallerObj:K,@byRef, D,_)) ... 	
+	    </functionStack>
+	<currentScope> LocalScope:Loc </currentScope>
+        <heap> ... LocalScope |-> zval(Array(_,Elems:List),_,_,_) ... </heap>
+	<functionArgumentsDeclaration> _ => D </functionArgumentsDeclaration>
+	<status> S => NEXT </status> 
+	<returns> V => Bot </returns>
+	<returns-loc> .Set </returns-loc> // NOTE: this is only a sanity check
+	[transition]	
+
+    // by ref - all refs
+    rule    <k> POP(K) => 
+                setCrntScope(CallerScope) ~>
+                setCrntClass(CallerClass) ~>
+                setCrntObj(CallerObj) ~>
+                decRefCount(LocalScope) ~>
+                popStackFrame ~>
+                makeRetLoc(VL) ~> K   </k> // TODO 
+            <functionStack> 
+		ListItem(sf(_:String,CallerScope,CallerClass,CallerObj:K,@byRef, D,_)) ... 	
+	    </functionStack>
+	<currentScope> LocalScope:Loc </currentScope>
+        <heap> ... LocalScope |-> zval(Array(_,Elems:List),_,_,_) ... </heap>
+	<functionArgumentsDeclaration> _ => D </functionArgumentsDeclaration>
+	<status> S => NEXT </status> 
+	<returns> Bot </returns>
+	<returns-loc> VL => .Set </returns-loc>
+	when VL =/=Set .Set
+	[transition]	
+
+    // by ref - mixed refs + values
+    rule    <k> POP(K) =>
+		NOTICE("Only variable references should be returned by reference in %s on line %d\n") ~>
+                setCrntScope(CallerScope) ~>
+                setCrntClass(CallerClass) ~>
+                setCrntObj(CallerObj) ~>
+                decRefCount(LocalScope) ~>
+                popStackFrame ~>
+                makeRetLoc(VL) ~> K   </k> // TODO 
+            <functionStack> 
+		ListItem(sf(_:String,CallerScope,CallerClass,CallerObj:K,@byRef, D,_)) ... 	
+	    </functionStack>
+	<currentScope> LocalScope:Loc </currentScope>
+        <heap> ... LocalScope |-> zval(Array(_,Elems:List),_,_,_) ... </heap>
+	<functionArgumentsDeclaration> _ => D </functionArgumentsDeclaration>
+	<status> S => NEXT </status> 
+	<returns> R </returns>
+	<returns-loc> VL => .Set </returns-loc> 
+	when (R =/=K Bot) andBool (VL =/=Set .Set) 	
+	[transition]	
+*/
+
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{The global construct} */
 // ---------------------------------------------------------------------------------------------
