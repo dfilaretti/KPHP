@@ -29,7 +29,8 @@ configuration
 			<globalScope> .K </globalScope>
         	<globalStaticScope> .K </globalStaticScope> 
         	<superGlobalScope> .K </superGlobalScope>
-		</scopes>
+		</scopes> 
+
 		<heap color="red"> .Map </heap>
         </mem>
 		<br/>
