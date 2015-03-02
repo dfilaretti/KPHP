@@ -132,28 +132,32 @@ syntax K ::= "myCurrent" "(" K ")" [strict]
 
 // Object
 rule [current-obj]:    
-	<k> myCurrent(L:Loc => L1) ... </k>
+	<k> myCurrent(L':Loc => L1) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L  |-> zval(OID(L1,_,_),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("current-obj") </trace>
 	[intermediate]
 
 // Array (no current)   
 rule [current-none]:    
-	<k> myCurrent(L:Loc) => false ... </k>
+	<k> myCurrent(L':Loc) => false ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap>... L |-> zval(Array(none,_),_,_,_) ...</heap>
 	<trace> Trace:List => Trace ListItem("current-none") </trace>
 	[internal]
 
 // Array (current)   
 rule [current-some]:    
-	<k> myCurrent(L:Loc) => L1 ... </k>
+	<k> myCurrent(L':Loc) => L1 ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L |-> zval(Array([X,V], _ ListItem([X,V,L1]) _),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("current-some") </trace>
 	[internal]
 
 // Scalar (returns NULL)
 rule [current-null]:    
-	<k> myCurrent(L:Loc) => NULL ... </k>
+	<k> myCurrent(L':Loc) => NULL ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(V:Value,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("current-null") </trace>
 	when notBool (isArrayType(V) orBool isObjectType(V)) 
@@ -172,28 +176,32 @@ rule [key-arg2Loc]:
 	
 // Object
 rule [key-obj]:    
-	<k> key(L:Loc => L1) ... </k>
+	<k> key(L':Loc => L1) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L  |-> zval(OID(L1,_,_),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("key-obj") </trace>
 	[intermediate]
 
 // Array (no current)   
 rule [key.none]:    
-	<k> key(L:Loc) => false ... </k>
+	<k> key(L':Loc) => false ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap>... L |-> zval(Array(none,_),_,_,_) ...</heap>
 	<trace> Trace:List => Trace ListItem("key.none") </trace>
 	[internal]
 
 // Array (current)   
 rule [key-some]:    
-	<k> key(L:Loc) => X ... </k>
+	<k> key(L':Loc) => X ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(Array([X,_],_),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("key-some") </trace>
 	[internal]
 
 // Scalar case (returns NULL)
 rule [key-scalar]:    
-	<k> key(L:Loc) => NULL ... </k>
+	<k> key(L':Loc) => NULL ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L |-> zval(V:Value,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("key-scalar") </trace>
 	when notBool (isArrayType(V) orBool isObjectType(V)) 
@@ -246,33 +254,42 @@ syntax K ::= "myNext" "(" K ")" [strict]
 
 // object
 rule [my-next-obj]:    
-	<k> myNext(L:Loc) =>  myNext(L1) ... </k>
+	<k> myNext(L':Loc) =>  myNext(L1) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L  |-> zval(OID(L1,_,_),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("my-next-obj") </trace>
 	[intermediate]
 
 // array
 rule [my-next-not-last-item]:    
-	<k> myNext(L:Loc) =>  current(L) ... </k>
- 	<heap> ... L |-> zval(Array([X,V] => [X1,V1], _ ListItem([X,V,_]) ListItem([X1,V1,_]) _ ),_,_,_) ... </heap>
+	<k> myNext(L':Loc) =>  current(L') ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
+ 	<heap> 
+	... 
+	L |-> zval(Array([X,V] => [X1,V1], _ ListItem([X,V,_]) ListItem([X1,V1,_]) _ ),_,_,_) 
+	... 
+	</heap>
 	<trace> Trace:List => Trace ListItem("my-next-not-last-item") </trace>
 	[internal]
  	
 rule [my-next-last-item]:    
-	<k> myNext(L:Loc) =>  current(L) ... </k>
+	<k> myNext(L':Loc) =>  current(L') ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L |-> zval(Array([X,V] => none,_ ListItem([X,V,_])),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("my-next-last-item") </trace>
 	[internal]
 	
 rule [my-next-none]:    
-	<k> myNext(L:Loc) =>  false ... </k>
+	<k> myNext(L':Loc) =>  false ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(Array(none,_),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("my-next-none") </trace>
 	[internal]
 
 // default case
 rule [next-scalar]:    
-	<k> myNext(L:Loc) => NULL ... </k>
+	<k> myNext(L':Loc) => NULL ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap>... L |-> zval(V:Value, _, _, _) ...</heap>
 	<trace> Trace:List => Trace ListItem("next-scalar") </trace>
 	when notBool (isArrayType(V) orBool isObjectType(V))
@@ -290,21 +307,24 @@ rule [reset-arg-strict]:
 
 // object case
 rule [reset-obj]:    
-	<k> reset(L:Loc => L1) ... </k>
+	<k> reset(L':Loc => L1) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L  |-> zval(OID(L1,_,_),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("reset-obj") </trace>
 	[intermediate]
 
 // array case
 rule [reset-array]:    
-	<k> reset(L:Loc) => current(L) ... </k>
+	<k> reset(L':Loc) => current(L') ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L |-> zval(Array(_=>head(K), K:List),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("reset-array") </trace>
 	[internal]
 
 // default case
 rule [reset-scalar]:    
-	<k> reset(L:Loc) => NULL ... </k>
+	<k> reset(L':Loc) => NULL ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap>... L |-> zval(V,_,_,_) ...</heap>
 	<trace> Trace:List => Trace ListItem("reset-scalar") </trace>
 	when notBool (V isCompoundValue)
@@ -323,27 +343,30 @@ rule [each-arg2Loc]:
 
 // Object case
 rule [each-obj]:    
-	<k> each(L:Loc) => each(L1) ... </k>
+	<k> each(L':Loc) => each(L1) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(OID(L1,_,_),_,_,_) ... </heap> 
 	<trace> Trace:List => Trace ListItem("each-obj") </trace>
 	[intermediate]
 
 // Scalar
 rule [each-scalar]:
-	<k> each(L:Loc) => NULL ... </k>
+	<k> each(L':Loc) => NULL ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(V:Value,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("each-scalar") </trace>
 	when notBool (V isCompoundValue)
 	[internal]
 
 rule [each-none]:    
-	<k> each(L:Loc) => false ... </k>
+	<k> each(L':Loc) => false ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap>... L |-> zval(Array(none,_),_,_,_) ...</heap>
 	<trace> Trace:List => Trace ListItem("each-none") </trace>
 	[internal]
 
 rule [each-last]:
-	<k> each(L:Loc) =>  
+	<k> each(L':Loc) =>  
     	'Array('ListWrap(
     		'Pair('Some('Key(0)),, 'Value(K)),, 
     		'Pair('Some('Key(1)),, 'Value(convertToLanguageValue(L1))),,
@@ -351,19 +374,21 @@ rule [each-last]:
     		'Pair('Some('Key("value")),, 'Value(convertToLanguageValue(L1)))
     		)
     	)... </k>            
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(Array([K,V] => [X1,V1],_ ListItem([K,V,L1]) ListItem([X1,V1,_]) _),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("each-last") </trace>
 	[internal]		
 
 rule [each-non-last]:    
-	<k> each(L:Loc) =>  
+	<k> each(L':Loc) =>  
     	'Array('ListWrap(
     		'Pair('Some('Key(0)),, 'Value(K)),, 
     		'Pair('Some('Key(1)),, 'Value(convertToLanguageValue(L1))),,
     		'Pair('Some('Key("key")),, 'Value(K)),, 
     		'Pair('Some('Key("value")),, 'Value(convertToLanguageValue(L1)))
     		)
-    	)... </k>            
+    	)... </k>  
+	<thematrix> ... L' |-> L ... </thematrix>	          
 	<heap> ... L |-> zval(Array([K,V] => none,_ ListItem([K,V,L1])),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("each-non-last") </trace>
 	[internal]
@@ -426,19 +451,20 @@ rule [vardump-arg2Loc]:
 
 /* var_dumping an array  */
 rule [vardump-array]:
-	<k> var_dump (L:Loc) => 
+	<k> var_dump (L':Loc) => 
             print("array(") ~> 
 			print(len(Elems)) ~> 
             print(") {\n") ~>
             indentInc ~>
             dump_content(Elems) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L |-> zval(Array(_,Elems:List),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("vardump-array") </trace>
 	[internal]
 
 /* var_dumping an object  */
 rule [vardump-object]:
-	<k> var_dump (L:Loc) => 
+	<k> var_dump (L':Loc) => 
     		print("object(") ~> 
             print(Id2String(ClassName)) ~>
             print(")#%d") ~>
@@ -447,9 +473,15 @@ rule [vardump-object]:
 			print(") {\n") ~>
             indentInc ~>
             dump_content(Elems) ... </k>
+	<thematrix> 
+	... 
+		L'  |-> L 
+		L1' |-> L1
+	... 
+	</thematrix>	
 	<heap>
 	...
-		L  |-> zval(OID(L1,ClassName,_),_,_,_)
+		L  |-> zval(OID(L1',ClassName,_),_,_,_)
 		L1 |-> zval(Array(_,Elems:List),_,_,_)
 	...
 	</heap>
@@ -458,7 +490,7 @@ rule [vardump-object]:
 
 /* var_dumping a string  */
 rule [vardump-string]:    
-	<k> var_dump (L:Loc) => 
+	<k> var_dump (L':Loc) => 
             *Cond(IsRef, print("&"), .) ~>
             print("string") ~> 
             print("(") ~>
@@ -467,29 +499,32 @@ rule [vardump-string]:
             print(S) ~>
             print("\"\n") ...
         </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(S:String,_,_,IsRef) ... </heap>
 	<trace> Trace:List => Trace ListItem("vardump-string") </trace>
 	[internal]
 
 /* var_dumping a boolean  */
 rule [vardump-bool]:    
-	<k> var_dump (L:Loc) => 
+	<k> var_dump (L':Loc) => 
             *Cond(IsRef, print("&"), .) ~>
             print("bool") ~> 
             print("(") ~>
             *Cond(B ==Bool true, print("true"), print("false")) ~>
             print(")\n") 
         ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(B:Bool,_,_,IsRef) ... </heap>
 	<trace> Trace:List => Trace ListItem("vardump-bool") </trace>
 	[internal]
 
 /* var_dumping NULL  */
 rule [vardump-null]:    
-	<k> var_dump (L:Loc) => 
+	<k> var_dump (L':Loc) => 
             //*Cond(IsRef, print("&"), .) ~>
             print("NULL\n")
         ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(NULL,_,_,IsRef) ... </heap>
 	<trace> Trace:List => Trace ListItem("vardump-null") </trace>
 	[internal]
@@ -497,26 +532,28 @@ rule [vardump-null]:
 /* var_dumping integers  */
 // TODO: move to domain?
 rule [vardump-int]:    
-	<k> var_dump (L:Loc)  => 
+	<k> var_dump (L':Loc)  => 
 			*Cond(IsRef, print("&"), .) ~> 
             print ("int") ~> 
             print("(") ~>
             print(V) ~> 
             print(")\n") ... </k>
-        <heap> ... L |-> zval(V:AInt, _, _, IsRef:Bool) ... </heap>
+	<thematrix> ... L' |-> L ... </thematrix>	 
+	<heap> ... L |-> zval(V:AInt, _, _, IsRef:Bool) ... </heap>
 	<trace> Trace:List => Trace ListItem("vardump-int") </trace>
 	when (V isNumeric)
 	
 /* var_dumping floats  */
 // TODO: move to domain?
 rule [vardump-float]:    
-	<k> var_dump (L:Loc)  => 
+	<k> var_dump (L':Loc)  => 
 			*Cond(IsRef, print("&"), .) ~> 
             print ("float") ~> 
             print("(") ~>
             print(V) ~>
             //*Cond(hasNoDecimalPart(V), print(Float2Int(V)), print(V))  ~> 
             print(")\n") ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
         <heap> ... L |-> zval(V:AFloat, _, _, IsRef:Bool) ... </heap>
 	<trace> Trace:List => Trace ListItem("vardump-float") </trace>
 	when (V isNumeric)
@@ -662,7 +699,7 @@ rule [printr-arg2Loc]:
 
 /* var_dumping an array  */
 rule [printr-array]:    
-	<k> print_r(L:Loc) =>
+	<k> print_r(L':Loc) =>
 			'Echo( 'ListWrap( "Array\n" )) ~> 
             print_r_indent(Depth *Int 2) ~>
             'Echo( 'ListWrap( "(\n" ) ) ~>
@@ -670,6 +707,7 @@ rule [printr-array]:
             print_r_content(Elems) ~> 
         	print_r_indent(Depth *Int 2) ~>
         	'Echo( 'ListWrap( ")\n" )  )  ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(Array(_,Elems:List),_,_,_) ... </heap>
 	<varDumpLevel> Depth:Int </varDumpLevel>
 	<trace> Trace:List => Trace ListItem("printr-array") </trace>
@@ -677,7 +715,7 @@ rule [printr-array]:
 
 /* var_dumping an object  */
 rule [printr-object]:        
-	<k> print_r(L:Loc) =>
+	<k> print_r(L':Loc) =>
 			'Echo('ListWrap(Id2String(ClassName))) ~>
 			'Echo( 'ListWrap( " Object\n" )) ~> 
             print_r_indent(Depth *Int 2) ~>
@@ -686,9 +724,15 @@ rule [printr-object]:
             print_r_content(Elems) ~> 
         	print_r_indent(Depth *Int 2) ~>
         	'Echo( 'ListWrap( ")\n" )) ... </k>
+	<thematrix> 
+	... 
+		L'  |-> L 
+		L1' |-> L1
+	... 
+	</thematrix>	
 	<heap>
 	...
-		L  |-> zval(OID(L1,ClassName,_),_,_,_)
+		L  |-> zval(OID(L1',ClassName,_),_,_,_)
 		L1 |-> zval(Array(_,Elems:List),_,_,_)
 	...
 	</heap>
@@ -697,19 +741,21 @@ rule [printr-object]:
 	[internal]
 
 rule [printr-string]:        
-	<k> print_r(L:Loc) => 
+	<k> print_r(L':Loc) => 
             'Echo( 'ListWrap(S) ) ~>
             'Echo( 'ListWrap("\n") ) ...
 	</k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(S:String, _, _, IsRef:Bool) ... </heap>
 	<trace> Trace:List => Trace ListItem("printr-string") </trace>
 	[internal]
 
 rule [printr-other]:        
-	<k> print_r(L:Loc)  => 
+	<k> print_r(L':Loc)  => 
             'Echo( 'ListWrap(V) ) ~> 
             'Echo( 'ListWrap("\n") ) ...
         </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
         <heap> ... L |-> zval(V:Value,_,_,IsRef:Bool) ... </heap>
 	<trace> Trace:List => Trace ListItem("printr-other") </trace>
 	when (notBool (isArrayType(V))) andBool (notBool (isStringType(V))) andBool (notBool (isObjectType(V)))

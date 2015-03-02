@@ -2,15 +2,15 @@ require "shared.k"
 require "program-transformations.k"
 require "builtin-functions.k"
 
-//require "../domains/empty/empty-domain.k"
-require "../domains/mySigns/mySigns-domain.k"
+require "../domains/empty/empty-domain.k"
+//require "../domains/mySigns/mySigns-domain.k"
 
 module CORE 
 	imports SHARED
 	imports PROGRAM-TRANSFORMATIONS
 	imports BUILTIN-FUNCTIONS
-	//imports EMPTY-DOMAIN
-    	imports MYSIGNS-DOMAIN
+	imports EMPTY-DOMAIN
+    	//imports MYSIGNS-DOMAIN
     	
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
@@ -417,20 +417,22 @@ rule [assign-RHS2Loc-NonLiteral]:
 	[intermediate]
 
 rule [assign-RHS2LangValue-overflow]:    
-	<k> 'Assign(L:Loc,, L1:Loc) =>  
-			'Expr('Assign(L,, convertToLanguageValue(L1))) ~>
+	<k> 'Assign(L:Loc,, L1':Loc) =>  
+			'Expr('Assign(L,, convertToLanguageValue(L1'))) ~>
 			'Expr(reset(L)) ~>
 			convertToLanguageValue(L) ...
 	</k>
+	<thematrix> ... L1' |-> L1 ... </thematrix>
 	<heap> M:Map </heap>
 	<trace> Trace:List => Trace ListItem("assign-RHS2LangValue-overflow") </trace>
-	when currentOverflow(M,L1)
+	when currentOverflow(M,L1) // TODO: check side conditions!
 	[intermediate]
 
 rule [assign-RHS2LangValue-no-overflow]:    
-	<k> 'Assign(L:Loc,, (L1:Loc => convertToLanguageValue(L1))) ... </k>  
+	<k> 'Assign(L:Loc,, (L1':Loc => convertToLanguageValue(L1'))) ... </k>  
+	<thematrix> ... L1' |-> L1 ... </thematrix>	
 	<heap> M:Map </heap>
-		<trace> Trace:List => Trace ListItem("assign-RHS2LangValue-no-overflow") </trace>
+	<trace> Trace:List => Trace ListItem("assign-RHS2LangValue-no-overflow") </trace>
 	when notBool (currentOverflow(M,L1))
 	[intermediate]
 
@@ -518,37 +520,77 @@ rule [ref-assign-RHS2Loc]:
 	[intermediate]
 
 rule [ref-assign-fresh-obj-prop]:
-		<k> 'ReferenceAssign(ref((L:Loc => L2), X:Key),, L1:Loc) ... </k>
+	<k> 'ReferenceAssign(ref((L':Loc => L2'), X:Key),, L1':Loc) ... </k>
+	<thematrix> 
+	... 
+		L'  |-> L 
+		L1' |-> L1 
+		L2' |-> L2
+	... 
+	</thematrix>	
         <heap> 
         ... 
-        	L  |-> zval(OID(L2,_,_),_,_,_) L1 |-> _
-			L2 |-> zval(Array(_,Elems),_,_,_)
-		...
-		</heap>
+        	L  |-> zval(OID(L2',_,_),_,_,_) 
+		L1 |-> _
+		L2 |-> zval(Array(_,Elems),_,_,_)
+	...
+	</heap>
 	<trace> Trace:List => Trace ListItem("ref-assign-fresh-obj-prop") </trace>
 	when notBool (Elems hasProperty X)
-		[intermediate]
+	[intermediate]
 
 rule [ref-assign-fresh-array-elem]:
-		<k> 'ReferenceAssign(ref(L:Loc, X:Key),, L1:Loc) =>  
-            ArrayUpdateElem(L, X, L1) ~> ref(L, X) ... </k>
-        <heap> ... L  |-> zval(Array(_,Elems),_,_,_) L1 |-> _ ... </heap>
+	<k> 'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  
+            	ArrayUpdateElem(L', X, L1') ~> ref(L', X) ... </k>
+	<thematrix> 
+	... 
+		L'  |-> L 
+		L1' |-> L1
+	... 
+	</thematrix>	
+        <heap> 
+	... 
+		L  |-> zval(Array(_,Elems),_,_,_) 
+		L1 |-> _ 
+	... 
+	</heap>
 	<trace> Trace:List => Trace ListItem("ref-assign-fresh-array-elem") </trace>
 	when notBool (Elems hasProperty X)
-		[step]
+	[step]
 			
 rule [ref-assign-existent-array-elem]:
-		<k> 'ReferenceAssign(ref(L:Loc, X:Key),, L1:Loc) =>  
-            //'Unset(ref(L, X)) ~>
-            ArrayUpdateElem(L, X, L1) ~> ref(L, X) ... </k>
-        <heap> ... L  |-> zval(Array(_,_ ListItem([X,_,L2]) _),_,_,_) L1 |-> _ ... </heap>
+	<k> 'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  
+            	ArrayUpdateElem(L', X, L1') ~> ref(L', X) ... </k>
+	<thematrix> 
+	... 
+		L'  |-> L 
+		L1' |-> L1
+	... 
+	</thematrix>
+        <heap> 
+	... 
+		L  |-> zval(Array(_,_ ListItem([X,_,L2]) _),_,_,_) 
+		L1 |-> _ 
+	... 
+	</heap>
 	<trace> Trace:List => Trace ListItem("ref-assign-existent-array-elem") </trace>
-	when L1 =/=K L2
+	when L1 =/=K L2 // TODO: do we need this side conditions?
         [step]
         	
 rule [ref-assign-existent-array-elem-same]:
-		<k> 'ReferenceAssign(ref(L:Loc, X:Key),, L1:Loc) =>  ref(L,X) ... </k>
-        <heap> ... L  |-> zval(Array(_,_ ListItem([X,_,L1]) _),_,_,_) L1 |-> _ ... </heap>
+	<k> 'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  ref(L',X) ... </k>
+	<thematrix> 
+	... 
+		L'  |-> L 
+		L1' |-> L1
+	... 
+	</thematrix>	
+        <heap> 
+	... 
+		L  |-> zval(Array(_,_ ListItem([X,_,L1]) _),_,_,_) 
+		L1 |-> _ 
+	... 
+	</heap>
 	<trace> Trace:List => Trace ListItem("ref-assign-existent-array-elem-same") </trace>
 	[step]
 
@@ -642,13 +684,15 @@ rule [isset-arg2BasicRef]:
 	[internal, intermediate]
 
 rule [isset-true]:
-	<k> isset (ref(L:Loc, K:Key)) => true ... </k>
+	<k> isset (ref(L':Loc, K:Key)) => true ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L |-> zval(Array(_,_ ListItem([K,public,_]) _),_,_,_)  ... </heap> 
 	<trace> Trace:List => Trace ListItem("isset-true") </trace>
 	[internal]
 
 rule [isset-false]:
-	<k> isset (ref(L:Loc, K:Key)) => false ... </k>
+	<k> isset (ref(L':Loc, K:Key)) => false ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L |-> zval(Array(_,Elems),_,_,_)  ... </heap> 
 	<trace> Trace:List => Trace ListItem("isset-false") </trace>
 	when notBool (Elems hasProperty K)
@@ -663,7 +707,8 @@ rule [isset-null]:
 	[internal]
 
 rule [isset-scalar]:    
-	<k> isset (ref(L:Loc, K:Key)) => false ... </k>
+	<k> isset (ref(L':Loc, K:Key)) => false ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L |-> zval(V:Value,_,_,_)  ... </heap> 
 	<trace> Trace:List => Trace ListItem("isset-scalar") </trace>
 	when notBool (V isCompoundValue)
@@ -695,44 +740,86 @@ rule [unset-arg2BasicRef]:
 	[intermediate]
 
 rule [unset-obj-prop]:        
-	<k> 'Unset(ref((L => L1),X)) ... </k>
+	<k> 'Unset(ref((L' => L1),X)) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(OID(L1,_,_),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("unset-obj-prop") </trace>
 	[intermediate]
 
 rule [unset-null-ref]:    
-	<k> 'Unset(ref(L:Loc, X:Key))=> . ... </k>
+	<k> 'Unset(ref(L':Loc, X:Key))=> . ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap>... L |-> zval(Array(_,Elems),_,_,_)  ...</heap>
 	<trace> Trace:List => Trace ListItem("unset-null-ref") </trace>
 	when notBool (Elems hasProperty X)				
 	[step]
 
 rule [unset-non-current]:
-	<k> 'Unset(ref(L:Loc, X:Key)) => decRefCount(L1) ... </k>
-	<heap> ... L |-> zval(Array([Y,Vis1],_ (ListItem([X,Vis,L1]) => .) _),_,_,_)  
-			  L1 |-> zval(V:Value,_,_,_) ... </heap>       
+	<k> 'Unset(ref(L':Loc, X:Key)) => decRefCount(L1') ... </k>
+	<thematrix> 
+	... 
+		L' |-> L 
+		L1' |-> L1 
+	... 
+	</thematrix>	
+	<heap> 
+	... 
+		L |-> zval(Array([Y,Vis1],_ (ListItem([X,Vis,L1']) => .) _),_,_,_)  
+		L1 |-> zval(V:Value,_,_,_) 
+	... 
+	</heap>       
 	<trace> Trace:List => Trace ListItem("unset-non-current") </trace>
 	when (Y =/=K X) orBool (Vis =/=K Vis1)
 	[step]
 
 rule [unset-current-none]:    
-	<k> 'Unset(ref(L:Loc, X:Key)) => decRefCount(L1) ... </k>
-	<heap> ... L |-> zval(Array(none,_ (ListItem([X,Vis,L1]) => .) _),_,_,_)  
-			  L1 |-> zval(V:Value,_,_,_) ... </heap>       
+	<k> 'Unset(ref(L':Loc, X:Key)) => decRefCount(L1') ... </k>
+	<thematrix> 
+	... 
+		L' |-> L 
+		L1' |-> L1 
+	... 
+	</thematrix>	
+	<heap> 
+	... 
+		L |-> zval(Array(none,_ (ListItem([X,Vis,L1']) => .) _),_,_,_)  
+		L1 |-> zval(V:Value,_,_,_) 
+	... 
+	</heap>       
 	<trace> Trace:List => Trace ListItem("unset-current-none") </trace>
 	[step]
 	
 rule [unset-current-not-last]:
-	<k> 'Unset(ref(L:Loc, X:Key)) => decRefCount(L1) ... </k>
-	<heap> ... L |-> zval(Array([X,Vis] => [X1,V1],_ ((ListItem([X,Vis,L1]) => .) ListItem([X1,V1,_])) _),_,_,_)  
-			  L1 |-> zval(V:Value,_,_,_) ... </heap>       
+	<k> 'Unset(ref(L':Loc, X:Key)) => decRefCount(L1') ... </k>
+	<thematrix> 
+	... 
+		L' |-> L 
+		L1' |-> L1 
+	... 
+	</thematrix>	
+	<heap> 
+	... 
+		L |-> zval(Array([X,Vis] => [X1,V1],_ ((ListItem([X,Vis,L1']) => .) ListItem([X1,V1,_])) _),_,_,_)  
+		L1 |-> zval(V:Value,_,_,_) 
+	... 
+	</heap>       
 	<trace> Trace:List => Trace ListItem("unset-current-not-last") </trace>
 	[step]
 
 rule [unset-current-last]:   
-	<k> 'Unset(ref(L:Loc, X:Key)) => decRefCount(L1) ... </k>
-	<heap> ... L |-> zval(Array([X,Visib] => none, E:List (ListItem([X,Visib,L1]) => .)),_,_,_)  
-		L1 |-> zval(V:Value,_,_,_) ... </heap>       
+	<k> 'Unset(ref(L':Loc, X:Key)) => decRefCount(L1') ... </k>
+	<thematrix> 
+	... 
+		L' |-> L 
+		L1' |-> L1 
+	... 
+	</thematrix>	
+	<heap> 
+	... 
+		L |-> zval(Array([X,Visib] => none, E:List (ListItem([X,Visib,L1']) => .)),_,_,_)  
+		L1 |-> zval(V:Value,_,_,_) 
+	... 
+	</heap>       
 	<trace> Trace:List => Trace ListItem("unset-current-last") </trace>
 	[step]
 

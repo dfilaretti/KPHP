@@ -74,13 +74,17 @@ rule [array-init-prop-key-ref]:
 	[internal]
 
 rule [array-init-prop-def-key]:    
-	<k> ArrayInitProp(L:Loc, 'Pair('None(_),, 'Value(V:KResult))) => 'Expr('Assign(ref(L,biggestIntKey(Elems) +Int 1),, V)) ... </k>
+	<k> ArrayInitProp(L':Loc, 'Pair('None(_),, 'Value(V:KResult))) => 
+		'Expr('Assign(ref(L',biggestIntKey(Elems) +Int 1),, V)) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L |-> zval(Array(_,Elems),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("array-init-prop-def-key") </trace>
 	[internal]
 
 rule [array-init-prop-def-key-ref]:    
-	<k> ArrayInitProp(L:Loc, 'Pair('None(_),, 'RefValue(V:KResult))) => 'Expr('ReferenceAssign(ref(L,biggestIntKey(Elems) +Int 1),, V)) ... </k>
+	<k> ArrayInitProp(L':Loc, 'Pair('None(_),, 'RefValue(V:KResult))) => 
+		'Expr('ReferenceAssign(ref(L',biggestIntKey(Elems) +Int 1),, V)) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L |-> zval(Array(_,Elems),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("array-init-prop-def-key-ref") </trace>
 	[internal]

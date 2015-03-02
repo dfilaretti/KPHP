@@ -23,14 +23,14 @@ configuration
     		<classInstanceCounters> .Map </classInstanceCounters>
     	</tables>	
 		<br/>
-        <mem>
-	    <scopes color="green">
+	<mem>
+		<scopes color="green">
 			<currentScope> .K </currentScope>
 			<globalScope> .K </globalScope>
-        	<globalStaticScope> .K </globalStaticScope> 
-        	<superGlobalScope> .K </superGlobalScope>
+        		<globalStaticScope> .K </globalStaticScope> 
+        		<superGlobalScope> .K </superGlobalScope>
 		</scopes> 
-
+		<thematrix> .Map </thematrix>
 		<heap color="red"> .Map </heap>
         </mem>
 		<br/>

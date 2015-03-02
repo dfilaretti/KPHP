@@ -146,7 +146,8 @@ rule [make-new-obj]:
 syntax K ::= "objectInit" "(" Loc "," Id ")"
 
 rule [obj-init]: 	
-	<k> objectInit(L:Loc, ClassName) => buildObjElemList(L, ClassName, PropList) ... </k>
+	<k> objectInit(L':Loc, ClassName) => buildObjElemList(L', ClassName, PropList) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(Array(_,.List),_,_,_) ... </heap>
 	<classes> ... ClassName |-> class(_,PropList:List,_,_)  ... </classes>
 	<trace> Trace:List => Trace ListItem("obj-init") </trace>
@@ -184,9 +185,10 @@ context [built-obj-prop-list-args-strict]:
 // --- adding a public or protected property ---
 
 rule [built-obj-prop-list-non-private-add]: 	
-	<k> buildObjElemList(L, ClassName, ListItem(prop(X,Visib,V:Value)) Items:List) => 
-		ArrayCreateElem(L,X,Visib,allocValue(V)) ~>
-		buildObjElemList(L, ClassName, Items) ... </k>
+	<k> buildObjElemList(L', ClassName, ListItem(prop(X,Visib,V:Value)) Items:List) => 
+		ArrayCreateElem(L',X,Visib,allocValue(V)) ~>
+		buildObjElemList(L', ClassName, Items) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(Array(_,ObjItems),_,_,_)  ... </heap>
 	<trace> Trace:List => Trace ListItem("built-obj-prop-list-non-private-add") </trace>
 	when (notBool ObjItems hasProperty X) andBool 
@@ -196,8 +198,9 @@ rule [built-obj-prop-list-non-private-add]:
 // --- public or protected property is already present, hence skipped ---
 
 rule [built-obj-prop-list-non-private-skip]: 	
-	<k> buildObjElemList(L, ClassName, ListItem(prop(X,Visib,_)) Items:List) =>  
-		buildObjElemList(L, ClassName, Items) ... </k>
+	<k> buildObjElemList(L', ClassName, ListItem(prop(X,Visib,_)) Items:List) =>  
+		buildObjElemList(L', ClassName, Items) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(Array(_,ObjItems),_,_,_)  ... </heap>
 	<trace> Trace:List => Trace ListItem("built-obj-prop-list-non-private-skip") </trace>
 	when (ObjItems hasProperty X) andBool (Visib ==K public orBool Visib ==K protected)
@@ -206,9 +209,10 @@ rule [built-obj-prop-list-non-private-skip]:
 // --- adding a private property ---
 
 rule [built-obj-prop-list-private]: 	
-	<k> buildObjElemList(L, ClassName, ListItem(prop(X,private(ClassName),V:Value)) Items:List) => 
+	<k> buildObjElemList(L', ClassName, ListItem(prop(X,private(ClassName),V:Value)) Items:List) => 
 		ArrayCreateElem(L,X,private(ClassName),allocValue(V)) ~>
-		buildObjElemList(L, ClassName, Items) ... </k>
+		buildObjElemList(L', ClassName, Items) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(Array(_,ObjItems),_,_,_)  ... </heap>
 	<trace> Trace:List => Trace ListItem("built-obj-prop-list-private") </trace>
 	[internal]
@@ -284,8 +288,9 @@ rule [meth-call-name2LangValue]:
 	[intermediate]
 
 rule [meth-call]: 	
-	<k> 'FunctionCall(L,,MethodName:String,,'ListWrap(Args:KList),,Lab:Int) =>
-		methRunIfVisible(methodLookup(ObjClass,MethodName),'ListWrap(Args),L,Lab) ... </k>
+	<k> 'FunctionCall(L',,MethodName:String,,'ListWrap(Args:KList),,Lab:Int) =>
+		methRunIfVisible(methodLookup(ObjClass,MethodName),'ListWrap(Args),L',Lab) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L  |-> zval(OID(L1:Loc,ObjClass:Id,_),_,_,_) ...  </heap>
 	<trace> Trace:List => Trace ListItem("meth-call") </trace>
 	[step]
@@ -383,8 +388,9 @@ syntax K ::= "allocAndRunConstructor" "(" Loc "," K ")"
 // run constructor, old style (function with same name as class)
 
 rule [run-constructor-old]:	
-	<k> allocAndRunConstructor(L, Args:K)  =>
-		'Expr('FunctionCall(L,,Id2String(ClassName),,Args)) ... </k>
+	<k> allocAndRunConstructor(L', Args:K)  =>
+		'Expr('FunctionCall(L',,Id2String(ClassName),,Args)) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ...  L |-> zval(OID(_,ClassName,_),_,_,_) ... </heap>
 	<classes> ... ClassName |-> class(_,_,Meths:Map,_) ... </classes>
 	<trace> Trace:List => Trace ListItem("run-constructor-old") </trace>
@@ -394,8 +400,9 @@ rule [run-constructor-old]:
 // run the constructor, PHP 5 style */
 
 rule [run-constructor-PHP-5]:	
-	<k> allocAndRunConstructor(L, Args:K)  =>
-		'Expr('FunctionCall(L,,"__construct",,Args)) ... </k>
+	<k> allocAndRunConstructor(L', Args:K)  =>
+		'Expr('FunctionCall(L',,"__construct",,Args)) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ...  L |-> zval(OID(_,ClassName,_),_,_,_) ... </heap>
 	<classes> ... ClassName |-> class(_,_,Meths:Map,_) ... </classes>
 	<trace> Trace:List => Trace ListItem("run-constructor-PHP-5") </trace>
@@ -405,7 +412,8 @@ rule [run-constructor-PHP-5]:
 // No constructor is present 
 
 rule [run-constructor-none]:	
-	<k> allocAndRunConstructor(L, Args:K)  => . ... </k>
+	<k> allocAndRunConstructor(L', Args:K)  => . ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ...  L |-> zval(OID(_,ClassName,_),_,_,_) ... </heap>
 	<classes> ... ClassName |-> class(_,_,Meths:Map,_) ... </classes>
 	<trace> Trace:List => Trace ListItem("run-constructor-none") </trace>

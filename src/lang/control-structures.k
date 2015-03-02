@@ -341,39 +341,42 @@ rule [foreach-arg2Loc]:
 	[intermediate]
 
 rule [foreach-with-local-copy]: 	
-	<k> ('ForEach(L:Loc,,Pattern:K,,Stmt:K) ~> K:K) => 
+	<k> ('ForEach(L':Loc,,Pattern:K,,Stmt:K) ~> K:K) => 
 			write(V,Lx) ~> 
-			pushLoopContext(loopFrame(K, foreachArrayPair(L,Lx))) ~> 
+			pushLoopContext(loopFrame(K, foreachArrayPair(L',Lx))) ~> 
 			foreach(Lx, Pattern, Stmt) ~>
 			popLoopContext
 	</k>
+	<thematrix> ...  L' |-> L  ... </thematrix>		
 	<heap> ... L |-> zval(V:Array,_,N,_) ... </heap>
-	<currentForeachItem> _ => L </currentForeachItem>
+	<currentForeachItem> _ => L' </currentForeachItem>
 	<trace> Trace:List => Trace ListItem("foreach-with-local-copy") </trace>
 	when ((V isCompoundValue) andBool (N <=Int 1) andBool (fresh(Lx:Loc)))
 	[step]
 	
 rule [foreach-without-local-copy]: 	
-	<k> ('ForEach(L:Loc,,Pattern:K,,Stmt:K) ~> K:K) => 
+	<k> ('ForEach(L':Loc,,Pattern:K,,Stmt:K) ~> K:K) => 
 			write(V,Lx) ~> 
-			pushLoopContext(loopFrame(K, foreachArrayPair(L, none))) ~> 
+			pushLoopContext(loopFrame(K, foreachArrayPair(L', none))) ~> 
 			foreach(Lx, Pattern, Stmt) ~>
 			popLoopContext
 	</k>
+	<thematrix> ...  L' |-> L  ... </thematrix>		
 	<heap> ... L |-> zval(V:Object,_,N,_) ... </heap>
-	<currentForeachItem> _ => L </currentForeachItem>
+	<currentForeachItem> _ => L' </currentForeachItem>
 	<trace> Trace:List => Trace ListItem("foreach-without-local-copy") </trace>
 	when ((V isCompoundValue) andBool (N <=Int 1) andBool (fresh(Lx:Loc)))
 	[step]
 	
 rule [foreach]: 	
-	<k> ('ForEach(L:Loc,,Pattern:K,,Stmt:K) ~> K:K) => 
-			pushLoopContext(loopFrame(K, foreachArrayPair(L, none))) ~> 
-			foreach(L, Pattern, Stmt) ~>
+	<k> ('ForEach(L':Loc,,Pattern:K,,Stmt:K) ~> K:K) => 
+			pushLoopContext(loopFrame(K, foreachArrayPair(L', none))) ~> 
+			foreach(L', Pattern, Stmt) ~>
 			popLoopContext
 	</k>
 	<heap> ... L |-> zval(V:Value,_,N,_) ... </heap>
-	<currentForeachItem> _ => L </currentForeachItem>
+	<thematrix> ...  L' |-> L  ... </thematrix>		
+	<currentForeachItem> _ => L' </currentForeachItem>
 	<trace> Trace:List => Trace ListItem("foreach") </trace>
 	when ((V isCompoundValue) andBool (N >Int 1))
 	[step]
@@ -381,8 +384,9 @@ rule [foreach]:
 // Error cases: invalid argument
 
 rule [foreach-scalar-1]:
-	<k> 'ForEach(L:Loc,,_) => 
+	<k> 'ForEach(L':Loc,,_) => 
 		WARNING("Warning: Invalid argument supplied for foreach() in %s on line %d\n") ... </k>
+	<thematrix> ...  L' |-> L  ... </thematrix>		
 	<heap> ... L |-> zval(V:Value,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("foreach-scalar-1") </trace>
 	when notBool (V isCompoundValue)
@@ -447,14 +451,21 @@ rule [foreach-spec]:
 syntax K ::= "ArrayCrnt2None" "(" Loc ")"
 
 rule 
-	<k> ArrayCrnt2None(L) => . ... </k>
+	<k> ArrayCrnt2None(L') => . ... </k>
+	<thematrix> ...  L' |-> L  ... </thematrix>		
 	<heap>... L |-> zval(Array(_ => none,_),_,_,_)  ... </heap>
 	
 rule 
-	<k> ArrayCrnt2None(L1) => . ... </k>
+	<k> ArrayCrnt2None(L1') => . ... </k>
+	<thematrix> 
+	... 
+		L1' |-> L1
+		L'  |-> L  
+	... 
+	</thematrix>			
 	<heap>
 		... 
-		L1 |-> zval(OID(L,_,_),_,_,_)
+		L1 |-> zval(OID(L',_,_),_,_,_)
 		L |-> zval(Array(_ => none,_),_,_,_)  
 		... 
 	</heap>
@@ -508,14 +519,16 @@ rule [init-foreach-iteration-vars-keyvalue-ref-error]:
 syntax K ::= "locHoldsCompoundValue" "(" Loc ")" 
 
 rule [loc-holds-compound-value-true]:
-	<k> locHoldsCompoundValue(L) => true ... </k>
+	<k> locHoldsCompoundValue(L') => true ... </k>
+	<thematrix> ...  L' |-> L  ... </thematrix>			
 	<heap> ... L |-> zval(V:Value,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("loc-holds-compound-value-true") </trace>
 	when (isArrayType(V) orBool isObjectType(V))
 	[internal]
 
 rule [loc-holds-compound-value-false]:
-	<k> locHoldsCompoundValue(L) => false ... </k>
+	<k> locHoldsCompoundValue(L') => false ... </k>
+	<thematrix> ...  L' |-> L  ... </thematrix>			
 	<heap> ... L |-> zval(V:Value,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("loc-holds-compound-value-false") </trace>
 	when notBool (isArrayType(V) orBool isObjectType(V))
@@ -552,7 +565,14 @@ rule [pop-loop-cntx-special]:
 syntax K ::= "syncArrayCurrent" "(" Loc "," OptionLoc ")"
 
 rule [syncArrayCurrent-some]: 
-	<k> syncArrayCurrent(Lorig, Llocal:Loc) => . ... </k>
+	<k> syncArrayCurrent(Lorig', Llocal':Loc) => . ... </k>
+	<thematrix> 
+	...  
+		Lorig' |-> Lorig
+		Llocal' |-> Llocal  
+	... 
+	</thematrix>		
+	
 	<heap> 
 	...
 		Lorig |-> zval(Array(_ => Crnt,_),_,_,_)
@@ -592,16 +612,23 @@ rule [syncArrayCurrent-none]:
 syntax K ::= "isCrntVisib" "(" Loc ")"
 
 rule [is-crnt-visib-array]:
-	<k> isCrntVisib(L:Loc) => true ... </k>
+	<k> isCrntVisib(L':Loc) => true ... </k>
+	<thematrix> ...  L' |-> L  ... </thematrix>		
 	<heap> ... L  |-> zval(V:Array,_,_,_) ... </heap> 
 	<trace> Trace:List => Trace ListItem("is-crnt-visib-array") </trace>
 	[internal]
 
 rule [is-crnt-visib-obj-public]:
-	<k> isCrntVisib(L:Loc) => true ... </k>
+	<k> isCrntVisib(L':Loc) => true ... </k>
+	<thematrix> 
+	...  
+		L'  |-> L
+		L1' |-> L1 
+	... 
+	</thematrix>		
 	<heap>
 	...
-		L  |-> zval(OID(L1:Loc,_,_),_,_,_)
+		L  |-> zval(OID(L1':Loc,_,_),_,_,_)
 		L1 |-> zval(Array([_,public],_),_,_,_)
 	...
 	</heap> 
@@ -609,11 +636,17 @@ rule [is-crnt-visib-obj-public]:
 	[internal]
 		
 rule [is-crnt-visib-obj-protected]: 	
-	<k> isCrntVisib(L:Loc) => isVisible(ObjClass, Context, protected) ... </k>
+	<k> isCrntVisib(L':Loc) => isVisible(ObjClass, Context, protected) ... </k>
 	<class> Context:K </class>
+	<thematrix> 
+	...  
+		L'  |-> L
+		L1' |-> L1 
+	... 
+	</thematrix>
 	<heap>
 	...
-		L  |-> zval(OID(L1:Loc,ObjClass,_),_,_,_)
+		L  |-> zval(OID(L1':Loc,ObjClass,_),_,_,_)
 		L1 |-> zval(Array([_,protected],_),_,_,_)
 	...
 	</heap> 
@@ -621,11 +654,17 @@ rule [is-crnt-visib-obj-protected]:
 	[internal]
 		
 rule [is-crnt-visib-obj-private-true]:
-	<k> isCrntVisib(L:Loc) => true ... </k>
+	<k> isCrntVisib(L':Loc) => true ... </k>
 	<class> Context:K </class>
+	<thematrix> 
+	...  
+		L'  |-> L
+		L1' |-> L1 
+	... 
+	</thematrix>	
 	<heap>
 	...
-		L  |-> zval(OID(L1:Loc,_,_),_,_,_)
+		L  |-> zval(OID(L1':Loc,_,_),_,_,_)
 		L1 |-> zval(Array([_,private(Context)],_),_,_,_)
 	...
 	</heap> 
@@ -633,11 +672,17 @@ rule [is-crnt-visib-obj-private-true]:
 	[internal]
 	
 rule [is-crnt-visib-obj-private-false]:
-	<k> isCrntVisib(L:Loc) => false ... </k>	
+	<k> isCrntVisib(L':Loc) => false ... </k>	
 	<class> Context:K </class>
+	<thematrix> 
+	...  
+		L'  |-> L
+		L1' |-> L1 
+	... 
+	</thematrix>
 	<heap>
 	...
-		L  |-> zval(OID(L1:Loc,ObjClass,_),_,_,_)
+		L  |-> zval(OID(L1':Loc,ObjClass,_),_,_,_)
 		L1 |-> zval(Array([_,private(Owner:Id)],_),_,_,_)
 	...
 	</heap> 

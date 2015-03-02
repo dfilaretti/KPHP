@@ -71,7 +71,8 @@ rule [class-constant-arg2Id]:
 
 rule [class-constant-parent]: 	
 	<k> 'ClassConstant((ClassName:Id => Parent),,'Variable('Simple(X:String))) ... </k>
-	<classes> ... ClassName |-> class(Parent,_,_,L)  ...  </classes>
+	<classes> ... ClassName |-> class(Parent,_,_,L')  ...  </classes>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L |-> zval(Array(_,M),_,_,_)  ... </heap>
 	<trace> Trace:List => Trace ListItem("class-constant-parent") </trace>
 	when notBool (M hasProperty X)
@@ -84,7 +85,8 @@ rule [class-constant]:
 				L1,
 				ERROR(makeAccess2NonVisibleClassConstantErrorMsg(ClassName, X, V))
 			) ... </k>
-	<classes> ... ClassName |-> class(_,_,_,L)  ...  </classes>
+	<classes> ... ClassName |-> class(_,_,_,L')  ...  </classes>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L |-> zval(Array(_,_ ListItem([X,V,L1]) _),_,_,_)  ... </heap>
 	<class> Context:K  </class>
 	<trace> Trace:List => Trace ListItem("class-constant") </trace>

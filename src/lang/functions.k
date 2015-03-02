@@ -173,7 +173,8 @@ rule [return-arg2Loc]:
 
 
 rule [return-arg2LangValue-not-compound]:    
-	<k> 'Return (L:Loc => convertToLanguageValue(L)) ... </k> 
+	<k> 'Return (L':Loc => convertToLanguageValue(L')) ... </k> 
+	<thematrix> ... L' |-> L ... </thematrix>
 	<functionStack> ListItem(sf(_,_,_,_,@byValue,_,_)) ... </functionStack>
 	<heap> ... L |-> zval(V,_,_,_) ... </heap>
 	when notBool (V isCompoundValue)
@@ -250,12 +251,13 @@ rule [return]:
                 setCrntScope(CallerScope) ~>
                 setCrntClass(CallerClass) ~>
                 setCrntObj(CallerObj) ~>
-                decRefCount(LocalScope) ~>
+                decRefCount(LocalScope') ~>
                 popStackFrame ~>
                 makeReturnValue(V,VL,RefMode) ~> K   </k> 
             <functionStack> ListItem(sf(_:String,CallerScope,CallerClass,CallerObj:K, RefMode, D,_)) ... </functionStack>
  
-	<currentScope> LocalScope:Loc </currentScope>
+	<currentScope> LocalScope':Loc </currentScope>
+	<thematrix> ... LocalScope' |-> LocalScope ... </thematrix>	
         <heap> ... LocalScope |-> zval(Array(_,Elems:List),_,_,_) ... </heap>
 	<functionArgumentsDeclaration> _ => D </functionArgumentsDeclaration>
 	<status> S => NEXT </status> 
@@ -279,11 +281,15 @@ rule makeReturnValue(Bot,VL,@byRef) => mergeLocSet(VL)
     
 syntax K ::= "mergeLocSet" "(" Set ")"
 
+
+/* TODO
 rule mergeLocSet(SetItem(L)) => L
 rule <k> mergeLocSet(SetItem(L1) SetItem(L2) S) => 
       	 mergeLocSet(SetItem(L) S) ... </k>
      <heap> H => H mergeZval(L,heap_read(H,L1),H,heap_read(H,L2),H)</heap>
      when fresh(L:Loc) // broken?
+*/
+
 
 // return by ref / mixed refs and values
 rule makeReturnValue(V,VL,@byRef) => 
@@ -460,8 +466,9 @@ rule [set-crnt-obj]:
 syntax K ::= "allocCrntObj" "(" OptionLoc ")"
 
 rule [alloc-crnt-obj]:    
-	<k> allocCrntObj(Obj:Loc) => write(V, L1) ... </k>
+	<k> allocCrntObj(Obj':Loc) => write(V, L1) ... </k>
 	<object> _ => L1 </object>
+	<thematrix> ... Obj' |-> Obj ... </thematrix>	
 	<heap> ... Obj |-> zval(V:Object,_,_,_) ... </heap> 
 	<trace> Trace:List => Trace ListItem("alloc-crnt-obj") </trace>
 	when fresh(L1:Loc)
@@ -646,7 +653,7 @@ rule
 
 syntax K ::= "runFunction" "(" String "," FunDef "," K "," OptionId "," OptionLoc "," Bool "," Int "," StackFrame ")"
 
-
+// TODO: double chekc!
 rule [run-function]:	
 	<k> runFunction(FName:String, f(Parameters:K, Body:K, RetType:K, LStatic:Loc), Args:K, Class:OptionId,Obj:OptionLoc,Static:Bool,Lab,Sf:StackFrame) ~> K:K =>
 			*Cond(

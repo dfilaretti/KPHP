@@ -269,25 +269,29 @@ syntax ZvalField ::= "@Value" | "@Type" | "@RefCount" | "@IsRef"
 syntax K ::= "zvalRead" "(" Loc "," ZvalField ")" [strict(1)]
 
 rule [zval-read-value]:
-	<k> zvalRead(L,@Value) => V ... </k>
- 	<heap> ... L |-> zval(V,_,_,_) ... </heap>
+	<k> zvalRead(L',@Value) => V ... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 	 
+	<heap> ... L |-> zval(V,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("zval-read-value") </trace>
 	[internal]
 
 rule [zval-read-type]:
-	<k> zvalRead(L,@Type) => T ... </k>
+	<k> zvalRead(L',@Type) => T ... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 
 	<heap>... L |-> zval(_,T,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("zval-read-type") </trace>
 	[internal]
 
 rule [zval-read-refCount]:    
-	<k> zvalRead(L:Loc, @RefCount) => RC ... </k>
+	<k> zvalRead(L':Loc, @RefCount) => RC ... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 	
 	<heap>... L |-> zval(_, _, RC:Int, _) ...</heap>
 	<trace> Trace:List => Trace ListItem("zval-read-refCount") </trace>
 	[internal]
 
 rule [zval-read-isRef]:    
-	<k> zvalRead(L:Loc, @IsRef) => IR ... </k>
+	<k> zvalRead(L':Loc, @IsRef) => IR ... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 	
 	<heap>... L |-> zval(_, _, _, IR:Bool) ...</heap>
 	<trace> Trace:List => Trace ListItem("zval-read-isRef") </trace>
 	[internal]
@@ -298,25 +302,29 @@ syntax LanguageValueOrType ::= LanguageValue | Type
 syntax K ::= "zvalWrite" "(" Loc "," ZvalField "," LanguageValueOrType ")" [strict(1,3)]
     
 rule [zval-write-value]:
-	<k> zvalWrite(L,@Value,V:LanguageValue) => . ... </k>	
+	<k> zvalWrite(L',@Value,V:LanguageValue) => . ... </k>	
+	<thematrix> ... L' |-> L ... </thematrix> 
 	<heap> ... L |-> zval(_=> V,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("zval-write-value") </trace>
 	[internal, mem]
 
 rule [zval-write-type]:    
-	<k> zvalWrite(L,@Type,T:Type) => . ... </k>
+	<k> zvalWrite(L',@Type,T:Type) => . ... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 	
 	<heap> ... L |-> zval(_,_=> T,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("zval-write-type") </trace>
 	[internal, mem]
 
 rule [zval-write-refCount]:    
-	<k> zvalWrite(L,@RefCount,N:Int) => .K ... </k>
+	<k> zvalWrite(L',@RefCount,N:Int) => .K ... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 
 	<heap> ... L |-> zval(_,_,_ => N,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("zval-write-refCount") </trace>
 	[internal, mem]
 
 rule [zval-write-isRef]:    
-	<k> zvalWrite(L:Loc, @IsRef, B:Bool) => .K ... </k>
+	<k> zvalWrite(L':Loc, @IsRef, B:Bool) => .K ... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 	
 	<heap> ... L |-> zval(_,_,_,_ => B) ... </heap>
 	<trace> Trace:List => Trace ListItem("zval-write-isRef") </trace>
 	[internal, mem]
@@ -324,15 +332,18 @@ rule [zval-write-isRef]:
 syntax K ::= "zvalCreate" "(" Loc "," Value "," Type "," Int "," Bool ")" 
   
 rule [zval-create]:    
-	<k> zvalCreate(L:Loc, V:KResult, T:Type, R:Int, IR:Bool) => .K ... </k>
+	<k> zvalCreate(L':Loc, V:KResult, T:Type, R:Int, IR:Bool) => .K ... </k>
+	<thematrix> ... . =>  L' |-> L ... </thematrix> 	
 	<heap> Rho:Map => Rho[zval(V, T, R, IR) / L] </heap>
 	<trace> Trace:List => Trace ListItem("zval-create") </trace>
+	when (fresh(L:Loc))
 	[internal, mem]
     
 syntax K ::= "zvalDestroy" "(" Loc ")"    
 
 rule [zval-destroy]:    
-	<k> zvalDestroy(L:Loc) => .K ... </k>
+	<k> zvalDestroy(L':Loc) => .K ... </k>
+	<thematrix> ... (L' |-> L) => . ... </thematrix> 
 	<heap> ... (L |-> _) => . ... </heap>
 	<trace> Trace:List => Trace ListItem("zval-destroy") </trace>
 	[internal, mem]
@@ -340,21 +351,24 @@ rule [zval-destroy]:
 syntax K ::= "incRefCount" "(" Loc ")"
 
 rule [inc-refCount-1]:
-	<k> incRefCount(L:Loc) => zvalWrite(L, @RefCount, Refs +Int 1) ... </k>
+	<k> incRefCount(L':Loc) => zvalWrite(L', @RefCount, Refs +Int 1) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 
 	<heap> ... L |-> zval(_,_,Refs:Int,false) ... </heap>
 	<trace> Trace:List => Trace ListItem("inc-refCount-1") </trace>
 	when (Refs ==Int 0)
 	[internal, mem]
 
 rule [inc-refCount-2]:
-	<k> incRefCount(L:Loc) => zvalWrite(L, @RefCount, Refs +Int 1) ... </k>
+	<k> incRefCount(L':Loc) => zvalWrite(L', @RefCount, Refs +Int 1) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 	
 	<heap> ... L |-> zval(_,_,Refs:Int,false => true) ... </heap>
 	<trace> Trace:List => Trace ListItem("inc-refCount-2") </trace>
 	when (Refs ==Int 1)
 	[internal, mem]		
 		
 rule [inc-refCount-3]:
-	<k> incRefCount(L:Loc) => zvalWrite(L, @RefCount, Refs +Int 1) ... </k>
+	<k> incRefCount(L':Loc) => zvalWrite(L', @RefCount, Refs +Int 1) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 	
 	<heap> ... L |-> zval(_,_,Refs:Int,true) ... </heap>
 	<trace> Trace:List => Trace ListItem("inc-refCount-3") </trace>
 	when (Refs >Int 1)
@@ -363,23 +377,26 @@ rule [inc-refCount-3]:
 syntax K ::= "decRefCount" "(" Loc ")"            
 			
 rule [dec-refCount-1]:
-	<k> decRefCount(L:Loc) => zvalWrite(L,@RefCount,Refs -Int 1) ... </k>
+	<k> decRefCount(L':Loc) => zvalWrite(L',@RefCount,Refs -Int 1) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 	
 	<heap> ... L |-> zval(_,_,Refs:Int,true) ... </heap>
 	<trace> Trace:List => Trace ListItem("dec-refCount-1") </trace>
 	when (Refs >Int 2)
 	[internal, mem]
 
 rule [dec-refCount-2]:
-	<k> decRefCount(L:Loc) => zvalWrite(L,@RefCount,Refs -Int 1) ... </k>
+	<k> decRefCount(L':Loc) => zvalWrite(L',@RefCount,Refs -Int 1) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 	
 	<heap> ... L |-> zval(_,_,Refs,true => false) ... </heap>
 	<trace> Trace:List => Trace ListItem("dec-refCount-2") </trace>
 	when (Refs ==Int 2)
 	[internal, mem]
 			
 rule [dec-refCount-3]:
-	<k> decRefCount(L:Loc) => 
-		zvalWrite(L,@RefCount,Refs -Int 1) ~>
-		*Cond(V isCompoundValue, decRefCountCompound(L),.) ... </k>
+	<k> decRefCount(L':Loc) => 
+		zvalWrite(L',@RefCount,Refs -Int 1) ~>
+		*Cond(V isCompoundValue, decRefCountCompound(L'),.) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 	
 	<heap> ... L |-> zval(V,_,Refs,false) ... </heap>
 	<trace> Trace:List => Trace ListItem("dec-refCount-3") </trace>
 	when (Refs <=Int 1)
@@ -388,16 +405,23 @@ rule [dec-refCount-3]:
 syntax K ::= "decRefCountCompound" "(" Loc ")"
 
 rule [dec-refCount-compound-array]:
-	<k> decRefCountCompound(L) => decRefCountArrayElems(L,Elems)... </k>
+	<k> decRefCountCompound(L') => decRefCountArrayElems(L',Elems)... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 	
 	<heap> ... L |-> zval(Array(_,Elems),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("dec-refCount-compound-array") </trace>
 	[internal]
 
 rule [dec-refCount-compound-obj]:    
-	<k> decRefCountCompound(L:Loc => L1) ... </k>
+	<k> decRefCountCompound(L':Loc => L1') ... </k>
+	<thematrix> 
+	... 
+		L' |-> L 
+		L1' |-> L1 
+	... 
+	</thematrix> 	
 	<heap> 
 	... 
-		L  |-> zval(OID(L1,_,_),_,_,_) 
+		L  |-> zval(OID(L1',_,_),_,_,_) 
 		L1 |-> zval(Array(_,Elems),_,_,_) 
 	... 
 	</heap>
@@ -407,7 +431,9 @@ rule [dec-refCount-compound-obj]:
 syntax K ::= "decRefCountArrayElems" "(" Loc "," List ")"
 
 rule [dec-refCount-array-elems-cons]:
-	<k> decRefCountArrayElems(L:Loc, Elems:List ListItem([X,_,L1])) => decRefCount(L1) ~> decRefCountArrayElems(L, Elems) ... </k>
+	<k> decRefCountArrayElems(L:Loc, Elems:List ListItem([X,_,L1])) => 
+		decRefCount(L1) ~> 
+		decRefCountArrayElems(L, Elems) ... </k>
 	<trace> Trace:List => Trace ListItem("dec-refCount-array-elems-cons") </trace>
 	[internal]
 
@@ -445,35 +471,68 @@ rule [array-create-empty]:
 
 syntax K ::= "ArrayCreateElem" "(" Loc "," Key "," ArrayItemVisibility "," Loc ")" [strict(4)]
 
+/*
 rule [array-create-elem]:
 	<k> ArrayCreateElem(L, K, V, L1:Loc) => incRefCount(L1) ... </k> 
-	<heap> ... L |-> zval(Array(Crnt,ArrayElems:List (. => ListItem([K, V, L1]))),_,_,_) ... </heap> 
+	<heap> 
+	... 
+		L |-> zval(Array(Crnt,ArrayElems:List (. => ListItem([K, V, L1]))),_,_,_) 
+	... 
+	</heap> 
 	<trace> Trace:List => Trace ListItem("array-create-elem") </trace>
 	when Crnt =/=K none
 	[internal]
+*/
+
+
+rule [array-create-elem]:
+	<k> ArrayCreateElem(L', K, V, L1':Loc) => incRefCount(L1') ... </k> 
+	<thematrix> 
+	... 
+		L' |-> L
+	... 
+	</thematrix>	
+	<heap> 
+	... 
+		L |-> zval(Array(Crnt,ArrayElems:List (. => ListItem([K, V, L1']))),_,_,_) 
+	... 
+	</heap> 
+	<trace> Trace:List => Trace ListItem("array-create-elem") </trace>
+	when Crnt =/=K none
+	[internal]
+
+
 	
 rule [array-create-elem-update-crnt]:
-	<k> ArrayCreateElem(L, K, V, L1:Loc) => incRefCount(L1) ... </k> 
-	<heap> ... L |-> zval(Array(none => [K, V], .(List => ListItem([K, V, L1]))),_,_,_) ... </heap> 
-	<trace> Trace:List => Trace ListItem("array-create-elem-update-crnt") </trace>
+	<k> ArrayCreateElem(L', K, V, L1:Loc) => incRefCount(L1) ... </k> 
+	<thematrix> ... L' |-> L ... </thematrix>
+	<heap> 
+	... 
+		L |-> zval(Array(none => [K, V], .(List => ListItem([K, V, L1]))),_,_,_) 
+	... 
+	</heap> 
 	[internal]
 	
 /* Updates an element, or creates it if don't exists  */
 
 syntax K ::= "ArrayUpdateElem" "(" Loc "," Key "," Loc ")"
 
-rule //[array-update-elem-update]:
-	<k> ArrayUpdateElem(L1:Loc, X:Key, L2:Loc) => decRefCount(L3) ~> incRefCount(L2) ... </k>
-	<heap>... L1 |-> zval(Array(_,_ ListItem([X,_,L3 => L2]) _),_,_,_)  ...</heap>    
+
+rule [array-update-elem-update]:
+	<k> ArrayUpdateElem(L1':Loc, X:Key, L2':Loc) => decRefCount(L3') ~> incRefCount(L2') ... </k>
+	<thematrix> ... L1' |-> L1 ... </thematrix>	
+	<heap>... L1 |-> zval(Array(_,_ ListItem([X,_,L3' => L2']) _),_,_,_)  ...</heap>    
 	<trace> Trace:List => Trace ListItem("array-update-elem-update") </trace>
 	[internal]
 
 rule [array-update-elem-create]:    
-	<k> ArrayUpdateElem(L1:Loc, X:Key, L2:Loc) => ArrayCreateElem(L1, X, public, L2) ... </k>
+	<k> ArrayUpdateElem(L1':Loc, X:Key, L2':Loc) => ArrayCreateElem(L1', X, public, L2') ... </k>
+	<thematrix> ... L1' |-> L1 ... </thematrix>	
 	<heap>... L1 |-> zval(Array(_,Elems),_,_,_)  ...</heap>
 	<trace> Trace:List => Trace ListItem("array-update-elem-create") </trace>
 	when notBool (Elems hasProperty X)
 	[internal]
+
 	
 /* Gets the array element at a specific numeric index (internal use only) */
 
@@ -503,17 +562,17 @@ rule [array-init-reset]:
 	[internal]	
 	
 rule [array-init-n]:
-	<k> ArrayInitCrnt(L, N) => ArrayWriteCrnt(L,ArrayGetElemAtIndex(N, Elems)) ... </k>	
-	<heap> 
-		... L |-> zval(Array(_,Elems),_,_,_)  ...
-	</heap>
+	<k> ArrayInitCrnt(L', N) => ArrayWriteCrnt(L',ArrayGetElemAtIndex(N, Elems)) ... </k>	
+	<thematrix> ... L' |-> L ... </thematrix>	
+	<heap> ... L |-> zval(Array(_,Elems),_,_,_)  ... </heap>
 	<trace> Trace:List => Trace ListItem("array-init-n") </trace>
 	[internal]	
 
 syntax K ::= "ArrayWriteCrnt" "(" Loc "," OptionArrayCrntElem ")"
 
 rule [array-write-current-some]:
-	<k> ArrayWriteCrnt(L,C) => . ... </k>
+	<k> ArrayWriteCrnt(L',C) => . ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(Array(_ => C,_),_,_,_)  ... </heap>
 	<trace> Trace:List => Trace ListItem("array-write-current-some") </trace>
 	[internal]
@@ -522,7 +581,9 @@ rule [array-write-current-some]:
 /*@ \subsection{Auxiliary List and arithmetic ops} */
 // ---------------------------------------------------------------------------------------------
 
-// "raw" reading operations (TODO move) 
+// "raw" reading operations
+
+// TODO: check after the introduction of <thematrix>
 
 syntax  Zval ::= "heap_read" "(" Map "," Loc ")" [function]
 
@@ -537,8 +598,6 @@ rule	heap_read(H,L) => zval(Array(none,.List),array,1,false)
 syntax  Zval ::= "heap_read1" "(" Map "," Loc ")" [function]
 
 rule    heap_read1(_:Map (L:Loc |-> V:Zval) _:Map,L:Loc) => V 
-
-
 
 
 syntax  ArrayItem ::= "array_read" "(" List "," Key ")" [function]
@@ -629,18 +688,28 @@ rule [read-string]:
 syntax K ::= "write" "(" Value "," Loc ")" [strict] 
 
 rule [write-loc-exists]:
-	<k> write(V:KResult, L:Loc) => 
-		zvalWrite(L, @Value, V) ~> 
-		zvalWrite(L, @Type, typeOf(V))   ...  </k>
-	<heap> ... L |-> _ ... </heap>                                                                                                 
+	<k> write(V:KResult, L':Loc) => 
+		zvalWrite(L', @Value, V) ~> 
+		zvalWrite(L', @Type, typeOf(V)) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
+	<heap> ... L |-> _ ... </heap>
 	<trace> Trace:List => Trace ListItem("write-loc-exists") </trace>
 	[internal]
 
+/*
 rule [write-loc-undef]:    
 	<k> write(V:KResult, L:Loc) => zvalCreate(L, V, typeOf(V), 0, false) ...  </k>
 	<heap> Mem:Map </heap>
 	<trace> Trace:List => Trace ListItem("write-loc-undef") </trace>
 	when (notBool (L in keys(Mem))) andBool (L =/=K locNull)                                                                                                         	
+	[internal]
+*/
+
+rule [write-loc-undef]:    
+	<k> write(V:KResult, L':Loc) => zvalCreate(L', V, typeOf(V), 0, false) ...  </k>
+	<thematrix> Mem:Map </thematrix>
+	<trace> Trace:List => Trace ListItem("write-loc-undef") </trace>
+	when (notBool (L' in keys(Mem))) andBool (L' =/=K locNull)                                                                                                         	
 	[internal]
 
 // This is needed for cases like $c[$c=1] = 0; (when $c is not initialised)
@@ -695,17 +764,19 @@ rule [copy-value-to-loc-object-literal]:
 syntax K ::= "copyArrayMembers" "(" Loc "," List ")"    
 
 rule [copyArrayMembers-cons-no-aliasing]: 
-	<k> copyArrayMembers(L1:Loc, ListItem([Key,Visib,L]) Elems) => 
+	<k> copyArrayMembers(L1:Loc, ListItem([Key,Visib,L']) Elems) => 
 		ArrayCreateElem(L1,Key,Visib,allocValue(V)) ~> 
 		copyArrayMembers(L1, Elems) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ...  L |-> zval(V:Value,_,_,false) ... </heap>
 	<trace> Trace:List => Trace ListItem("copyArrayMembers-cons-no-aliasing") </trace>
 	[intermediate]
 
 rule [copyArrayMembers-cons-aliasing]:
-	<k> copyArrayMembers(L1:Loc, ListItem([Key,Visib,L]) Elems) => 
-		ArrayCreateElem(L1,Key,Visib,L) ~> 
+	<k> copyArrayMembers(L1:Loc, ListItem([Key,Visib,L']) Elems) => 
+		ArrayCreateElem(L1,Key,Visib,L') ~> 
 		copyArrayMembers(L1, Elems) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ...  L |-> zval(V:Value,_,_,true) ... </heap>
 	<trace> Trace:List => Trace ListItem("copyArrayMembers-cons-aliasing") </trace>
 	[intermediate]
@@ -728,29 +799,27 @@ syntax K ::= "Rget" "(" Ref ")" 				[strict]
 		   
 rule [rget-default]: 
 	<k> Rget(R:Ref) => RgetRef(R, nul) ... </k>
-	<trace> Trace:List => Trace ListItem("rget-default") </trace>
 	[structural]
 
 // Recursive propagation of get operations
 
 rule [rget-propagate]:    
 	<k> RgetRef(lref(R:Ref, X:Key, T1:RefType),T2:RefType) => RgetRef(ref(RgetRef(R,T1), X), T2) ... </k>
-	<trace> Trace:List => Trace ListItem("rget-propagate") </trace>
 	[structural]
 	
 // Reading an array property
 
 rule [rget-array-prop]:
-	<k> RgetRef(ref(L:Loc, X:Key), _) =>  L1 ... </k>
+	<k> RgetRef(ref(L':Loc, X:Key), _) =>  L1 ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap>... L |-> zval(Array(_,_:List ListItem([X,public,L1]) _:List),_,_,_)  ...</heap>
-	<trace> Trace:List => Trace ListItem("rget-array-prop") </trace>
 	[internal]
 
 rule [rget-array-prop-undefined]:
-	<k> RgetRef(ref(L:Loc, X:Key), _) =>  
+	<k> RgetRef(ref(L':Loc, X:Key), _) =>  
 		NOTICE("Undefined variable: %s in %s on line %d\n") ~> locNull ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap>... L |-> zval(Array(_,ArrayElements),_,_,_)  ...</heap>
-	<trace> Trace:List => Trace ListItem("rget-array-prop-undefined") </trace>
 	when notBool (ArrayElements hasProperty X)
 	[internal, error]
 
@@ -759,11 +828,17 @@ rule [rget-array-prop-undefined]:
 // public (i.e. no restrictions)
 
 rule [rget-obj-prop-public]:
-	<k> RgetRef(ref(L:Loc, X:String), _) => L2 ... </k>
+	<k> RgetRef(ref(L':Loc, X:String), _) => L2 ... </k>
 	<class> Context:K </class>
+	<thematrix> 
+	... 
+		L'  |-> L 
+		L1' |-> L1
+	... 
+	</thematrix>	
 	<heap>
 	... 
-		L |-> zval(OID(L1:Loc,_,_),_,_,_)  
+		L |-> zval(OID(L1':Loc,_,_),_,_,_)  
 		L1 |-> zval(Array(_,(E:List ListItem([X,public,L2:Loc]) F:List)),_,_,_)
 	...
 	</heap>
@@ -774,12 +849,18 @@ rule [rget-obj-prop-public]:
 // protected        
 
 rule [rget-obj-prop-protected]:    
-	<k> RgetRef(ref(L:Loc, X:String), _) => 
+	<k> RgetRef(ref(L':Loc, X:String), _) => 
 		*Cond(isVisible(ObjClass, Context, protected), L2, ERROR("ERROR-PROTECTED")) ... </k>
 	<class> Context:K </class>
+	<thematrix> 
+	... 
+		L'  |-> L 
+		L1' |-> L1
+	... 
+	</thematrix>	
 	<heap>
 	... 
-		L |-> zval(OID(L1:Loc,ObjClass:Id,_),_,_,_)  
+		L |-> zval(OID(L1':Loc,ObjClass:Id,_),_,_,_)  
 		L1 |-> zval(Array(_,(E:List ListItem([X,protected,L2:Loc]) F:List)),_,_,_)
 	...
 	</heap>
@@ -790,12 +871,18 @@ rule [rget-obj-prop-protected]:
 // private
 
 rule [rget-obj-prop-private]:
-	<k> RgetRef(ref(L:Loc, X:String),_) => L2 ... </k>
+	<k> RgetRef(ref(L':Loc, X:String),_) => L2 ... </k>
 	<class> Context </class>
+	<thematrix> 
+	... 
+		L'  |-> L 
+		L1' |-> L1
+	... 
+	</thematrix>	
 	<heap>
 	... 
-		L |-> zval(OID(L1:Loc,ObjClass,_),_,_,_)  
-        L1 |-> zval(Array(_,(E:List ListItem([X,private(Context),L2:Loc]) F:List)),_,_,_)
+		L |-> zval(OID(L1':Loc,ObjClass,_),_,_,_)  
+        	L1 |-> zval(Array(_,(E:List ListItem([X,private(Context),L2:Loc]) F:List)),_,_,_)
 	...
 	</heap>
 	<trace> Trace:List => Trace ListItem("rget-obj-prop-private") </trace>
@@ -804,13 +891,19 @@ rule [rget-obj-prop-private]:
 // non-existent property
 
 rule [rget-obj-prop-undefined]:    
-	<k> RgetRef(ref(L:Loc, X:String), _) => 
+	<k> RgetRef(ref(L':Loc, X:String), _) => 
 		NOTICE("Undefined property: %s in %s on line %d\n") ~> 
 		locNull ... </k>
+	<thematrix> 
+	... 
+		L'  |-> L 
+		L1' |-> L1
+	... 
+	</thematrix>	
 	<heap>
 	... 
-		L |-> zval(OID(L1:Loc,_,_),_,_,_)  
-        L1 |-> zval(Array(_,E:List),_,_,_)
+		L |-> zval(OID(L1':Loc,_,_),_,_,_)  
+        	L1 |-> zval(Array(_,E:List),_,_,_)
 	...
 	</heap>
 	<trace> Trace:List => Trace ListItem("rget-obj-prop-undefined") </trace>
@@ -820,7 +913,8 @@ rule [rget-obj-prop-undefined]:
 // not a compound value
 
 rule [rget-obj-scalar]:
-	<k> RgetRef(ref(L:Loc,_),_) =>  locNull ... </k>
+	<k> RgetRef(ref(L':Loc,_),_) =>  locNull ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(V:Value,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("rget-obj-scalar") </trace>
 	when (notBool (isArrayType(V))) andBool (notBool (isStringType(V))) andBool (notBool (isObjectType(V)))
@@ -834,13 +928,15 @@ rule [rget-null]:
 // String element access. Most likely we'll need to change this one 
 
 rule [rget-string-index]:	
-	<k> RgetRef(ref(L:Loc, Index:Int),_) => substrString(Str, Index, Index +Int 1) ... </k>
+	<k> RgetRef(ref(L':Loc, Index:Int),_) => substrString(Str, Index, Index +Int 1) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(Str:String,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("rget-string-index") </trace>
 	[internal]
 
 rule [rget-string-undef]:	
-	<k> RgetRef(ref(L:Loc, Index:String),_) => locNull ... </k>
+	<k> RgetRef(ref(L':Loc, Index:String),_) => locNull ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(Str:String,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("rget-string-undef") </trace>
 	[internal]
@@ -871,31 +967,43 @@ rule [lget-propagate]:
 
 // Array case
 
+
 rule [lget-found-array]:
-	<k> LgetRef(ref(L:Loc,X:Key), _) => Rget(ref(L,X)) ... </k>
+	<k> LgetRef(ref(L':Loc,X:Key), _) => Rget(ref(L',X)) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 
 	<heap> ... L |-> zval(Array(_,ArrayElems),_,_,_) ... </heap>    
 	<trace> Trace:List => Trace ListItem("lget-found-array") </trace>
-	when (ArrayElems hasProperty X) andBool (L =/=K LError)
+	when (ArrayElems hasProperty X) andBool (L =/=K LError) // TODO: L or L'?!?!
 	[internal]
-	
+
+
 // Object case
 
+
 rule [lget-found-obj]:
-	<k> LgetRef(ref(L:Loc, X:Key),_) =>  Rget(ref(L, X)) ... </k>
+	<k> LgetRef(ref(L':Loc, X:Key),_) =>  Rget(ref(L', X)) ... </k>
+	<thematrix> 
+	... 
+		L'  |-> L 
+		L1' |-> L1
+	... 
+	</thematrix>
 	<heap>
 	... 
-		L  |-> zval(OID(L1:Loc,_,_),_,_,_)
+		L  |-> zval(OID(L1':Loc,_,_),_,_,_)
 		L1 |-> zval(Array(_,Elems:List),_,_,_)  
 	...
 	</heap>
 	<trace> Trace:List => Trace ListItem("lget-found-obj") </trace>
 	when (Elems hasProperty X)
 	[internal]
+
 	
 /* Case 2: the reference does not exists. */
 
 // Array 
 
+/*
 rule [lget-not-found-init-null]:
 	<k> LgetRef(ref(L:Loc,X:Key), nul) =>   
 		ArrayCreateElem(L, X, public, allocValue(NULL)) ~> 
@@ -905,10 +1013,27 @@ rule [lget-not-found-init-null]:
 	when (notBool ArrayElems hasProperty X) andBool
 	(L =/=K LError) andBool (X =/=K NULL)
 	[internal]
+*/
+
+
+rule [lget-not-found-init-null]:
+	<k> LgetRef(ref(L':Loc,X:Key), nul) =>   
+		ArrayCreateElem(L', X, public, allocValue(NULL)) ~> 
+		Rget(ref(L',X)) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
+	<heap> ... L |-> zval(Array(_,ArrayElems),_,_,_) ... </heap>
+	when (notBool ArrayElems hasProperty X) andBool
+	(L =/=K LError) andBool (X =/=K NULL)
+	[internal]
+
+
+
+
 
 rule [lget-not-found-init-array]:    
-	<k> LgetRef(ref(L:Loc,X:Key), arr) =>   
-		ArrayCreateElem(L, X, public, allocValue(emptyArray)) ~> Rget(ref(L,X)) ... </k>
+	<k> LgetRef(ref(L':Loc,X:Key), arr) =>   
+		ArrayCreateElem(L', X, public, allocValue(emptyArray)) ~> Rget(ref(L',X)) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L |-> zval(Array(_,ArrayElems),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("lget-not-found-init-array") </trace>
 	when (notBool ArrayElems hasProperty X) andBool 
@@ -916,9 +1041,10 @@ rule [lget-not-found-init-array]:
 	[internal]
 
 rule [lget-not-found-init-obj]:    
-	<k> LgetRef(ref(L:Loc,X:Key), obj) => 
-		'Expr('Assign(ref(L, X),, ('ObjectCreation("stdClass")))) ~> 
-		Rget(ref(L,X)) ...  </k>
+	<k> LgetRef(ref(L':Loc,X:Key), obj) => 
+		'Expr('Assign(ref(L', X),, ('ObjectCreation("stdClass")))) ~> 
+		Rget(ref(L',X)) ...  </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L |-> zval(Array(_,Elems:List), _, _, _) ... </heap>
 	<trace> Trace:List => Trace ListItem("lget-not-found-init-obj") </trace>
 	when (notBool Elems hasProperty X) andBool 
@@ -927,6 +1053,7 @@ rule [lget-not-found-init-obj]:
 
 // Object
 
+/*
 rule [lget-not-found-in-obj]:    
 	<k> LgetRef(ref((L:Loc => L2),X:Key), _) ... </k>
 	<heap> 
@@ -938,11 +1065,32 @@ rule [lget-not-found-in-obj]:
 	<trace> Trace:List => Trace ListItem("lget-not-found-in-obj") </trace>
 	when (notBool ArrayElems hasProperty X)
 	[internal]
+*/
+
+rule [lget-not-found-in-obj]:    
+	<k> LgetRef(ref((L':Loc => L2),X:Key), _) ... </k>
+	<thematrix>
+	... 
+		L'  |-> L 
+		L2' |-> L2
+	...
+	</thematrix>
+	<heap> 
+	... 
+		L |-> zval(OID(L2':Loc,_,_),_,_,_)  
+		L2 |-> zval(Array(_,ArrayElems),_,_,_) 
+	... 
+	</heap>
+	<trace> Trace:List => Trace ListItem("lget-not-found-in-obj") </trace>
+	when (notBool ArrayElems hasProperty X)
+	[internal]
 
 // Default array key
 
 rule [lget-not-found-default-array-key]:    
-	<k> LgetRef(ref(L:Loc,NULL), T) => LgetRef(ref(L,biggestIntKey(Elems) +Int 1),T) ... </k>
+	<k> LgetRef(ref(L':Loc,NULL), T) => 
+		LgetRef(ref(L',biggestIntKey(Elems) +Int 1),T) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 
 	<heap> ... L |-> zval(Array(_,Elems:List),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("lget-not-found-default-array-key") </trace>
 	when  (L =/=K LError)
@@ -951,9 +1099,10 @@ rule [lget-not-found-default-array-key]:
 // Error
 
 rule [lget-error-1]:    
-	<k> LgetRef(ref(L:Loc,X:Key),_) => 
+	<k> LgetRef(ref(L':Loc,X:Key),_) => 
 		WARNING("Cannot use a scalar value as an array in %s on line %d\n") ~> locNull ... </k>
-  	<heap>... L |-> zval(V:Value,_,_,_)  ...</heap>
+	<thematrix> ... L' |-> L ... </thematrix>  
+	<heap>... L |-> zval(V:Value,_,_,_)  ...</heap>
 	<trace> Trace:List => Trace ListItem("lget-error-1") </trace>
 	when (notBool (isArrayType(V))) andBool (notBool (isObjectType(V)))
 	[internal, error]

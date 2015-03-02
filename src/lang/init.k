@@ -214,6 +214,7 @@ rule [init-builtin-functions]:
 /*@ \subsection{Initialising the scopes} */
 // ---------------------------------------------------------------------------------------------
 
+/*
 rule [init-scopes]:   
 	 <k> initScopes => . ... </k>
 	 <heap> . => L  |-> zval(Array(none,.List), array, 0, false) 
@@ -225,6 +226,28 @@ rule [init-scopes]:
 	<globalStaticScope> . => L3 </globalStaticScope>
 	<trace> Trace:List => Trace ListItem("init-scopes") </trace>
 	when fresh(L:Loc) andBool fresh(L1:Loc) andBool fresh(L3:Loc)
+	[internal]
+*/
+
+rule [init-scopes]:   
+	<k> initScopes => . ... </k>
+	<thematrix> . =>
+		L  |-> L' 
+		L1 |-> L1'
+		L3 |-> L3'
+	</thematrix> 
+	<heap> . => 
+		L'  |-> zval(Array(none,.List), array, 0, false) 
+       		L1' |-> zval(Array(none,.List), array, 1, false) 
+        	L3' |-> zval(Array(none,.List), array, 1, false)	
+	</heap> 
+	<currentScope> . => L </currentScope>
+	<globalScope> . => L </globalScope>
+	<superGlobalScope> . => L1 </superGlobalScope>
+	<globalStaticScope> . => L3 </globalStaticScope>
+	when 	fresh(L:Loc) andBool fresh(L1:Loc) andBool fresh(L3:Loc) andBool
+		fresh(L':Loc) andBool fresh(L1':Loc) andBool fresh(L3':Loc)
+	
 	[internal]
 
 // ---------------------------------------------------------------------------------------------

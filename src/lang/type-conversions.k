@@ -487,11 +487,12 @@ rule [toArray-array]:
 	[internal]
 	
 rule [toArray-object]:    
-	<k> *toArray(OID(L,_,_)) => 
+	<k> *toArray(OID(L',_,_)) => 
 			copyValueToLoc(A, L1) ~> 
 			*Cond(arrayCurrentOverflow(A), 'Expr(reset(L1)), .K) ~>
 			L1 
 	... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L |-> zval(A:Array,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("toArray-object") </trace>
 	when fresh(L1:Loc)

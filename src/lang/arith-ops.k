@@ -273,14 +273,16 @@ rule [isEqual-RHS2Loc]:
 // ... and locations to values, but only if the location does NOT contain a compound value
 
 rule [isEqual-LHS2LangValue]:
-	<k> comparison(_,(L:Loc => V),_) ... </k>
+	<k> comparison(_,(L':Loc => V),_) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(V:Value,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("isEqual-LHS2LangValue") </trace>
 	when notBool(V isCompoundValue)
 	[intermediate]
 			
 rule [isEqual-RHS2LangValue]: 	
-	<k> comparison(_,_,(L:Loc => V)) ... </k>
+	<k> comparison(_,_,(L':Loc => V)) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(V:Value,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("isEqual-RHS2LangValue") </trace>
 	when notBool(V isCompoundValue)
@@ -375,7 +377,13 @@ rule [comparison-equal-scalar]:
 	[intermediate]
 
 rule [comparison-equal-array]: 
-	<k> comparison(equal, V1:Loc, V2:Loc) => isEqual(V1, V2) ... </k>
+	<k> comparison(equal, V1':Loc, V2':Loc) => isEqual(V1', V2') ... </k>
+	<thematrix> 
+	... 
+		V1' |-> V1
+		V2' |-> V2  
+	... 
+	</thematrix>	
 	<heap> M:Map </heap>
 	<trace> Trace:List => Trace ListItem("comparison-equal-array") </trace>
 	when locsHoldSameCompound(M, V1, V2) 
@@ -390,7 +398,13 @@ rule [comparison-identical-scalar]:
 	[intermediate]
 	
 rule [comparison-identical-array]: 
-	<k> comparison(identical, V1:Loc, V2:Loc) => isEqual(V1, V2) ... </k>
+	<k> comparison(identical, V1':Loc, V2':Loc) => isEqual(V1', V2') ... </k>
+	<thematrix> 
+	... 
+		V1' |-> V1
+		V2' |-> V2  
+	... 
+	</thematrix>	
 	<heap> M:Map </heap>
 	<trace> Trace:List => Trace ListItem("comparison-identical-array") </trace>
 	when locsHoldSameCompound(M, V1, V2) 
@@ -405,7 +419,13 @@ rule [comparison-less-scalar]:
 	[intermediate]
 
 rule [comparison-less-array]: 
-	<k> comparison(less, V1:Loc, V2:Loc) => less(V1, V2) ... </k>
+	<k> comparison(less, V1':Loc, V2':Loc) => less(V1', V2') ... </k>
+	<thematrix> 
+	... 
+		V1' |-> V1
+		V2' |-> V2  
+	... 
+	</thematrix>	
 	<heap> M:Map </heap>
 	<trace> Trace:List => Trace ListItem("comparison-less-array") </trace>
 	when locsHoldSameCompound(M, V1, V2)
@@ -420,7 +440,13 @@ rule [comparison-lessequal-scalar]:
 	[intermediate]
 
 rule [comparison-lessEqual-array]: 
-	<k> comparison(lessEqual, V1:Loc, V2:Loc) => lessEqual(V1, V2) ... </k>
+	<k> comparison(lessEqual, V1':Loc, V2':Loc) => lessEqual(V1', V2') ... </k>
+	<thematrix> 
+	... 
+		V1' |-> V1
+		V2' |-> V2  
+	... 
+	</thematrix>	
 	<heap> M:Map </heap>
 	<trace> Trace:List => Trace ListItem("comparison-lessEqual-array") </trace>
 	when locsHoldSameCompound(M, V1, V2)
@@ -435,7 +461,13 @@ rule [comparison-greater-scalar]:
 	[intermediate]
 	
 rule [comparison-greater-array]: 
-	<k> comparison(greater, V1:Loc, V2:Loc) => greater(V1, V2) ... </k>
+	<k> comparison(greater, V1':Loc, V2':Loc) => greater(V1', V2') ... </k>
+	<thematrix> 
+	... 
+		V1' |-> V1
+		V2' |-> V2  
+	... 
+	</thematrix>	
 	<heap> M:Map </heap>
 	<trace> Trace:List => Trace ListItem("comparison-greater-array") </trace>
 	when locsHoldSameCompound(M, V1, V2)
@@ -450,7 +482,13 @@ rule [comparison-greaterEqual-scalar]:
 	[intermediate]
 	
 rule [comparison-greaterEqual-array]: 
-	<k> comparison(greaterEqual, V1:Loc, V2:Loc) => greaterEqual(V1, V2) ... </k>
+	<k> comparison(greaterEqual, V1':Loc, V2':Loc) => greaterEqual(V1', V2') ... </k>
+	<thematrix> 
+	... 
+		V1' |-> V1
+		V2' |-> V2  
+	... 
+	</thematrix>		
 	<heap> M:Map </heap>
 	<trace> Trace:List => Trace ListItem("comparison-greaterEqual-array") </trace>
 	when locsHoldSameCompound(M, V1, V2)
@@ -510,7 +548,13 @@ rule    [isEqual-array]:
 // --- if the objects has same class, they are compared as arrays
 
 rule [isEqual-object-same-class]: 	
-	<k> isEqual((L1:Loc => L3), (L2:Loc => L4)) ... </k>
+	<k> isEqual((L1':Loc => L3), (L2':Loc => L4)) ... </k>
+	<thematrix> 
+	... 
+		L1' |-> L1
+		L2' |-> L2  
+	... 
+	</thematrix>	
 	<heap> 
 	... 
 		L1 |-> zval(OID(L3,Class,_),_,_,_)
@@ -523,7 +567,13 @@ rule [isEqual-object-same-class]:
 // --- If the two objects has different classes, the comparison is false
 
 rule [isEqual-object-different-class]: 	
-	<k> isEqual(L1:Loc, L2:Loc) => false ... </k>
+	<k> isEqual(L1':Loc, L2':Loc) => false ... </k>
+	<thematrix> 
+	... 
+		L1' |-> L1
+		L2' |-> L2  
+	... 
+	</thematrix>	
 	<heap> 
 	... 
 		L1 |-> zval(OID(L3,Class1,_),_,_,_)
@@ -598,12 +648,18 @@ rule [less-string]:
 // Arrays and objects
 
 rule [less-array]: 	
-	<k> less(L1:Loc, L2:Loc) => 
-			*Cond(
-			isEqualScalar('FunctionCall("isEqualArray",,'ListWrap('Param(L1),, 'Param(L2))),-1),
-			true,
-			false) ... 
+	<k> less(L1':Loc, L2':Loc) => 
+	*Cond(
+	isEqualScalar('FunctionCall("isEqualArray",,'ListWrap('Param(L1'),, 'Param(L2'))),-1),
+	true,
+	false) ... 
 	</k>
+	<thematrix> 
+	... 
+		L1' |-> L1
+		L2' |-> L2  
+	... 
+	</thematrix>	
 	<heap> 
 	... 
 		L1 |-> zval(V1:Array,_,_,_)
@@ -618,7 +674,13 @@ rule [less-array]:
 // ---  if the objects has same class, they are compared as arrays
 
 rule [less-object-same-class]: 	
-	<k> less((L1:Loc => L3), (L2:Loc => L4)) ... </k>
+	<k> less((L1':Loc => L3), (L2':Loc => L4)) ... </k>
+	<thematrix> 
+	... 
+		L1' |-> L1
+		L2' |-> L2  
+	... 
+	</thematrix>	
 	<heap> 
 	... 
 		L1 |-> zval(OID(L3,Class,_),_,_,_)
@@ -631,7 +693,13 @@ rule [less-object-same-class]:
 // --- If the two objects has different classes, the comparison is false
 
 rule [less-object-diff-class]: 	
-	<k> less(L1:Loc, L2:Loc) => false ... </k>
+	<k> less(L1':Loc, L2':Loc) => false ... </k>
+	<thematrix> 
+	... 
+		L1' |-> L1
+		L2' |-> L2  
+	... 
+	</thematrix>	
 	<heap> 
 	... 
 		L1 |-> zval(OID(L3,Class1,_),_,_,_)
@@ -686,14 +754,18 @@ rule [greater-string]:
 // Array comparison: calls comparison routine "isEqualArray" (taken from PHP docs)
 
 rule [greater-array]: 	
-	<k> greater(L1:Loc, L2:Loc) => 
-			*Cond(
-			//isEqualScalar('FunctionCall("isEqualArray",,'ListWrap('Param(L1),, 'Param(L2))),1),
-			isEqualScalar('FunctionCall("isEqualArray",,'ListWrap('Param(L2),, 'Param(L1))),-1),
-			true,
-			false) ... 
-		
-	</k>
+	<k> greater(L1':Loc, L2':Loc) => 
+	*Cond(
+	//isEqualScalar('FunctionCall("isEqualArray",,'ListWrap('Param(L1),, 'Param(L2))),1),
+	isEqualScalar('FunctionCall("isEqualArray",,'ListWrap('Param(L2'),, 'Param(L1'))),-1),
+	true,
+	false) ... </k>
+	<thematrix> 
+	... 
+		L1' |-> L1
+		L2' |-> L2  
+	... 
+	</thematrix>		
 	<heap> 
 	... 
 		L1 |-> zval(V1:Array,_,_,_)
@@ -708,7 +780,13 @@ rule [greater-array]:
 // --- if the objects has same class, they are compared as arrays
 
 rule [greater-obj-same-class]: 	
-	<k> greater((L1:Loc => L3), (L2:Loc => L4)) ... </k>
+	<k> greater((L1':Loc => L3), (L2':Loc => L4)) ... </k>
+	<thematrix> 
+	... 
+		L1' |-> L1
+		L2' |-> L2  
+	... 
+	</thematrix>	
 	<heap> 
 	... 
 		L1 |-> zval(OID(L3,Class,_),_,_,_)
@@ -721,7 +799,13 @@ rule [greater-obj-same-class]:
 // --- If the two objects has different classes, the comparison is false
 
 rule [greater-obj-diff-class]: 	
-	<k> greater(L1:Loc, L2:Loc) => false ... </k>
+	<k> greater(L1':Loc, L2':Loc) => false ... </k>
+	<thematrix> 
+	... 
+		L1' |-> L1
+		L2' |-> L2  
+	... 
+	</thematrix>		
 	<heap> 
 	... 
 		L1 |-> zval(OID(L3,Class1,_),_,_,_)
@@ -777,7 +861,13 @@ rule [lessEqual-string]:
 // Array comparison: calls comparison routine "isEqualArray" (taken from PHP docs)
 
 rule [lessEqual.-array]: 	
-	<k> lessEqual(L1:Loc, L2:Loc) => *or('Less(L1,, L2), 'IsEqual(L1,, L2)) ... </k>
+	<k> lessEqual(L1':Loc, L2':Loc) => *or('Less(L1',, L2'), 'IsEqual(L1',, L2')) ... </k>
+	<thematrix> 
+	... 
+		L1' |-> L1
+		L2' |-> L2  
+	... 
+	</thematrix>	
 	<heap> 
 	... 
 		L1 |-> zval(V1:Array,_,_,_)
@@ -792,7 +882,13 @@ rule [lessEqual.-array]:
 // --- if the objects has same class, they are compared as arrays
 
 rule [lessEqual-obj-same-class]: 	
-	<k> lessEqual((L1:Loc => L3), (L2:Loc => L4)) ... </k>
+	<k> lessEqual((L1':Loc => L3), (L2':Loc => L4)) ... </k>
+	<thematrix> 
+	... 
+		L1' |-> L1
+		L2' |-> L2  
+	... 
+	</thematrix>		
 	<heap> 
 	... 
 		L1 |-> zval(OID(L3,Class,_),_,_,_)
@@ -805,7 +901,13 @@ rule [lessEqual-obj-same-class]:
 // --- If the two objects has different classes, the comparison is false
 
 rule [lessEqual-obj-diff-class]: 	
-	<k> lessEqual(L1:Loc, L2:Loc) => false ... </k>
+	<k> lessEqual(L1':Loc, L2':Loc) => false ... </k>
+	<thematrix> 
+	... 
+		L1' |-> L1
+		L2' |-> L2  
+	... 
+	</thematrix>	
 	<heap> 
 	... 
 		L1 |-> zval(OID(L3,Class1,_),_,_,_)
@@ -860,7 +962,13 @@ rule [greaterEqual-string]:
 // Array comparison: calls comparison routine "isEqualArray" (taken from PHP docs)
 
 rule [greaterEqual-array]: 	
-	<k> greaterEqual(L1:Loc, L2:Loc) => *or(greater(L1, L2), isEqual(L1, L2)) ... </k>
+	<k> greaterEqual(L1':Loc, L2':Loc) => *or(greater(L1', L2'), isEqual(L1', L2')) ... </k>
+	<thematrix> 
+	... 
+		L1' |-> L1
+		L2' |-> L2  
+	... 
+	</thematrix>	
 	<heap> 
 	... 
 		L1 |-> zval(V1:Array,_,_,_)
@@ -875,7 +983,13 @@ rule [greaterEqual-array]:
 // --- if the objects has same class, they are compared as arrays
 
 rule [greaterEqual-obj-same-class]:
-	<k> greaterEqual((L1:Loc => L3),(L2:Loc => L4)) ... </k>
+	<k> greaterEqual((L1':Loc => L3),(L2':Loc => L4)) ... </k>
+	<thematrix> 
+	... 
+		L1' |-> L1
+		L2' |-> L2  
+	... 
+	</thematrix>	
 	<heap> 
 	... 
 		L1 |-> zval(OID(L3,Class,_),_,_,_)
@@ -888,7 +1002,13 @@ rule [greaterEqual-obj-same-class]:
 // --- If the two objects has different classes, the comparison is false
 
 rule [greaterEqual-obj-diff-class]:
-	<k> greaterEqual(L1:Loc, L2:Loc) => false ... </k>
+	<k> greaterEqual(L1':Loc, L2':Loc) => false ... </k>
+	<thematrix> 
+	... 
+		L1' |-> L1
+		L2' |-> L2  
+	... 
+	</thematrix>	
 	<heap> 
 	... 
 		L1 |-> zval(OID(L3,Class1,_),_,_,_)
@@ -1032,9 +1152,10 @@ rule    [postDecArg2Loc]:
 	    [intermediate]
 
 rule    [postDec]:    
-	    <k> 'PostDec(L:Loc) => V ... </k>
-	    <heap> ... L |-> zval(V:AInt => V -AInt alpha(1),_,_,_) ...  </heap>
-	    [step]
+	<k> 'PostDec(L':Loc) => V ... </k>
+	<thematrix> ... L' |-> L ...  </thematrix>
+	<heap> ... L |-> zval(V:AInt => V -AInt alpha(1),_,_,_) ...  </heap>
+	[step]
 
 /* post inc */
 
@@ -1045,14 +1166,16 @@ rule    [postIncArg2Loc]:
     	[intermediate]
 
 rule    [postInc]:
-	    <k> 'PostInc(L:Loc) => V ... </k>
-	    <heap> ... L |-> zval(V:AInt => V +AInt alpha(1),_,_,_) ...  </heap>
-	    [step]
+	<k> 'PostInc(L':Loc) => V ... </k>
+	<thematrix> ... L' |-> L ...  </thematrix>
+	<heap> ... L |-> zval(V:AInt => V +AInt alpha(1),_,_,_) ...  </heap>
+	[step]
         
 rule    [postInc-null]:
-	    <k> 'PostInc(L:Loc) => NULL ... </k>
- 	    <heap> ... L |-> zval(NULL => alpha(1),_,_,_) ...  </heap>
-	    [step]
+	<k> 'PostInc(L':Loc) => NULL ... </k>
+	<thematrix> ... L' |-> L ...  </thematrix>
+ 	<heap> ... L |-> zval(NULL => alpha(1),_,_,_) ...  </heap>
+	[step]
 
 /* pre dec */
 
@@ -1063,9 +1186,10 @@ rule    [preDec-arg2Loc]:
 	    [intermediate]
 
 rule    [preDec]:    
-	    <k> 'PreDec(L:Loc) => V -AInt alpha(1) ... </k>
-	    <heap> ... L |-> zval(V:AInt => V -AInt alpha(1),_,_,_) ...  </heap>
-	    [step]
+	<k> 'PreDec(Li':Loc) => V -AInt alpha(1) ... </k>
+	<thematrix> ... L' |-> L ...  </thematrix>	
+	<heap> ... L |-> zval(V:AInt => V -AInt alpha(1),_,_,_) ...  </heap>
+	[step]
 
 /* pre inc */
 
@@ -1076,7 +1200,8 @@ rule    [preInc-arg2Loc]:
 	    [intermediate]
 
 rule    [preInc]:    
-	    <k> 'PreInc(L:Loc) => V +AInt alpha(1) ... </k>
-	    <heap> ... L |-> zval(V:AInt => V +AInt alpha(1),_,_,_) ...  </heap>
-	    [step]
+	<k> 'PreInc(L':Loc) => V +AInt alpha(1) ... </k>
+	<thematrix> ... L' |-> L ...  </thematrix>
+	<heap> ... L |-> zval(V:AInt => V +AInt alpha(1),_,_,_) ...  </heap>
+	[step]
 endmodule
