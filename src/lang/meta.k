@@ -560,14 +560,16 @@ rule	<k> runInMem(none, _) => .  ... </k>
                     <globalStaticScope> L3 </globalStaticScope>
                     <superGlobalScope> L4 </superGlobalScope>  
                 </scopes>
-		(mergeArray(
-		    optionLoc2Loc(vheap_read(H1',L4)),
+		bagUnwrap(leftElem(mergeArray(
+		    L4,optionLoc2Loc(vheap_read(H1',L4)),
 		    heap_read(H1',H1,L4 ),H1',H1,
 		    heap_read(H2',H2,L4'),H2',H2,
-		    .List,(L4 |-> vheap_read(H1',L4) ),.Map)
-		+Mem (mergeStackedScopes(St1,H1',H1,St2,H2',H1)))
+		    .List,.Map,.Map,.Map)))
 	//	mergeFunStaticScopes(F1,H1,F2,H2)
 	when L1 ==K L2
+
+
+
 
     rule    mergeMem(_,
                 <scopes> 
@@ -593,79 +595,82 @@ rule	<k> runInMem(none, _) => .  ... </k>
                     <globalStaticScope> L3 </globalStaticScope>
                     <superGlobalScope> L4 </superGlobalScope>  
                 </scopes>
-		((mergeArray(
-		    optionLoc2Loc(vheap_read(H1',L4)),
+		/*
+		((((bagUnwrap(leftElem(mergeArray(
+		    L4,optionLoc2Loc(vheap_read(H1',L4)),
 		    heap_read(H1',H1,L4 ),H1',H1,
 		    heap_read(H2',H2,L4'),H2',H2,
-		    .List,(L4 |-> vheap_read(H1',L4) ),.Map)
+		    .List,.Map,.Map,.Map)))
 		+Mem 
-		(mergeStackedScopes(St1,H1',H1,St2,H2',H2)))
+		(mergeStackedScopes(St1,H1',H1,St2,H2',H2)))))
 		+Mem
-		mergeArray(
-		    optionLoc2Loc(vheap_read(H1',L1)),
+		bagUnwrap(leftElem(mergeArray(
+		    L1,optionLoc2Loc(vheap_read(H1',L1)),
 		    heap_read(H1',H1,L1 ),H1',H1,
 		    heap_read(H2',H2,L1'),H2',H2,
-		    .List,(L1 |-> vheap_read(H1',L1) ),.Map))
-	//	mergeFunStaticScopes(F1,H1,F2,H2)
+		    .List,.Map,.Map,.Map))))
+		*/
+		bagUnwrap(
+		    leftElem(
+			mergeArrayInCtx(
+			    pair(
+				bagWrap(<thematrix> .Map </thematrix> <heap> .Map </heap>), 
+				mapWrap(.Map)),
+			    ListItem(
+				mergeArgs(
+				    L4,optionLoc2Loc(vheap_read(H1',L4)),
+				    heap_read(H1',H1,L4 ),H1',H1,
+				    heap_read(H2',H2,L4'),H2',H2))
+			    ListItem(
+				mergeArgs(
+				    L1,optionLoc2Loc(vheap_read(H1',L1)),
+				    heap_read(H1',H1,L1 ),H1',H1,
+				    heap_read(H2',H2,L1'),H2',H2))   
+			    mergeStackedScopes(St1,H1',H1,St2,H2',H2)   
+			    /*mergeFunStaticScopes(F1,H1',H1,F2,H2',H2)*/)))	
 	when L1 =/=K L2
-
 	
 
+/*
 syntax Bag ::= Bag "+Mem" Bag [function]
 rule (<thematrix> H1' </thematrix> <heap> H1 </heap>) +Mem
      (<thematrix> H2' </thematrix> <heap> H2 </heap>) => 
      (<thematrix> H1' H2' </thematrix> <heap> H1 H2 </heap>)  
 rule .Bag +Mem X => X
 rule X +Mem .Bag => X
-
-syntax Loc ::= "optionLoc2Loc" "(" OptionLoc ")" [function]
-rule optionLoc2Loc(L:Loc) => L
-
-
-
-
-
-
-
-/*
-    rule    mergeMem(_,
-                <scopes> 
-                    <currentScope> L1 </currentScope>
-                    <globalScope> L2 </globalScope>
-                    <globalStaticScope> L3 </globalStaticScope>
-                    <superGlobalScope> L4 </superGlobalScope> 
-                </scopes> 
-                <heap> H1 </heap>,St1,F1,
-                <scopes> 
-                    <currentScope> L1' </currentScope>
-                    <globalScope> L2' </globalScope>
-                    <globalStaticScope> L3' </globalStaticScope>
-                    <superGlobalScope> L4' </superGlobalScope>   
-                </scopes> 
-                <heap> H2 </heap>,St2,F2) => 
-                <scopes>
-                    <currentScope> L1 </currentScope>
-                    <globalScope> L2 </globalScope>
-                    <globalStaticScope> L3 </globalStaticScope>
-                    <superGlobalScope> L4 </superGlobalScope>  
-                </scopes>
-                <heap>
-                	mergeArray(L4,heap_read(H1,L4),H1,heap_read(H2,L4'),H2,.List,.Map)
-                    	mergeArray(L3,heap_read(H1,L3),H1,heap_read(H2,L3'),H2,.List,.Map)
-		        //mergeArray(L1,heap_read(H1,L1),H1,heap_read(H2,L1'),H2,.List,.Map)
-			mergeFunStaticScopes(F1,H1,F2,H2)
-			mergeStackedScopes(St1,H1,St2,H2)	
-                </heap>
-		when (L1 ==K L2) 
 */
+
+
+
+
+
+
+
+
+
     ///////////////////////////////////////////////////////////////////////////
     // Merge array
     ///////////////////////////////////////////////////////////////////////////
 
     // ------------------------------------------------- auxiliary constructions
-    
+
+
+    // option loc 2 loc
+    syntax Loc ::= "optionLoc2Loc" "(" OptionLoc ")" [function]
+    rule optionLoc2Loc(L:Loc) => L
+
+
     // Pairs
     syntax Pair ::= "pair" "(" K "," K ")"
+
+    syntax K ::= "leftElem" "(" Pair ")" [function]
+    rule leftElem(pair(L,_)) => L 
+	
+    syntax K ::= "rightElem" "(" Pair ")" [function]
+    rule rightElem(pair(_,R)) => R 
+
+
+
 
     // isScalarZVal
     syntax Bool ::= "isScalar_zval" "(" Zval ")" [predicate]
@@ -677,6 +682,17 @@ rule optionLoc2Loc(L:Loc) => L
 
     // set wrap 
     syntax K ::= "setWrap" "(" Set ")"
+
+    // bag wrap
+    syntax K ::= "bagWrap" "(" Bag ")"
+    syntax Bag ::= "bagUnwrap" "(" K ")" [function]
+    rule bagUnwrap(bagWrap(B)) => B
+    
+    // map wrap
+    syntax K ::= "mapWrap" "(" Map ")"
+    syntax Map ::= "mapUnwrap" "(" K ")" [function]
+    rule mapUnwrap(mapWrap(M)) => M
+    
 
     // preimage: Map -> K -> Set
     syntax Set ::= "preimage" "(" Map "," K ")" [function]
@@ -721,7 +737,58 @@ rule optionLoc2Loc(L:Loc) => L
 
     // ------------------------------------------------- merging
 
+
+    syntax MergeArgs ::= "mergeArgs" "(" 
+	Loc "," Loc "," 
+	Zval "," Map "," Map "," 
+	Zval "," Map "," Map ")"
+
+    syntax Pair ::= "mergeArrayInCtx" "(" Pair "," List ")" [function]
+    
+    // base case
+    rule mergeArrayInCtx(M:Pair,.List) => M 
+
+    // cons case
+    rule mergeArrayInCtx(M:Pair, ListItem(A:MergeArgs) Args) =>    
+	mergeArrayInCtx(mergeArrayInCtx1(M,A), Args) 
+
+    syntax Pair ::= "mergeArrayInCtx1" "(" Pair "," MergeArgs ")" [function]
+    rule mergeArrayInCtx1(P,mergeArgs(L',L,V1,H1',H1,V2,H2',H2)) => 
+	    mergeArrayInCtx2(P,L',L,V1,H1',H1,V2,H2',H2)  
+
+    
+    syntax Pair ::= "mergeArrayInCtx2" "(" 
+	Pair ","
+	Loc "," Loc ","
+	Zval "," Map "," Map ","
+	Zval "," Map "," Map ")"
+	[function]
+
+    rule mergeArrayInCtx2(
+	    pair(bagWrap(<thematrix> H' </thematrix> <heap> H </heap>),mapWrap(Alpha)),
+	    L',L,
+	    A1,H1',H1,
+	    A2,H2',H2) => 
+	mergeArray(L',L,A1,H1',H1,A2,H2',H2,.List,H',H,Alpha)
+
+
+
     // ----- step 0: init
+    syntax  Pair ::= "mergeArray" "(" 
+	OptionLoc "," Loc ","				    // destination
+	Zval "," Map "," Map ","	    // memory 1
+	Zval "," Map "," Map ","	    // memory 2
+	List "," Map "," Map "," Map ")"    // intermediate memory/result
+	[function]
+ 
+    rule    mergeArray(
+		L',L,
+                zval(Array(_,E1),_,_,_),H1',H1,
+                zval(Array(_,E2),_,_,_),H2',H2,                
+                E,H',H,Alpha) => 
+		mergeArray1(L',L,E1,H1',H1,E2,H2',H2,E,H',H,Alpha)
+ 
+    /* NOTE: old 
     syntax  Bag ::= "mergeArray" "(" 
 	Loc ","			    // destination
 	Zval "," Map "," Map ","    // memory 1
@@ -735,8 +802,72 @@ rule optionLoc2Loc(L:Loc) => L
                 zval(Array(_,E2),_,_,_),H2',H2,                
                 E,H',H) => 
 		mergeArray1(L,E1,H1',H1,E2,H2',H2,E,H',H,.Map)
+    */
+
 
     // ----- step 1: choose variable to merge. Identify locs in the heap.
+
+    syntax  Pair ::= "mergeArray1" "(" 
+	OptionLoc "," Loc "," 
+	List "," Map "," Map "," 
+	List "," Map "," Map "," 
+	List "," Map "," Map ","
+	Map ")"
+	[function]
+
+    // base case - none 
+    rule    mergeArray1(none,L,.List,_,_,.List,_,_,E,H',H,Alpha) => 
+		pair(
+		    bagWrap(
+			<heap> (L |-> zval(Array(head(E),E),array,1,false)) H </heap>
+			<thematrix> H' </thematrix>),
+		    mapWrap(Alpha))
+ 
+    // base case - Loc
+    rule    mergeArray1(L':Loc,L,.List,_,_,.List,_,_,E,H',H,Alpha) => 
+		pair(
+		    bagWrap(
+			<heap> (L |-> zval(Array(head(E),E),array,1,false)) H </heap>
+			<thematrix> (L' |-> L) H' </thematrix>),
+		    mapWrap(Alpha))
+ 
+    // left
+    rule    mergeArray1(
+		L',L,
+		(ListItem([X,Vis,L1']) E1),H1',H1,
+                E2,H2',H2,                
+                E,H',H,
+		Alpha) =>
+	    mergeArray2(
+		L',L,
+		E1,H1',H1,
+		arrayRemove(E2,X),H2',H2,
+		E,H',H,
+		Alpha,
+		pair(X,Vis),
+		pair(
+		    vheap_read(H1',L1'), 
+		    vheap_read(H2',array_read_v(E2,X)))) 
+	
+    // right
+    rule    mergeArray1(
+		L',L,
+		E1,H1',H1,
+                (ListItem([X,Vis,L2']) E2),H2',H2,                
+                E,H',H,
+		Alpha) =>
+	    mergeArray2(
+		L',L,
+		arrayRemove(E1,X),H1',H1,
+		E2,H2',H2,
+		E,H',H, 
+		Alpha,
+		pair(X,Vis),
+		pair(
+		    vheap_read(H1',(array_read_v(E1,X))), 
+		    vheap_read(H2',L2')))
+
+    /*
     syntax  Bag ::= "mergeArray1" "(" 
 	Loc "," 
 	List "," Map "," Map "," 
@@ -746,25 +877,11 @@ rule optionLoc2Loc(L:Loc) => L
 	[function]
 
     
-    // base case
-  
+    // base case  
     rule    mergeArray1(L,.List,_,_,.List,_,_,E,H',H,_) => 
                 <heap> (L |-> zval(Array(head(E),E),array,1,false)) H </heap>
 		<thematrix> H' </thematrix>
   
-    /* 
-    rule    mergeArray1(L,.List,_,_,.List,_,_,E,H',H,_) => 
-                <heap> (L' |-> zval(Array(head(E),E),array,1,false)) H </heap>
-		<thematrix> (L |-> L') H' </thematrix>
-		when fresh(L':Loc)
-    */
-
-    /*
-    rule    mergeArray1(L,.List,_,_,.List,_,_,E,H',H,_) => 
-                <heap> (J |-> zval(Array(head(E),E),array,1,false)) H </heap>
-		<thematrix> (L |-> J) H' </thematrix>
-    */
-
     // left
     rule    mergeArray1(
 		L,
@@ -800,9 +917,43 @@ rule optionLoc2Loc(L:Loc) => L
 		pair(
 		    vheap_read(H1',(array_read_v(E1,X))), 
 		    vheap_read(H2',L2')))
-    
+    */    
+
+
 
     // ----- step 2: retrieve heap locs
+
+    syntax  Pair ::= "mergeArray2" "(" 
+	OptionLoc "," Loc "," 
+	List "," Map "," Map "," 
+	List "," Map "," Map "," 
+	List "," Map "," Map ","
+	Map ","
+	Pair ","		    // the variable (and visibility) being mergedd
+	Pair ")"		    // the pair of heap locations 
+	[function]
+
+
+    rule    mergeArray2(
+		L',L,
+		E1,H1',H1,
+                E2,H2',H2,                
+                E,H',H,
+		Alpha,
+		Var,
+		pair(J1,J2)) =>
+	    mergeArray3(
+		L',L,
+		E1,H1',H1,
+		E2,H2',H2, 
+		E,H',H,
+		Alpha,
+		Var,
+		pair(J1, J2),
+		preimage(H1',J1) preimage(H2',J2))
+
+
+    /*
     syntax  Bag ::= "mergeArray2" "(" 
 	Loc "," 
 	List "," Map "," Map "," 
@@ -831,10 +982,71 @@ rule optionLoc2Loc(L:Loc) => L
 		Var,
 		pair(J1, J2),
 		preimage(H1',J1) preimage(H2',J2))
-  
+    */
 
 
     // ----- step 2: make env entry
+
+
+    syntax  Pair ::= "mergeArray3" "(" 
+	OptionLoc "," Loc "," 
+	List "," Map "," Map "," 
+	List "," Map "," Map "," 
+	List "," Map "," Map ","
+	Map ","
+	Pair ","		    // the variable being merged
+	Pair ","		    // the pair of heap locations 
+	Set ")"			    // codomain
+	[function]
+
+    
+    rule    mergeArray3(
+		L',L,
+		E1,H1',H1,
+                E2,H2',H2,                
+                E,H',H,
+		(setWrap(C) |-> L1' Alpha),
+		pair(X,Vis),
+		_,
+		C:Set) =>
+	    mergeArray1(
+		L',L,
+		E1,H1',H1,
+		E2,H2',H2,
+		E ListItem([X,Vis,L1']),H',H, 
+		(setWrap(C) |-> L1' Alpha))
+
+
+    rule    mergeArray3(
+		L',L,
+		E1,H1',H1,
+                E2,H2',H2,                
+                E,H',H,
+		Alpha,
+		pair(X,Vis),
+		LocPair,
+		C) =>
+	    mergeArray4(
+		L',L,
+		E1,H1',H1,
+		E2,H2',H2,
+		E ListItem([X,Vis,L1']),H',H,
+		(setWrap(C) |-> L1') Alpha,
+		LocPair,
+		C SetItem(L1'),
+		unify(H',C))
+    when (notBool(setWrap(C) in keys(Alpha))) andBool (fresh(L1':Loc))  
+
+
+
+
+
+
+
+
+
+
+    /*
     syntax  Bag ::= "mergeArray3" "(" 
 	Loc "," 
 	List "," Map "," Map "," 
@@ -862,7 +1074,6 @@ rule optionLoc2Loc(L:Loc) => L
 		E2,H2',H2,
 		E ListItem([X,Vis,L']),H',H, 
 		(setWrap(C) |-> L' Alpha))
-		// TODO: maybe we need handwritten set comparison?
 
 
     rule    mergeArray3(
@@ -884,8 +1095,148 @@ rule optionLoc2Loc(L:Loc) => L
 		C SetItem(L'),
 		unify(H',C))
     when (notBool(setWrap(C) in keys(Alpha))) andBool (fresh(L':Loc))  
+    */
+
+
 
     // ----- step 3: 
+
+    syntax  Pair ::= "mergeArray4" "(" 
+	OptionLoc "," Loc "," 
+	List "," Map "," Map "," 
+	List "," Map "," Map "," 
+	List "," Map "," Map ","
+	Map ","
+	Pair ","		    // the pair of heap locations 
+	Set ","
+	Loc ")"
+	[function]
+
+    // variable only in left branch - scalar
+    rule    mergeArray4(
+		L',L,
+		E1,H1',(J1 |-> ZV1) H1,
+                E2,H2',H2,                
+                E,H',H,
+		Alpha,
+		pair(J1,none),
+		C,
+		J) =>
+	    mergeArray1(
+		L',L,
+		E1,H1',(J1 |-> ZV1) H1,
+		E2,H2', H2,
+		E, 
+		H' makeH'(H',C,J),	    
+		makeH(H,J,ZV1,ZV1),  
+		Alpha)
+    when isScalar_zval(ZV1)   
+
+    // variable only in right branch - scalar
+    rule    mergeArray4(
+		L',L,
+		E1,H1',H1,
+                E2,H2',(J2 |-> ZV2) H2,                
+                E,H',H,
+		Alpha,
+		pair(none,J2),
+		C,
+		J) =>
+	    mergeArray1(
+		L',L,
+		E1,H1',H1,
+		E2,H2', (J2 |-> ZV2) H2,
+		E, 
+		H' makeH'(H',C,J),	    
+		makeH(H,J,ZV2,ZV2),  
+		Alpha)
+    when isScalar_zval(ZV2)  
+
+    // variable in both branches - scalar OR (scalar + array)
+    rule    mergeArray4(
+		L',L,
+		E1,H1',(J1 |-> ZV1) H1,
+                E2,H2',(J2 |-> ZV2) H2,                
+                E,H',H,
+		Alpha,
+		pair(J1,J2),
+		C,
+		J) =>
+	    mergeArray1(
+		L',L,
+		E1,H1',(J1 |-> ZV1) H1,
+		E2,H2',(J2 |-> ZV2) H2,
+		E, 
+		H' makeH'(H',C,J),	    
+		makeH(H,J,ZV1,ZV2),  
+		Alpha)
+	when isScalar_zval(ZV1) orBool isScalar_zval(ZV2) 
+
+    // variable only in left branch - array
+    rule    mergeArray4(
+		L',L,
+		E1,H1',(J1 |-> zval(Array(_,E1'),_,_,_)) H1,
+                E2,H2',H2,                
+                E,H',H,
+		Alpha,
+		pair(J1,none),
+		C,
+		J) =>
+	  mergeArray5(
+		L',L,
+		E1,H1',H1,
+		E2,H2',H2,
+		E,
+		H' makeH'(H',C,J),
+		H, 
+		Alpha,
+		bagUnwrap(leftElem(mergeArray1(none,J,E1',H1',H1,.List,.Map,.Map,.List,.Map,.Map,Alpha))))
+ 
+    // variable only in right branch - array
+    rule    mergeArray4(
+		L',L,
+		E1,H1',H1,
+                E2,H2',(J2 |-> zval(Array(_,E2'),_,_,_)) H2,                
+                E,H',H,
+		Alpha,
+		pair(none,J2),
+		C,
+		J) =>
+	    mergeArray5(
+		L',L,
+		E1,H1',H1,
+		E2,H2',H2,
+		E,
+		H' makeH'(H',C,J),
+		H, 
+		Alpha,
+		bagUnwrap(leftElem(mergeArray1(none,J,.List,.Map,.Map,E2',H2',H2,.List,.Map,.Map,Alpha))))
+ 
+
+    // variable in both branches - array 
+    rule    mergeArray4(
+		L',L,
+		E1,H1',
+		(J1 |-> zval(Array(_,E1'),_,_,_)) H1,
+                E2,H2',
+		(J2 |-> zval(Array(_,E2'),_,_,_)) H2,                
+                E,H',H,
+		Alpha,
+		pair(J1,J2),
+		C,
+		J) =>
+	    mergeArray5(
+		L',L,
+		E1,H1',H1,
+		E2,H2',H2,
+		E,
+		H' makeH'(H',C,J),
+		H, 
+		Alpha,
+		bagUnwrap(leftElem(mergeArray1(none,J,E1',H1',H1,E2',H2',H2,.List,.Map,.Map,Alpha))))
+
+
+    /*
     syntax  Bag ::= "mergeArray4" "(" 
 	Loc "," 
 	List "," Map "," Map "," 
@@ -1019,8 +1370,37 @@ rule optionLoc2Loc(L:Loc) => L
 		H, 
 		Alpha,
 		mergeArray1(J,E1',H1',H1,E2',H2',H2,.List,.Map,.Map,Alpha))
-    
+    */    
+
+
+
     // ----- step 3: 
+
+
+    syntax  Pair ::= "mergeArray5" "(" 
+	OptionLoc "," Loc "," 
+	List "," Map "," Map "," 
+	List "," Map "," Map "," 
+	List "," Map "," Map ","
+	Map ","
+	Bag ")"
+	[function]
+    
+    rule    mergeArray5(
+		L',L,
+		E1,H1',H1,
+                E2,H2',H2,                
+                E,H',H,
+		Alpha,
+		<heap> H3 </heap> <thematrix> H3' </thematrix>) =>
+	    mergeArray1(
+		L',L,
+		E1,H1',H1,
+		E2,H2',H2,
+		E, (H' H3'), (H H3),  
+		Alpha)
+
+    /*
     syntax  Bag ::= "mergeArray5" "(" 
 	Loc "," 
 	List "," Map "," Map "," 
@@ -1043,75 +1423,11 @@ rule optionLoc2Loc(L:Loc) => L
 		E2,H2',H2,
 		E, (H' H3'), (H H3),  
 		Alpha)
-
-/*
-    syntax  Map ::= "mergeArray1" "(" Loc "," List "," Map "," List "," Map "," List "," Map ")" [function]
-            
-    // base case
-    rule    mergeArray1(L,.List,_,.List,_,A,H) => 
-                (L |-> zval(Array(head(A),A),array,1,false)) H
-
-    // field exists only in one of the two arrays, scalar case 
-    rule   mergeArray1(L,
-                ListItem([X,Vis,L1]) M1,
-                (L1 |-> V1) S1,
-                M2,S2,V,S) => 
-            mergeArray1(L,M1,S1,M2,S2,
-                ListItem([X,Vis,N]) V,
-                (N |-> V1) S)
-            when (notBool (M2 hasProperty X)) andBool 
-                 isScalar_zval(V1) andBool
-                 fresh(N:Loc) 
-
-    rule   mergeArray1(L,
-                M1,S1,
-                ListItem([X,Vis,L2]) M2,
-                (L2 |-> V2) S2,
-                V,S)=> 
-            mergeArray1(L,M1,S1,M2,S2,
-                ListItem([X,Vis,N]) V,
-                (N |-> V2) S)
-            when (notBool (M1 hasProperty X)) andBool 
-                 isScalar_zval(V2) andBool
-                 fresh(N:Loc)
-
-    // field exists only in one of the two arrays, array case 
-    rule   mergeArray1(L,
-                ListItem([X,Vis,L1]) M1,
-                (L1 |-> Array(_,V1)) S1,
-                M2,S2,V,S) => 
-            mergeArray1(L,M1,S1,M2,S2,
-                ListItem([X,Vis,N]) V,
-                mergeArray1(N,V1,S1,.List,.Map,.List,.Map) S)
-            when (notBool (M2 hasProperty X)) andBool
-                 fresh(N:Loc)
-
-    rule   mergeArray1(L,
-                M1,S1,
-                ListItem([X,Vis,L2]) M2,
-                (L2 |-> Array(_,V2)) S2,
-                V,S)=> 
-            mergeArray1(L,M1,S1,M2,S2,
-                ListItem([X,Vis,N]) V,
-                mergeArray1(N,V2,S2,.List,.Map,.List,.Map) S)
-            when (notBool (M1 hasProperty X)) andBool
-                 fresh(N:Loc)
-
-    // field exists in both arrays
+    */
 
 
-    rule    mergeArray1(L,
-                ListItem([X,Vis,L1]) M1,
-                (L1 |-> V1) S1,
-                M2, 
-                S2,
-                V,S) => 
-            mergeArray1(L,M1,(L1 |-> V1) S1,(arrayRemove(M2,X)),S2,
-                V ListItem(merge_ArrayItem(L1,[X,Vis,L1],array_read(M2,X))),
-                mergeZval(L1,V1,(L1 |-> V1) S1,heap_read(S2,array_read_v(M2,X)),S2) S)
-            when (M2 hasProperty X) //andBool (fresh(N:Loc))
 
-*/
+
 
 
 
@@ -1144,9 +1460,73 @@ rule optionLoc2Loc(L:Loc) => L
     /*@ \subsection{merge the function's static vars part of the heap} */
     ///////////////////////////////////////////////////////////////////////////
 
+    syntax List ::= "mergeFunStaticScopes" "(" Map "," Map "," Map "," 
+			Map "," Map "," Map ")" [function]
+
+    rule    mergeFunStaticScopes(.Map,_,_,.Map,_,_) => .List
+
+    rule    mergeFunStaticScopes(
+		F|->f(_,_,_,L1) F1,
+		H1',
+		H1,
+		F|->f(_,_,_,L2) F2,
+		H2',
+		H2) =>
+		ListItem(
+		    mergeArgs(
+			L1,optionLoc2Loc(vheap_read(H1',L1)),
+			heap_read(H1',H1,L1),
+			H1',
+			H1,
+			heap_read(H2',H2,L2),
+			H2',
+			H2))
+		mergeFunStaticScopes(F1,H1',H1,F2,H2',H2)
+
+
+
+    rule    mergeFunStaticScopes(
+		F|->f(_,_,_,L1) F1,
+		H1',
+		H1,
+		F2,
+		H2',
+		H2) =>
+		ListItem(
+		    mergeArgs(
+			L1,optionLoc2Loc(vheap_read(H1',L1)),
+			heap_read(H1',H1,L1),
+			H1',
+			H1,
+			emptyArrayZval,
+			H2',
+			H2))
+		mergeFunStaticScopes(F1,H1',H1,F2,H2',H2)	
+		when notBool (F in keys(F2))
+
+    rule    mergeFunStaticScopes(
+		F1,
+		H1',
+		H1,
+		F|->f(_,_,_,L2) F2, 
+		H2',
+		H2) =>
+		ListItem(
+		    mergeArgs(
+			L2,optionLoc2Loc(vheap_read(H2',L2)),
+			emptyArrayZval,
+			H1',
+			H1,
+			heap_read(H2',H2,L2),
+			H2',
+			H2))
+		mergeFunStaticScopes(F1,H1',H1,F2,H2',H2)	
+		when notBool (F in keys(F1))
+
+
+    /*
     syntax Map ::= "mergeFunStaticScopes" "(" Map "," Map "," Map "," Map  ")" [function]
 
-/* TODO: decomment
     rule    mergeFunStaticScopes(F|->f(_,_,_,L1)F1,H1,F|->f(_,_,_,L2)F2,H2) =>
 		mergeArray(L1,heap_read(H1,L1),H1,heap_read(H2,L2),H2,.List,.Map) 
 		mergeFunStaticScopes(F1,H1,F2,H2)
@@ -1162,11 +1542,44 @@ rule optionLoc2Loc(L:Loc) => L
 		when notBool (F in keys(F1))
 
     rule    mergeFunStaticScopes(.Map,_,.Map,_) => .Map
-*/
+    */
     ///////////////////////////////////////////////////////////////////////////
     /*@ \subsection{merge the stack content part of the heap} */
     ///////////////////////////////////////////////////////////////////////////
 
+    syntax List ::= "mergeStackedScopes" 
+	"(" List "," Map "," Map "," List "," Map "," Map  ")" [function]
+
+    rule    mergeStackedScopes(.List,_,_,.List,_,_) => .List
+    rule    mergeStackedScopes(ListItem(_),_,_,ListItem(_),_,_) => .List
+
+    // process all elements but the 1st (the global scope!)
+    rule    mergeStackedScopes(
+		S:List ListItem(_),H1',H1,
+		S ListItem(_), H2',H2) => mergeStackedScopes1(S,H1',H1,S,H2',H2)
+	    when S =/=List .List
+
+    syntax List ::= "mergeStackedScopes1" 
+	"(" List "," Map "," Map "," List "," Map "," Map ")" [function]
+
+    rule    mergeStackedScopes1(.List,_,_,.List,_,_) => .List
+
+    rule    mergeStackedScopes1(
+		ListItem(sf(_,L1',_,_,_,_,_)) S,H1',H1,
+		ListItem(sf(_,L1',_,_,_,_,_)) S,H2',H2) =>
+		ListItem(
+		    mergeArgs(
+			L1',optionLoc2Loc(vheap_read(H1',L1')),
+			heap_read(H1',H1,L1'),
+			H1',
+			H1,
+			heap_read(H2',H2,L1'),
+			H2',
+			H2))
+		mergeStackedScopes1(S,H1',H1,S,H2',H2)
+
+
+    /*
     syntax Bag ::= "mergeStackedScopes" 
 	"(" List "," Map "," Map "," List "," Map "," Map  ")" [function]
 
@@ -1184,31 +1597,11 @@ rule optionLoc2Loc(L:Loc) => L
 
     rule    mergeStackedScopes1(.List,_,_,.List,_,_) => .Bag
 
-
-/* version 1 --- seems wrong
-    rule    mergeStackedScopes1(
-		ListItem(sf(_,L,_,_,_,_,_)) S,H1',H1,
-		ListItem(sf(_,L,_,_,_,_,_)) S,H2',H2) =>
-		(mergeArray(
-			optionLoc2Loc(vheap_read(H1',L)),
-			heap_read(H1',H1,L),
-			H1',
-			H1,
-			heap_read(H2',H2,L),
-			H2',
-			H2,
-			.List,
-			(L |-> optionLoc2Loc(vheap_read(H1',L))),
-			.Map)
-		+Mem
-		mergeStackedScopes(S,H1',H1,S,H2',H2))
-*/
-
     rule    mergeStackedScopes1(
 		ListItem(sf(_,L1',_,_,_,_,_)) S,H1',H1,
 		ListItem(sf(_,L1',_,_,_,_,_)) S,H2',H2) =>
-		(mergeArray(
-			optionLoc2Loc(vheap_read(H1',L1')),
+		bagUnwrap(leftElem(mergeArray(
+			L1',optionLoc2Loc(vheap_read(H1',L1')),
 			heap_read(H1',H1,L1'),
 			H1',
 			H1,
@@ -1216,31 +1609,19 @@ rule optionLoc2Loc(L:Loc) => L
 			H2',
 			H2,
 			.List,
-			(L1' |-> vheap_read(H1',L1')),
-			.Map)
+			.Map,
+			.Map,.Map)))
 		+Mem
-		mergeStackedScopes1(S,H1',H1,S,H2',H2))
+		mergeStackedScopes1(S,H1',H1,S,H2',H2)
+    */
 
-/*  OLD (pre-virtual heap. TODO: remove)
-    syntax Map ::= "mergeStackedScopes" "(" List "," Map "," List "," Map  ")" [function]
 
-    rule    mergeStackedScopes(.List,_,.List,_) => .Map
-    rule    mergeStackedScopes(ListItem(_),_,ListItem(_),_) => .Map
 
-    // process all elements but the 1st (the global scope!)
-    rule    mergeStackedScopes(
-		S:List ListItem(_),H1,
-		S ListItem(_), H2) => mergeStackedScopes1(S,H1,S,H2)
-	    when S =/=List .List
 
-    syntax Map ::= "mergeStackedScopes1" "(" List "," Map "," List "," Map  ")" [function]
 
-    rule    mergeStackedScopes1(.List,_,.List,_) => .Map
 
-    rule    mergeStackedScopes1(
-		ListItem(sf(_,L,_,_,_,_,_)) S,H1,
-		ListItem(sf(_,L,_,_,_,_,_)) S,H2) =>
-		mergeArray(L,heap_read(H1,L),H1,heap_read(H2,L),H2,.List,.Map)
-		mergeStackedScopes1(S,H1,S,H2)
-*/
+
+
+
+
 endmodule
