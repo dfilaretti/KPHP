@@ -1,13 +1,15 @@
 <?php
-	$x = 1;
-	$y =& $x;
-	//unset($x);
+
+$v = 1;
 
 
-	function foo($x) {
-		return $x + 1;
-	}
+function foo(&$x) {
+	if (2 == 1) {1;} else {2;};
+	$x = 0;
+}
 
-	$z = foo(123);
+foo($v);
+
+
 
 ?>

@@ -247,6 +247,8 @@ rule [return]:
 	[transition]	
 */	
 
+
+
     rule    <k> POP(K) =>	
                 setCrntScope(CallerScope) ~>
                 setCrntClass(CallerClass) ~>
@@ -264,6 +266,9 @@ rule [return]:
 	<returns> V => Bot </returns> 
 	<returns-loc> VL => .Set </returns-loc>
 	[transition]	
+
+
+
 
 
 syntax Returnable ::= "makeReturnValue" "(" LanguageValue "," Set "," FunReturnType ")"
@@ -295,9 +300,6 @@ rule <k> mergeLocSet(SetItem(L1) SetItem(L2) S) =>
 rule makeReturnValue(V,VL,@byRef) => 
 	NOTICE("Only variable references should be returned by reference in %s on line %d\n") ~>
 	mergeLocSet(VL) // TODO; lub with scalar value
-
-
-
 
 
 /*
@@ -671,18 +673,20 @@ rule [run-function]:
 	<functionArgumentsDeclaration> D:K => . </functionArgumentsDeclaration>
 	<currentScope> L:Loc </currentScope>
 	<heap> H:Map </heap>
+	<thematrix> H' </thematrix>
 	<class> CurrentClass:K </class>
 	<functionStack> S:List </functionStack>
 	<object> CurrentObj:K </object>
-	when (fresh(L1:Loc)) andBool (notBool(H |- Sf isIn S)) 
+	when (fresh(L1:Loc)) andBool (notBool((H',H) |- Sf isIn S)) 
 	[internal]
 
 rule [run-function]:	
 	<k> (runFunction(FName:String, f(Parameters:K, Body:K, RetType:K, LStatic:Loc), Args:K, Class:OptionId,Obj:OptionLoc,Static:Bool,Lab,Sf) ~> K:K) => R ~> K </k>
 	<returns> R </returns>
 	<heap> H:Map </heap>
+	<thematrix> H' </thematrix>
 	<functionStack> S:List </functionStack>
-	when H |- Sf isIn S
+	when (H',H) |- Sf isIn S
 	[internal]
 
 

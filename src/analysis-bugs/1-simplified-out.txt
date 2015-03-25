@@ -1,0 +1,287 @@
+////////////// OUTER MERGE ///////////////////////////
+
+
+            mergeArray ( 
+		#symLoc(1) , 
+
+		heap_read ( 
+			#symLoc(2) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+			mergeArray1 ( 
+				#symLoc(1) , 
+
+				ListItem([ "_GET" , public , #symLoc(9) ]) 
+				ListItem([ "_COOKIE" , public , #symLoc(10) ]) 
+				ListItem([ "_POST" , public , #symLoc(11) ]) 
+				ListItem([ "GLOBALS" , public , #symLoc(3) ]) ,
+
+               			#symLoc(1) |-> zval ( Array ( [ "_GET" , public ] , 
+					ListItem([ "_GET" , public , #symLoc(9) ]) 
+					ListItem([ "_COOKIE" , public , #symLoc(10) ]) 
+					ListItem([ "_POST" , public , #symLoc(11) ]) 
+              				ListItem([ "GLOBALS" , public , #symLoc(3) ]) ) , 
+					array , 1 , false ) 
+				#symLoc(2) |-> zval ( Array ( none , .List ) , array , 1, false ) 
+				#symLoc(3) |-> zval ( Array ( [ "r" , public ] , 
+              				ListItem([ "r" , public , #symLoc(13) ]) ) , array , 1 , false )
+               			#symLoc(4) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+				#symLoc(5) |-> zval ( Array ( none , .List ) , array , 1, false ) 
+				#symLoc(6) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+				#symLoc(7) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+				#symLoc(8) |-> zval ( Array ( none , .List ), array , 1 , false ) 
+				#symLoc(9) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+				#symLoc(10) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+				#symLoc(11) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+				#symLoc(12) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+				#symLoc(13)c|-> zval ( AIntPos , int , 1 , false ) , 
+
+				ListItem([ "_GET" , public , #symLoc(9) ]) 
+				ListItem([ "_COOKIE" , public , #symLoc(10) ]) 
+				ListItem([ "_POST" , public , #symLoc(11) ]) 
+				ListItem([ "GLOBALS" , public , #symLoc(3) ]) , 
+
+				#symLoc(1) |-> zval ( Array( [ "_GET" , public ] , 
+					ListItem([ "_GET" , public , #symLoc(9)]) 
+					ListItem([ "_COOKIE" , public , #symLoc(10) ]) 
+					ListItem([ "_POST" , public , #symLoc(11) ]) 
+					ListItem([ "GLOBALS" , public , #symLoc(3) ]) ) , array , 1 , false ) 
+				#symLoc(2) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+				#symLoc(3) |-> zval( Array ( [ "r" , public ] , 
+					ListItem([ "r" , public , #symLoc(14) ]) ) , array , 1 , false ) 
+				#symLoc(4) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+				#symLoc(5) |-> zval ( Array( none , .List ) , array , 1 , false ) 
+				#symLoc(6) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+				#symLoc(7) |-> zval( Array ( none , .List ) , array , 1 , false ) 
+				#symLoc(8) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+				#symLoc(9) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+				#symLoc(10) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+              			#symLoc(11) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+				#symLoc(12) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+				#symLoc(14) |-> zval ( AIntNeg , int , 1 , false ) ,
+
+               			.List , 
+
+				.Map ) , 
+
+				#symLoc(1) ) , 
+
+		#symLoc(2) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+		mergeArray1 ( #symLoc(1) , 
+              ListItem([ "_GET" , public , #symLoc(9) ]) ListItem([ "_COOKIE" 
+              , public , #symLoc(10) ]) ListItem([ "_POST" , public , #symLoc(
+              11) ]) ListItem([ "GLOBALS" , public , #symLoc(3) ]) , #symLoc(1
+              ) |-> zval ( Array ( [ "_GET" , public ] , ListItem([ "_GET" , 
+              public , #symLoc(9) ]) ListItem([ "_COOKIE" , public , #symLoc(
+              10) ]) ListItem([ "_POST" , public , #symLoc(11) ]) ListItem([ 
+              "GLOBALS" , public , #symLoc(3) ]) ) , array , 1 , false ) 
+              #symLoc(2) |-> zval ( Array ( none , .List ) , array , 1 , false
+               ) #symLoc(3) |-> zval ( Array ( [ "r" , public ] , ListItem([ 
+              "r" , public , #symLoc(13) ]) ) , array , 1 , false ) #symLoc(4)
+               |-> zval ( Array ( none , .List ) , array , 1 , false ) #symLoc
+              (5) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+              #symLoc(6) |-> zval ( Array ( none , .List ) , array , 1 , false
+               ) #symLoc(7) |-> zval ( Array ( none , .List ) , array , 1 , 
+              false ) #symLoc(8) |-> zval ( Array ( none , .List ) , array , 1
+               , false ) #symLoc(9) |-> zval ( Array ( none , .List ) , array 
+              , 1 , false ) #symLoc(10) |-> zval ( Array ( none , .List ) , 
+              array , 1 , false ) #symLoc(11) |-> zval ( Array ( none , .List 
+              ) , array , 1 , false ) #symLoc(12) |-> zval ( Array ( none , 
+              .List ) , array , 1 , false ) #symLoc(13) |-> zval ( AIntPos , 
+              int , 1 , false ) , ListItem([ "_GET" , public , #symLoc(9) ]) 
+              ListItem([ "_COOKIE" , public , #symLoc(10) ]) ListItem([ 
+              "_POST" , public , #symLoc(11) ]) ListItem([ "GLOBALS" , public 
+              , #symLoc(3) ]) , #symLoc(1) |-> zval ( Array ( [ "_GET" , 
+              public ] , ListItem([ "_GET" , public , #symLoc(9) ]) ListItem([
+               "_COOKIE" , public , #symLoc(10) ]) ListItem([ "_POST" , public
+               , #symLoc(11) ]) ListItem([ "GLOBALS" , public , #symLoc(3) ]) 
+              ) , array , 1 , false ) #symLoc(2) |-> zval ( Array ( none , 
+              .List ) , array , 1 , false ) #symLoc(3) |-> zval ( Array ( [ 
+              "r" , public ] , ListItem([ "r" , public , #symLoc(14) ]) ) , 
+              array , 1 , false ) #symLoc(4) |-> zval ( Array ( none , .List )
+               , array , 1 , false ) #symLoc(5) |-> zval ( Array ( none , 
+              .List ) , array , 1 , false ) #symLoc(6) |-> zval ( Array ( none
+               , .List ) , array , 1 , false ) #symLoc(7) |-> zval ( Array ( 
+              none , .List ) , array , 1 , false ) #symLoc(8) |-> zval ( Array
+               ( none , .List ) , array , 1 , false ) #symLoc(9) |-> zval ( 
+              Array ( none , .List ) , array , 1 , false ) #symLoc(10) |-> 
+              zval ( Array ( none , .List ) , array , 1 , false ) #symLoc(11)
+               |-> zval ( Array ( none , .List ) , array , 1 , false ) #symLoc
+              (12) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+              #symLoc(14) |-> zval ( AIntNeg , int , 1 , false ) , .List , 
+              .Map ) , 
+
+		zval ( Array ( [ "_GET" , public ] , ListItem([ "_GET" 
+              , public , #symLoc(9) ]) ListItem([ "_COOKIE" , public , #symLoc
+              (10) ]) ListItem([ "_POST" , public , #symLoc(11) ]) ListItem([ 
+              "GLOBALS" , public , #symLoc(3) ]) ) , array , 1 , false ) , 
+
+              #symLoc(1) |-> zval ( Array ( [ "_GET" , public ] , ListItem([ 
+              "_GET" , public , #symLoc(9) ]) ListItem([ "_COOKIE" , public , 
+              #symLoc(10) ]) ListItem([ "_POST" , public , #symLoc(11) ]) 
+              ListItem([ "GLOBALS" , public , #symLoc(3) ]) ) , array , 1 , 
+              false ) #symLoc(2) |-> zval ( Array ( none , .List ) , array , 1
+               , false ) #symLoc(3) |-> zval ( Array ( [ "r" , public ] , 
+              ListItem([ "r" , public , #symLoc(15) ]) ) , array , 1 , false )
+               #symLoc(4) |-> zval ( Array ( none , .List ) , array , 1 , 
+              false ) #symLoc(5) |-> zval ( Array ( none , .List ) , array , 1
+               , false ) #symLoc(6) |-> zval ( Array ( none , .List ) , array 
+              , 1 , false ) #symLoc(7) |-> zval ( Array ( none , .List ) , 
+              array , 1 , false ) #symLoc(8) |-> zval ( Array ( none , .List )
+               , array , 1 , false ) #symLoc(9) |-> zval ( Array ( none , 
+              .List ) , array , 1 , false ) #symLoc(10) |-> zval ( Array ( 
+              none , .List ) , array , 1 , false ) #symLoc(11) |-> zval ( 
+              Array ( none , .List ) , array , 1 , false ) #symLoc(12) |-> 
+              zval ( Array ( none , .List ) , array , 1 , false ) #symLoc(15)
+               |-> zval ( AIntZero , int , 1 , false ) , 
+
+		.List , 
+
+		.Map )
+        </heap> 
+
+
+
+
+
+//////////////////// OUTER MERGE RESULT (STUCK) ///////////////////////
+
+
+
+mergeArray1 ( 
+	#symLoc(1) , 
+
+	.List , 
+
+	#symLoc(1) |-> zval ( Array ( ["GLOBALS" , public ] , 
+		ListItem([ "GLOBALS" , public , #symLoc(3) ]) 
+		ListItem([ "_POST" , public , #symLoc(11) ]) 
+		ListItem([ "_COOKIE" , public , #symLoc(10) ]) 
+		ListItem([ "_GET" , public ,#symLoc(9) ]) ) , array , 1 , false ) 
+	#symLoc(2) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(3) |-> zval( Array ( [ "r" , public ] , 
+		ListItem([ "r" , public , #symLoc(13) ]) ) , array , 1 , false ) 
+	#symLoc(9) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(10) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(11) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(13) |-> zval ( AIntTop , int , 1 , false ) , 
+
+
+	ListItem([ "_COOKIE" ,public , #symLoc(10) ]) 
+	ListItem([ "_POST" , public , #symLoc(11) ]) 
+	ListItem([ "GLOBALS" , public , #symLoc(3) ]) , 
+
+	#symLoc(1) |-> zval ( Array ( [ "_GET" , public ] , ListItem([ "_GET" , 
+              public , #symLoc(9) ]) ListItem([ "_COOKIE" , public , #symLoc(
+              10) ]) ListItem([ "_POST" , public , #symLoc(11) ]) ListItem([ 
+              "GLOBALS" , public , #symLoc(3) ]) ) , array , 1 , false )              
+	#symLoc(2) |-> zval ( Array ( none , .List ) , array , 1 , false) 
+	#symLoc(3) |-> zval ( Array ( [ "r" , public ] , 
+		ListItem([ "r" , public , #symLoc(15) ]) ) , array , 1 , false ) 
+	#symLoc(4) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(5) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(6) |-> zval ( Array ( none , .List ) , array , 1 , false) 
+	#symLoc(7) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(8) |-> zval ( Array ( none , .List ) , array , 1, false ) 
+	#symLoc(9) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(10) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(11) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(12) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(15) |-> zval ( AIntZero , int , 1 , false ) , 
+	
+
+	ListItem([ "_GET" , public , #symLoc(9) ])      
+	ListItem([ "_COOKIE" , public , #symLoc(10) ]) 
+	ListItem([ "_POST" , public , #symLoc(11) ]) 
+	ListItem([ "GLOBALS" , public , #symLoc(3) ]) , 
+
+	#symLoc(3) |-> zval ( Array ( [ "r" , public ], 
+		ListItem([ "r" , public , #symLoc(13) ]) ) , array , 1 , false ) 
+	#symLoc(9) |-> zval ( Array ( none , .List ) , array , 1, false ) 
+	#symLoc(10) |-> zval ( Array ( none , .List ) , array, 1 , false ) 
+	#symLoc(11) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(13) |-> zval ( AIntTop , int , 1 , false ) )
+
+
+
+
+
+
+
+
+
+
+
+
+//////////////////// INNER MERGE //////////////////////////////////////
+
+mergeArray1 ( 
+	#symLoc(1) , 
+	
+	ListItem([ "_GET" , public , #symLoc(9)]) 
+	ListItem([ "_COOKIE" , public , #symLoc(10) ]) 
+	ListItem([ "_POST" , public , #symLoc(11) ]) 
+	ListItem([ "GLOBALS" , public , #symLoc(3) ]) , 
+
+	#symLoc(1) |-> zval ( Array ( [ "_GET" , public ] , 
+		ListItem([ "_GET" , public , #symLoc(9) ]) 
+		ListItem(["_COOKIE" , public , #symLoc(10) ]) 
+		ListItem([ "_POST" , public, #symLoc(11) ]) 
+		ListItem([ "GLOBALS" , public , #symLoc(3) ]) ) , array , 1 , false ) 
+	#symLoc(2) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(3) |-> zval ( Array ( [ "r" , public ] , 
+		ListItem([ "r" , public , #symLoc(13) ]) ) , array , 1 , false ) 
+	#symLoc(4) |-> zval ( Array ( none , .List ), array , 1 , false ) 
+	#symLoc(5) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(6) |-> zval ( Array ( none, .List ) , array , 1 , false ) 
+	#symLoc(7) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(8) |-> zval ( Array( none , .List ) , array , 1 , false ) 
+	#symLoc(9) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(10) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(11)|-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(12) |-> zval ( Array ( none , .List ) , array , 1 , false )       
+	#symLoc(13) |-> zval ( AIntPos , int , 1 , false ) , 
+
+
+	ListItem([ "_GET" , public , #symLoc(9) ]) 
+	ListItem([ "_COOKIE" , public , #symLoc(10) ]) 
+	ListItem([ "_POST" , public , #symLoc(11) ])       
+	ListItem([ "GLOBALS" , public , #symLoc(3) ]) , 
+
+	#symLoc(1) |-> zval ( Array ( [ "_GET" , public ] , 
+		ListItem([ "_GET" , public , #symLoc(9) ]) 
+		ListItem([ "_COOKIE" , public , #symLoc(10) ]) 
+              	ListItem([ "_POST" , public , #symLoc(11) ]) 
+		ListItem([ "GLOBALS" , public , #symLoc(3) ]) ) , array , 1 , false ) 
+	#symLoc(2) |-> zval ( Array ( none , .List ) , array , 1 , false) 
+	#symLoc(3) |-> zval ( Array ( [ "r" , public ] , 
+		ListItem([ "r" , public , #symLoc(14) ]) ) , array , 1 , false ) 
+	#symLoc(4)|-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(5) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(6) |-> zval ( Array ( none , .List ) , array , 1 , false) 
+	#symLoc(7) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(8) |-> zval ( Array ( none , .List ) , array , 1, false ) 
+	#symLoc(9) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(10) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(11) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(12) |-> zval ( Array ( none , .List ) , array , 1 , false ) 
+	#symLoc(14) |-> zval ( AIntNeg , int , 1 , false ) , .List , .Map )
+
+////////////////////// Inner merge RESULT /////////////////////////////////
+
+
+	#symLoc(1) |-> zval ( Array ( [ "GLOBALS" , public ] , 
+		ListItem([ "GLOBALS" , public , #symLoc(3) ]) 
+		ListItem([ "_POST", public , #symLoc(11) ]) 
+		ListItem([ "_COOKIE" , public , #symLoc(10) ]) 
+		ListItem([ "_GET" , public , #symLoc(9) ]) ) , array , 1 , false )
+	#symLoc(2) |-> zval ( Array ( none , .List ) , array , 1 , false )    
+	#symLoc(3) |-> zval ( Array ( [ "r" , public ] , 
+		ListItem([ "r" , public , #symLoc(13) ]) ) , array , 1 , false )
+	#symLoc(9) |-> zval ( Array ( none , .List ) , array , 1 , false )
+        #symLoc(10) |-> zval ( Array ( none , .List ) , array , 1 , false )
+        #symLoc(11) |-> zval ( Array ( none , .List ) , array , 1 , false )
+        #symLoc(13) |-> zval ( AIntTop , int , 1 , false )
+
+
+
+
+

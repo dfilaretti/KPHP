@@ -585,43 +585,70 @@ rule [array-write-current-some]:
 
 // TODO: check after the introduction of <thematrix>
 
-syntax  Zval ::= "heap_read" "(" Map "," Loc ")" [function]
+syntax  Zval ::= "heap_read" "(" Map "," Map "," Loc ")" [function]
 
-rule	heap_read(H,L) => heap_read1(H,L)
-	when (L in keys(H))
+rule	heap_read(H',H,L') => heap_read1(H',H,L')
+	when (L' in keys(H'))
 
 /*
 rule	heap_read(H,L) => zval(Array(none,.List),array,1,false)	
 	when notBool(L in keys(H))
 */
 
-syntax  Zval ::= "heap_read1" "(" Map "," Loc ")" [function]
+syntax  Zval ::= "heap_read1" "(" Map "," Map "," Loc ")" [function]
 
-rule    heap_read1(_:Map (L:Loc |-> V:Zval) _:Map,L:Loc) => V 
+rule    heap_read1((L' |-> L) _,(L |-> V) _,L') => V 
 
 
-syntax  ArrayItem ::= "array_read" "(" List "," Key ")" [function]
+syntax  OptionArrayItem ::= "array_read" "(" List "," Key ")" [function]
 
+rule array_read(.List,_) => none
 rule array_read((ListItem([K,V,L]) A:List),K) => [K,V,L]
 rule array_read((ListItem([K',_,_]) A:List),K) => array_read(A,K)
     when K =/=K K'
 
-syntax  Loc ::= "array_read_v" "(" List "," Key ")" [function]
-
+syntax  OptionLoc ::= "array_read_v" "(" List "," Key ")" [function]
 rule    array_read_v(A,K) => arrayItem2Loc(array_read(A,K))
 
+syntax  Loc ::= "optionLoc2Loc" "(" OptionLoc ")" [function]
+rule optionLoc2Loc(L:Loc) => L
+
 syntax  List ::= "arrayRemove" "(" List "," Key ")" [function]
-
-rule    arrayRemove(ListItem([K,V,L]) A,K1) => ListItem([K,V,L]) arrayRemove(A,K)
-        when (K =/=K K1)
-
-rule    arrayRemove(ListItem([K,V,L]) A,K) => arrayRemove(A,K)
-
 rule    arrayRemove(.List,_) => .List
 
-syntax  Loc ::= "arrayItem2Loc" "(" ArrayItem ")" [function]
+rule    arrayRemove(ListItem([K,V,L]) A,K1) => ListItem([K,V,L]) arrayRemove(A,K1)
+        when (K =/=K K1)
 
+rule    arrayRemove(ListItem([K,V,L]) A,K1) => arrayRemove(A,K1)
+	when K ==K K1
+
+syntax  OptionLoc ::= "arrayItem2Loc" "(" OptionArrayItem ")" [function]
 rule    arrayItem2Loc([_,_,L]) => L
+rule	arrayItem2Loc(none) => none
+
+
+
+
+// reading the virtual heap
+
+syntax 	OptionLoc ::= "vheap_read" "(" Map "," OptionLoc ")" [function]
+rule 	vheap_read(_,none) => none
+rule	vheap_read(L' |-> J _,L') => J
+rule	vheap_read(H',L') => none
+	when notBool(L' in keys(H'))
+
+// read a set of locations from the virtual heap
+
+syntax 	Set ::= "vheapReadSet" "(" Map "," Set ")" [function]
+rule	vheapReadSet(_,.Set) => .Set
+rule	vheapReadSet(H',SetItem(L')S) =>
+		optionItem2SetItem(vheap_read(H',L')) vheapReadSet(H',S)
+
+syntax  Set ::= "optionItem2SetItem" "(" K ")" [function]
+rule    optionItem2SetItem(none) => .Set
+rule    optionItem2SetItem(X) => SetItem(X) when X =/=K none
+
+
 
 // Membership operations
 
