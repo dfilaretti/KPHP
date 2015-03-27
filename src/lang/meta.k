@@ -772,7 +772,6 @@ rule X +Mem .Bag => X
 	mergeArray(L',L,A1,H1',H1,A2,H2',H2,.List,H',H,Alpha)
 
 
-
     // ----- step 0: init
     syntax  Pair ::= "mergeArray" "(" 
 	OptionLoc "," Loc ","				    // destination
@@ -922,7 +921,6 @@ rule X +Mem .Bag => X
 
 
     // ----- step 2: retrieve heap locs
-
     syntax  Pair ::= "mergeArray2" "(" 
 	OptionLoc "," Loc "," 
 	List "," Map "," Map "," 
