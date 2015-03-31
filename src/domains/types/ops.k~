@@ -1,0 +1,29 @@
+require "lattice.k"
+module OPS
+       imports LATTICE
+
+       syntax AInt ::= AInt "+AInt" AInt [function]
+       syntax AInt ::= AInt "-AInt" AInt [function]
+       syntax AInt ::= AInt "*AInt" AInt [function]
+       syntax AInt ::= AInt "/AInt" AInt [function]
+       syntax AInt ::= AInt "modAInt" AInt [function]
+       syntax AInt ::= "negative_AInt" "(" AInt ")" [function]       
+
+       rule AInt +AInt AInt => AInt
+       rule AInt -AInt AInt => AInt
+       rule AInt *AInt AInt => AInt
+       rule AInt /AInt AInt => AInt
+       rule AInt modAInt AInt => AInt
+       rule negative_AInt(AInt) => AInt
+
+       syntax AFloat ::== AFloat +AFloat AFloat	[function]
+       syntax AFloat ::== AFloat -AFloat AFloat [function]
+       syntax AFloat ::== AFloat *AFloat AFloat [function]
+       syntax AFloat ::== AFloat /AFloat AFloat [function]
+       syntax AFloat ::= "negative_AFloat" "(" AFloat ")" [function]
+
+       rule  AFloat "+AFloat" AFloat => AFloat
+       rule  AFloat "-AFloat" AFloat => AFloat
+       rule  AFloat "*AFloat" AFloat => AFloat
+       rule  AFloat "/AFloat" AFloat => AFloat
+       rule negative_AFloat(AFloat) => AFloat

@@ -1,0 +1,15 @@
+require "lattice.k"
+
+module ALPHA
+	imports LATTICE
+
+	syntax K ::= "alpha" "(" K ")" [function]
+
+	rule alpha(N:Int) => AInt
+
+	rule alpha(F:Float) => AFloat
+
+	rule alpha(B:Bool) => ABool
+
+	rule alpha(S:String) => AStringUntainted //used only for litterals ?
+endmodule

@@ -1,0 +1,9 @@
+module LATTICE
+       
+       syntax AString ::== "AStringTainted" | "AStringUntainted" | "AStringTop" | "ABot"
+       
+       syntax AInt ::== "AInt"
+
+       syntax ABool ::== "ABool"
+
+       syntax AFloat ::== "AFloat"
