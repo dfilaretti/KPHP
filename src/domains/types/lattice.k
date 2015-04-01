@@ -1,12 +1,12 @@
 module LATTICE
        
-       syntax AString ::== "AStringTainted" | "AStringUntainted" | "AStringTop" | "AStringBot"
+       syntax AString ::= "AStringTainted" | "AStringUntainted" | "AStringTop" | "AStringBot"
        
-       syntax AInt ::== "AInt"
+       syntax AInt ::= "AInt"
 
-       syntax ABool ::== "ABool"
+       syntax ABool ::= "ABool"
 
-       syntax AFloat ::== "AFloat"
+       syntax AFloat ::= "AFloat"
 
        syntax  AInt ::= "lub_AInt" "(" AInt "," AInt ")" [function]
        
@@ -37,5 +37,16 @@ module LATTICE
        rule lub_AString(AStringBot,X)=>X
        
        rule lub_AString(X,AStringBot)=>X
+	   
+	   
+	   //no reduction rules for these
+	   syntax  Bool ::= "valid" "(" ABool ")"	                [predicate]
+	   syntax  Bool ::= "unsatisfiable" "(" ABool ")"    		[predicate]
+	   
+	   
+	   
+	   
+	   
+	   
 
 endmodule

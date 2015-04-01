@@ -16,16 +16,16 @@ module OPS
        rule AInt modAInt AInt => AInt
        rule negative_AInt(AInt) => AInt
 
-       syntax AFloat ::== AFloat +AFloat AFloat	[function]
-       syntax AFloat ::== AFloat -AFloat AFloat [function]
-       syntax AFloat ::== AFloat *AFloat AFloat [function]
-       syntax AFloat ::== AFloat /AFloat AFloat [function]
+       syntax AFloat ::= AFloat "+AFloat" AFloat	[function]
+       syntax AFloat ::= AFloat "-AFloat" AFloat [function]
+       syntax AFloat ::= AFloat "*AFloat" AFloat [function]
+       syntax AFloat ::= AFloat "/AFloat" AFloat [function]
        syntax AFloat ::= "negative_AFloat" "(" AFloat ")" [function]
 
-       rule  AFloat "+AFloat" AFloat => AFloat
-       rule  AFloat "-AFloat" AFloat => AFloat
-       rule  AFloat "*AFloat" AFloat => AFloat
-       rule  AFloat "/AFloat" AFloat => AFloat
+       rule  AFloat +AFloat AFloat => AFloat
+       rule  AFloat -AFloat AFloat => AFloat
+       rule  AFloat *AFloat AFloat => AFloat
+       rule  AFloat /AFloat AFloat => AFloat
        rule negative_AFloat(AFloat) => AFloat
  // to boolean
     syntax  K ::= "*toBoolean" "(" LanguageValue ")" [strict]
@@ -43,7 +43,7 @@ module OPS
 	        [internal]
 
     rule    [toBoolean-string]:    
-	        <k> *toBoolean(S:String) => ABool ... </k>
+	        <k> *toBoolean(S:AString) => ABool ... </k>
 	        [internal]
 
 
@@ -83,13 +83,61 @@ module OPS
 	        [internal]
 
     rule    [toFloat-string]:
-	        <k> *toFloat(S:String) => *toFloat(string2Number(S)) ... </k>
+	        <k> *toFloat(S:AString) => *toFloat(string2Number(S)) ... </k>
 	        [internal]
 	
     rule    [toFloat-compound]:	
 	        <k> *toFloat(O:CompoundValue) => WARNING("conversion of compound types to integer is undefined (http://www.php.net/manual/en/language.types.integer.php)\n") ~> AFloat  ... </k>
 	        [internal, error]
 
+	//to string		
+			
+	syntax AString ::= "*toString" "(" LanguageValue ")" [strict]
+
+	rule [toString-int]:
+			<k> *toString(I:AInt) => AStringUntainted ... </k>
+			<trace> Trace:List => Trace ListItem("toString-int") </trace>
+			[internal]
+	
+	rule [toString-bool]:
+			<k> *toString(B:ABool) => AStringUntainted ... </k>
+			<trace> Trace:List => Trace ListItem("toString-bool") </trace>
+			[internal]
+			
+	rule [toString-float]:   
+			<k> *toString(F:AFloat) => AStringUntainted ... </k>
+			<trace> Trace:List => Trace ListItem("toString-float") </trace>
+			[internal]
+	rule [toString-string]:   
+			<k> *toString(S:AString) => S ... </k>
+			<trace> Trace:List => Trace ListItem("toString-string") </trace>
+			[internal]
+
+	rule [toString-array]:   
+			<k> *toString(Arr:Array) => AStringUntainted ... </k> //concrete string is "Array" ?
+			<trace> Trace:List => Trace ListItem("toString-array") </trace>
+			[internal]
+	
+	// TODO: put correct error msg
+	// TODO: use magic method __toString()
+
+	rule [toString-object]:   
+			<k> *toString(Obj:Object) => ERROR("Object of class %s could not be converted to string in %s on line %d") ... </k>
+			<trace> Trace:List => Trace ListItem("toString-array") </trace>
+			[internal, error]
+
+	rule [toString-null]:   
+			<k> *toString(NULL) => AStringUntainted ... </k>
+			<trace> Trace:List => Trace ListItem("toString-null") </trace>
+			[internal]
+	
+	syntax K ::= "string2Number" "(" AString ")"
+	
+	rule [string2Number]:
+			<k> string2Number(S:AString) => AInt ... </k>
+			<trace> Trace:List => Trace ListItem("string2Number") </trace>
+			[internal]
+			
     syntax  ABool ::= "notABool" ABool [function]
 
     rule    notABool ABool => ABool
@@ -123,5 +171,13 @@ module OPS
 	
     rule [input]:
     	<k>  user_input => AStringTainted ...</k>
-
+	
+	
+	//can't be resolved in this domain
+	
+	syntax Bool ::= "isNumericString" "(" AString ")" [function]	
+				| "isIntString" "(" AString ")" [function]	
+				| "isFloatString" "(" AString ")" [function]	
+	
+	
 endmodule

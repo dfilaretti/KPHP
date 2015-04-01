@@ -405,7 +405,9 @@ rule [strlen-arg2LangValue]:
 	<trace> Trace:List => Trace ListItem("strlen-arg2LangValue") </trace>
 	[intermediate]
 	
-rule [strlen-arg2String]: 
+
+
+	rule [strlen-arg2String]: 
 	<k> strlen(V:LanguageValue => *toString(V)) ... </k>
 	<trace> Trace:List => Trace ListItem("strlen-arg2String") </trace>
 	when notBool (isStringType(V))
@@ -489,6 +491,8 @@ rule [vardump-object]:
 	[internal]
 
 /* var_dumping a string  */
+
+
 rule [vardump-string]:    
 	<k> var_dump (L':Loc) => 
             *Cond(IsRef, print("&"), .) ~>
@@ -500,7 +504,7 @@ rule [vardump-string]:
             print("\"\n") ...
         </k>
 	<thematrix> ... L' |-> L ... </thematrix>	
-	<heap> ... L |-> zval(S:String,_,_,IsRef) ... </heap>
+	<heap> ... L |-> zval(S:AString,_,_,IsRef) ... </heap>
 	<trace> Trace:List => Trace ListItem("vardump-string") </trace>
 	[internal]
 
@@ -746,7 +750,7 @@ rule [printr-string]:
             'Echo( 'ListWrap("\n") ) ...
 	</k>
 	<thematrix> ... L' |-> L ... </thematrix>	
-	<heap> ... L |-> zval(S:String, _, _, IsRef:Bool) ... </heap>
+	<heap> ... L |-> zval(S:AString,_,_,IsRef:Bool) ... </heap>
 	<trace> Trace:List => Trace ListItem("printr-string") </trace>
 	[internal]
 
@@ -992,7 +996,7 @@ rule [is-type-scalar]:
 	[internal]
 
 rule [is-type-numeric-numericString2Number]:
-	<k> is_type(S:String, "numeric") => isNumericString(S) ... </k>
+	<k> is_type(S:AString, "numeric") => isNumericString(S) ... </k>
 	<trace> Trace:List => Trace ListItem("is-type-numeric-numericString2Number") </trace>
 	[internal]
 
@@ -1014,7 +1018,7 @@ syntax K ::= "label" "(" K ")" [strict]
 
 rule label(S:ConvertibleToLanguageValue => convertToLanguageValue(S))
 
-rule <k> label(S:String) => NULL ... </k>
+rule <k> label(S:AString) => NULL ... </k>
 	 <label> _ => S </label>
 
 // ---------------------------------------------------------------------------------------------

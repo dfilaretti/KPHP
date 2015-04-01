@@ -1,9 +1,12 @@
 require "objects.k"
 require "arrays.k"
+require "shared.k"
+
 
 module MEMORY
 	imports OBJECTS
 	imports ARRAYS
+	imports SHARED
 	
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
@@ -953,7 +956,8 @@ rule [rget-null]:
 	[internal]
 
 // String element access. Most likely we'll need to change this one 
-
+//TODO : put in domains
+/*@
 rule [rget-string-index]:	
 	<k> RgetRef(ref(L':Loc, Index:Int),_) => substrString(Str, Index, Index +Int 1) ... </k>
 	<thematrix> ... L' |-> L ... </thematrix>	
@@ -967,7 +971,7 @@ rule [rget-string-undef]:
 	<heap> ... L |-> zval(Str:String,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("rget-string-undef") </trace>
 	[internal]
-	
+*/
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Lget} 
 		LGet works the same ways as RGet when the reference being resolved does exists. 
