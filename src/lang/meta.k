@@ -560,13 +560,19 @@ rule	<k> runInMem(none, _) => .  ... </k>
                     <globalStaticScope> L3 </globalStaticScope>
                     <superGlobalScope> L4 </superGlobalScope>  
                 </scopes>
-		bagUnwrap(leftElem(mergeArray(
-		    L4,optionLoc2Loc(vheap_read(H1',L4)),
-		    heap_read(H1',H1,L4 ),H1',H1,
-		    heap_read(H2',H2,L4'),H2',H2,
-		    .List,.Map,.Map,.Map)))
-	//	mergeFunStaticScopes(F1,H1,F2,H2)
-	when L1 ==K L2
+		bagUnwrap(
+		    leftElem(
+			mergeArrayInCtx(
+			    pair(
+				bagWrap(<thematrix> .Map </thematrix> <heap> .Map </heap>), 
+				mapWrap(.Map)),
+			    ListItem(
+				mergeArgs(
+				    L4,optionLoc2Loc(vheap_read(H1',L4)),
+				    heap_read(H1',H1,L4 ),H1',H1,
+				    heap_read(H2',H2,L4'),H2',H2))
+			    mergeFunStaticScopes(F1,H1',H1,F2,H2',H2))))	
+		when L1 ==K L2
 
 
 
@@ -595,21 +601,6 @@ rule	<k> runInMem(none, _) => .  ... </k>
                     <globalStaticScope> L3 </globalStaticScope>
                     <superGlobalScope> L4 </superGlobalScope>  
                 </scopes>
-		/*
-		((((bagUnwrap(leftElem(mergeArray(
-		    L4,optionLoc2Loc(vheap_read(H1',L4)),
-		    heap_read(H1',H1,L4 ),H1',H1,
-		    heap_read(H2',H2,L4'),H2',H2,
-		    .List,.Map,.Map,.Map)))
-		+Mem 
-		(mergeStackedScopes(St1,H1',H1,St2,H2',H2)))))
-		+Mem
-		bagUnwrap(leftElem(mergeArray(
-		    L1,optionLoc2Loc(vheap_read(H1',L1)),
-		    heap_read(H1',H1,L1 ),H1',H1,
-		    heap_read(H2',H2,L1'),H2',H2,
-		    .List,.Map,.Map,.Map))))
-		*/
 		bagUnwrap(
 		    leftElem(
 			mergeArrayInCtx(
@@ -627,8 +618,8 @@ rule	<k> runInMem(none, _) => .  ... </k>
 				    heap_read(H1',H1,L1 ),H1',H1,
 				    heap_read(H2',H2,L1'),H2',H2))   
 			    mergeStackedScopes(St1,H1',H1,St2,H2',H2)   
-			    /*mergeFunStaticScopes(F1,H1',H1,F2,H2',H2)*/)))	
-	when L1 =/=K L2
+			    mergeFunStaticScopes(F1,H1',H1,F2,H2',H2))))	
+		when L1 =/=K L2
 	
 
 /*
