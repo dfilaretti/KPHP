@@ -137,7 +137,33 @@ module OPS
 			<k> string2Number(S:AString) => AInt ... </k>
 			<trace> Trace:List => Trace ListItem("string2Number") </trace>
 			[internal]
-			
+	
+	// String concatenation operation
+	rule [concat-string-untainted-1]:    
+	<k> 'Concat(AStringUntainted,, S:AString) => S ... </k>
+	<trace> Trace:List => Trace ListItem("concat-string-untainted-1") </trace>
+	[step]
+	
+	rule [concat-string-untainted-2]:    
+	<k> 'Concat(S:AString,, AStringUntainted) => S ... </k>
+	<trace> Trace:List => Trace ListItem("concat-string-untainted-2") </trace>
+	[step]
+	
+	rule [concat-string-tainted-1]:
+	<k> 'Concat(AStringTainted,, S:AString) => AStringTainted ... </k>
+	<trace> Trace:List => Trace ListItem("concat-string-tainted-1") </trace>
+	[step]
+	
+	rule [concat-string-tainted-2]:
+	<k> 'Concat(S:AString,, AStringTainted) => AStringTainted ... </k>
+	<trace> Trace:List => Trace ListItem("concat-string-tainted-2") </trace>
+	[step]
+	
+	rule [concat-string-top]:
+	<k> 'Concat(AStringTop,, AStringTop) => AStringTop ... </k>
+	<trace> Trace:List => Trace ListItem("concat-string-tainted-2") </trace>
+	[step]
+	
     syntax  ABool ::= "notABool" ABool [function]
 
     rule    notABool ABool => ABool

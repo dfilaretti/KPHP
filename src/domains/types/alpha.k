@@ -5,11 +5,13 @@ module ALPHA
 
 	syntax K ::= "alpha" "(" K ")" [function]
 
-	rule alpha(N:Int) => AInt
+	rule alpha(N:Int) => AInt [structural]
 
-	rule alpha(F:Float) => AFloat
+	rule alpha(F:Float) => AFloat [structural]	
 
-	rule alpha(B:Bool) => ABool
+	rule alpha(B:Bool) => ABool	 [structural]
 
-	rule alpha(S:String) => AStringUntainted //used only for litterals ?
+	rule alpha(S:String) => AStringUntainted [structural]
+
+	//used only for literals ?
 endmodule
