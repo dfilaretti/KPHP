@@ -92,7 +92,7 @@ module OPS
 
 	//to string		
 			
-	syntax AString ::= "*toString" "(" LanguageValue ")" [strict]
+	syntax K ::= "*toString" "(" LanguageValue ")" [strict]
 
 	rule [toString-int]:
 			<k> *toString(I:AInt) => AStringUntainted ... </k>
@@ -188,7 +188,7 @@ module OPS
     syntax  K ::= "print" "(" K ")"
     
     rule    [internal-print]:
-            <k> print (V:String)  => . ... </k>
+            <k> print (V:AString)  => . ... </k>
             <out> ... . => ListItem(V) </out>
             [internal, output]   
 
