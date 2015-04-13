@@ -1,7 +1,9 @@
 require "lattice.k"
+require "../../lang/arith-ops.k"
 module OPS
        imports LATTICE
-
+	   imports ARITH-OPS
+	   
        syntax AInt ::= AInt "+AInt" AInt [function]
        syntax AInt ::= AInt "-AInt" AInt [function]
        syntax AInt ::= AInt "*AInt" AInt [function]
@@ -27,6 +29,48 @@ module OPS
        rule  AFloat *AFloat AFloat => AFloat
        rule  AFloat /AFloat AFloat => AFloat
        rule negative_AFloat(AFloat) => AFloat
+ 
+	   rule [greater-aint]:
+	   <k> greater(I1:AInt, I2:AInt) => ABool ... </k>
+	   <trace> Trace:List => Trace ListItem("greater-aint") </trace>
+	   [internal]
+		
+	   rule [greater-afloat]:
+	   <k> greater(F1:AFloat, F2:AFloat) => ABool ... </k>
+	   <trace> Trace:List => Trace ListItem("greater-afloat") </trace>
+	   [internal]
+	
+	   rule [greater-abool]:
+	   <k> greater(B1:ABool, B2:ABool) => ABool ... </k>
+	   <trace> Trace:List => Trace ListItem("greater-abool") </trace>
+	   [internal]
+	   
+	   rule [greater-astring]:
+	   <k> greater(S1:AString, S2:AString) => ABool ... </k>
+	   <trace> Trace:List => Trace ListItem("greater-astring") </trace>
+	   [internal]
+	   
+	   rule [less-aint]:
+	   <k> less(I1:AInt, I2:AInt) => ABool ... </k>
+	   <trace> Trace:List => Trace ListItem("less-aint") </trace>
+	   [internal]
+		
+	   rule [less-afloat]:
+	   <k> less(F1:AFloat, F2:AFloat) => ABool ... </k>
+	   <trace> Trace:List => Trace ListItem("less-afloat") </trace>
+	   [internal]
+	
+	   rule [less-abool]:
+	   <k> less(B1:ABool, B2:ABool) => ABool ... </k>
+	   <trace> Trace:List => Trace ListItem("less-abool") </trace>
+	   [internal]
+	   
+	   rule [less-astring]:
+	   <k> less(S1:AString, S2:AString) => ABool ... </k>
+	   <trace> Trace:List => Trace ListItem("less-astring") </trace>
+	   [internal]
+ 
+ 
  // to boolean
     syntax  K ::= "*toBoolean" "(" LanguageValue ")" [strict]
 
@@ -118,6 +162,11 @@ module OPS
 			<trace> Trace:List => Trace ListItem("toString-array") </trace>
 			[internal]
 	
+	rule [toString-top]:
+			<k> *toString(Top) => AStringTop ... </k>
+			<trace> Trace:List => Trace ListItem("toString-top") </trace>
+			[internal]
+	
 	// TODO: put correct error msg
 	// TODO: use magic method __toString()
 
@@ -183,15 +232,13 @@ module OPS
     syntax  ABool ::= AString "==AString" AString
     
     rule X:AString ==AString Y:AString => ABool
-
-    // output
-    syntax  K ::= "print" "(" K ")"
     
     rule    [internal-print]:
             <k> print (V:AString)  => . ... </k>
             <out> ... . => ListItem(V) </out>
             [internal, output]   
-
+			
+			
     // input
     syntax K ::= "user_input"
 	
@@ -204,6 +251,7 @@ module OPS
 	syntax Bool ::= "isNumericString" "(" AString ")" [function]	
 				| "isIntString" "(" AString ")" [function]	
 				| "isFloatString" "(" AString ")" [function]	
+	
 	
 	
 endmodule

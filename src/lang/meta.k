@@ -83,7 +83,7 @@ syntax  K ::= "Abexp1" "(" K "," OptionBag ")" [strict(1)]
 rule Abexp(K,M) => Abexp1(runInMem(M,K),M)
 
 
-/*@
+
 rule Abexp1(V:KResult, M:OptionBag) =>
 	#if valid(V) #then 
             M
@@ -95,7 +95,7 @@ rule Abexp1(V:KResult, M:OptionBag) =>
             #fi
     #fi
     [transition]
-*/
+
 ///////////////////////////////////////////////////////////////////////////////
 /*@ \subsection{Return codes} */
 ///////////////////////////////////////////////////////////////////////////////

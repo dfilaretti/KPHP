@@ -31,7 +31,7 @@ rule ('StringAccess => 'ArrayAccess)(_,,_)
 context 'SingleQuoted('ListWrap(_:KList,,HOLE,,_:KList))
 
 rule [single-quoted]: 
-	<k> 'SingleQuoted('ListWrap(S:String)) => S ... </k>
+	<k> 'SingleQuoted('ListWrap(S:AString)) => S ... </k>
 	<trace> Trace:List => Trace ListItem("single-quoted") </trace>
 	[structural]
 

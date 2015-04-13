@@ -333,13 +333,13 @@ rule 	comparison(Op:ComparisonOp,_,(V2:AString => string2Number(V2)))
 // -- converts any string args to number
 
 rule [comparison-ac]:
-	<k> comparison(Op:ComparisonOp,V1:Value,(S:AString => 0)) ... </k>
+	<k> comparison(Op:ComparisonOp,V1:Value,(S:AString => alpha(0))) ... </k>
 	<trace> Trace:List => Trace ListItem("comparison-ac") </trace>
 	when (notBool isStringType(V1)) andBool (notBool isNumericString(S)) andBool (notBool(isStrictComparison(Op)))
 	[internal]
 
 rule [comparison-acd]:
-	<k> comparison(Op:ComparisonOp,(S:AString => 0),V1:Value) ... </k>
+	<k> comparison(Op:ComparisonOp,(S:AString => alpha(0)),V1:Value) ... </k>
 	<trace> Trace:List => Trace ListItem("comparison-acd") </trace>
 	when (notBool isStringType(V1)) andBool (notBool isNumericString(S)) andBool (notBool(isStrictComparison(Op)))
 	[internal]

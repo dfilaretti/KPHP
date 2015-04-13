@@ -39,10 +39,11 @@ module LATTICE
        rule lub_AString(X,AStringBot)=>X
 	   
 	   
-	   //no reduction rules for these
 	   syntax  Bool ::= "valid" "(" ABool ")"	                [predicate]
 	   syntax  Bool ::= "unsatisfiable" "(" ABool ")"    		[predicate]
 	   
+	   rule valid(ABool) => false
+	   rule unsatisfiable(ABool) => false
 	   
 	   
 	   
