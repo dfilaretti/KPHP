@@ -924,7 +924,10 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	Set ")"			    // codomain
 	[function]
 
-    
+   
+
+
+    // TODO: should increment L' ref counter 
     rule    mergeArray3(
 		L',L,Rc,
 		E1,H1',H1,
@@ -984,6 +987,8 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	Set ","
 	Loc ")"
 	[function]
+
+    // TODO: all the following should incfement ref counter of J 
 
     // variable only in left branch - scalar
     rule    mergeArray4(
