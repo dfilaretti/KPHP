@@ -748,6 +748,10 @@ rule	<k> runInMem(none, _) => .  ... </k>
 
     syntax Map ::= "makeH1" "(" Map "," Loc "," Zval ")" [function]
 
+    // NOTE: could optimize by 
+    //     (i) making mergeZval init the RC with 1
+    //    (ii) avoid the increment in the rule below 
+
     rule    makeH1(H,J,ZV) => (J |-> setZvalRC(ZV,1 +Int getRC(ZV))) H 
 	when notBool(J in keys(H))
 
