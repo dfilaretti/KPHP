@@ -732,15 +732,26 @@ rule	<k> runInMem(none, _) => .  ... </k>
     syntax Map ::= "add2H'" "(" K "," K ")" [function]
     rule add2H'(none,_) => .Map
     rule add2H'(L,J) => L |-> J when L =/=K none
+
+
+    // update zval ref counter
+    syntax Zval ::= "setZvalRC" "(" Zval "," Int ")" [function]
+    rule setZvalRC(zval(V,T,R',I),R) => zval(V,T,R,I)
+
+    syntax Int ::= "getRC" "(" Zval ")" [function]
+    rule getRC(zval(_,_,RC,_)) => RC
+
+
     // makeH
     syntax Map ::= "makeH" "(" Map "," Loc "," Zval "," Zval ")" [function]
     rule makeH(H,J,ZV1,ZV2) => makeH1(H,J,mergeZval(ZV1,ZV2))
 
     syntax Map ::= "makeH1" "(" Map "," Loc "," Zval ")" [function]
-    rule    makeH1(H,J,ZV) => (J |-> ZV) H 
+
+    rule    makeH1(H,J,ZV) => (J |-> setZvalRC(ZV,1 +Int getRC(ZV))) H 
 	when notBool(J in keys(H))
 
-    rule makeH1((J |-> _) H,J,ZV) => (J |-> ZV) H 
+    rule makeH1((J |-> ZV') H,J,ZV) => (J |-> setZvalRC(ZV,1 +Int getRC(ZV'))) H 
 
    // similar to map union, but if an element is present in both maps, 
    // the element on the RHS "wins"... 
@@ -761,6 +772,9 @@ rule	<k> runInMem(none, _) => .  ... </k>
    rule H1 <- (H2 (J |-> V2))  => (J |-> V2) (H1 <- H2) 
 	when notBool (J in keys(H1))
 
+    // increment reference counter
+    syntax Map ::= "incRCf" "(" Map "," Loc ")" [function]
+    rule incRCf(L |-> zval(V,T,R,I) H,L) => (L |-> zval(V,T,R +Int 1,I)) H 
 
     // ------------------------------------------------- merging
 
@@ -812,7 +826,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
                 zval(Array(_,E1),_,Rc1,_),H1',H1,
                 zval(Array(_,E2),_,Rc2,_),H2',H2,                
                 E,H',H,Alpha) => 
-		mergeArray1(L',L,max(Rc1,Rc2),E1,H1',H1,E2,H2',H2,E,H',H,Alpha)
+		mergeArray1(L',L,1/*max(Rc1,Rc2)*/,E1,H1',H1,E2,H2',H2,E,H',H,Alpha)
  
 
     // ----- step 1: choose variable to merge. Identify locs in the heap.
@@ -924,10 +938,8 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	Set ")"			    // codomain
 	[function]
 
-   
 
 
-    // TODO: should increment L' ref counter 
     rule    mergeArray3(
 		L',L,Rc,
 		E1,H1',H1,
@@ -941,7 +953,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		L',L,Rc,
 		E1,H1',H1,
 		E2,H2',H2,
-		E ListItem([X,Vis,L1']),H',H, 
+		E ListItem([X,Vis,L1']),H',incRCf(H,optionLoc2Loc(vheap_read(H',L1'))), 
 		(setWrap(C) |-> L1' Alpha))
 
 
@@ -1184,6 +1196,9 @@ rule	<k> runInMem(none, _) => .  ... </k>
     // ----- step 3: 
 
 
+
+
+    // TODO: should increment ref count of J 
     syntax  Pair ::= "mergeArray5" "(" 
 	OptionLoc "," Loc "," Int ","
 	List "," Map "," Map "," 
@@ -1221,12 +1236,14 @@ rule	<k> runInMem(none, _) => .  ... </k>
     ///////////////////////////////////////////////////////////////////////////
                        
     // notice that only zvals containing scalars arrive here...
+
+    // TODO: should NOT update refcount
     syntax  Zval ::= "mergeZval" "(" Zval "," Zval ")" [function]
     rule    mergeZval(zval(V,T,R,I),zval(V',T',R',I')) => 
 	    zval(
 	        lub(V,V'),
 	        lub_type(T,T'),
-	        max(R,R'),
+	        0, // TODO: can remove max(R,R'), if not used
 	        I orBool I')  
 
     ///////////////////////////////////////////////////////////////////////////
