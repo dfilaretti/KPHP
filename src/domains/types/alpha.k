@@ -13,5 +13,7 @@ module ALPHA
 
 	rule alpha(S:String) => AStringUntainted [structural]
 
+	rule alpha(NULL) => NULL [structural]
+	
 	//used only for literals ?
 endmodule

@@ -1,25 +1,5 @@
-Array access by strings in abstract domains
-
-src/test.php merge
-
-alpha(NULL) in test.php
-
-Abexp1 ?
-
-includes ?
-
-for loops -> maybe conditionals will solve
-
-float decimal part -> print floats
-
-hasDecimalPart, isNumericString...
-
 test zend/lang/30 : dynamic function call
 
-processFunArgs
+zend/basic/25 FunctionCall(var_dump, list(_POST, HTTP_RAW_POST_DATA), loc) ?
 
-ArrayCreateElem ( #symLoc(56) , "id" , private ( par ) , #symLoc(59) ) zend/lang/36
-
-zend/lang/17 comparison(less, AInt, Top)
-
-zend/lang/12 LFP not reduced
+ObjectProperty ("a") not reduced : "a" is not a Value because not abstracted ?

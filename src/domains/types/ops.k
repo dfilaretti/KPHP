@@ -69,7 +69,50 @@ module OPS
 	   <k> less(S1:AString, S2:AString) => ABool ... </k>
 	   <trace> Trace:List => Trace ListItem("less-astring") </trace>
 	   [internal]
+	   
+	   syntax K ::= "greaterEqual" "(" K "," K ")"
+
+	   rule [greaterEqual-aint]:
+	   <k> greaterEqual(I1:AInt, I2:AInt) => ABool ... </k>
+	   <trace> Trace:List => Trace ListItem("greaterEqual-aint") </trace>
+	   [internal]
+
+	   rule [greaterEqual-afloat]:
+	   <k> greaterEqual(F1:AFloat, F2:AFloat) => ABool ... </k>
+	   <trace> Trace:List => Trace ListItem("greaterEqual-afloat") </trace>
+	   [internal]
+
+	   rule [greaterEqual-abool]:
+	   <k> greaterEqual(ABool, ABool) => ABool ... </k>
+	   <trace> Trace:List => Trace ListItem("greaterEqual-abool") </trace>
+	   [internal]
+	   
+	   rule [greaterEqual-astring]:
+	   <k> greaterEqual(S1:AString, S2:AString) => ABool ... </k>
+	   <trace> Trace:List => Trace ListItem("greaterEqual-astring") </trace>
+	   [internal]
  
+	   syntax K ::= "lessEqual" "(" K "," K ")"
+
+	   rule [lessEqual-aint]:
+	   <k> lessEqual(I1:AInt, I2:AInt) => ABool... </k>
+	   <trace> Trace:List => Trace ListItem("lessEqual-aint") </trace>
+	   [internal]
+
+	   rule [lessEqual-afloat]:
+	   <k> lessEqual(F1:AFloat, F2:AFloat) => ABool ... </k>
+	   <trace> Trace:List => Trace ListItem("lessEqual-afloat") </trace>
+	   [internal]
+
+	   rule [lessEqual-abool]:
+	   <k> lessEqual(ABool, ABool) => ABool ... </k>
+	   <trace> Trace:List => Trace ListItem("lessEqual-abool") </trace>
+	   [internal]
+	   
+	   rule [lessEqual-astring]:
+	   <k> lessEqual(S1:AString, S2:AString) => ABool ... </k>
+	   <trace> Trace:List => Trace ListItem("lessEqual-astring") </trace>
+	   [internal]
  
  // to boolean
     syntax  K ::= "*toBoolean" "(" LanguageValue ")" [strict]

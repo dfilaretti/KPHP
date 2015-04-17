@@ -232,6 +232,15 @@ rule V isCompoundValue => isArrayType(V) orBool isObjectType(V)
 syntax Bool ::= Value "isScalar" [function]
 rule V isScalar => isStringType(V) orBool isIntType(V) orBool isFloatType(V) orBool isBoolType(V)
 
+
+syntax Bool ::= Type "==Type" Type [function]
+
+rule unknown ==Type _ => true
+
+rule _ ==Type unknown => true
+
+rule T1:Type ==Type T2:Type => T1 ==K T2 when notBool ((T1 ==K unknown) orBool (T2 ==K unknown))
+
 syntax Bool ::= "hasSameType" "(" Value "," Value ")" [function]
 rule hasSameType(V1, V2) => typeOf(V1) ==K typeOf(V2) 
 

@@ -215,16 +215,13 @@ rule [for]:
 
 syntax K ::= "for" "(" K "," K "," K "," K ")"
 
-/* TODO: broken after WHILE semantics has chnaged
 rule [for-spec]: 	
 	for(Init:K, 'ListWrap(Guard:K), Increment:K, Body:K) => 
 	'ListWrap(
 		makeForInit(Init),,
-		while(
-			Guard,
-			'ListWrap(Body) ~> makeForInit(Increment))) 	
+		'While(Guard,, 'ListWrap(Body) ~> makeForInit(Increment))) 	
 	[structural]
-*/
+
 
 syntax K ::= "makeForInit" "(" K ")"
 
@@ -414,14 +411,13 @@ syntax K ::= "foreach" "(" Loc "," K "," K ")"  [strict(1)]
 
 // TODO: replace 'crnt' with some variable name which will not interfere with 
 //       user-defined variables
-
-/* TODO: broken after WHILE rule changed
+/*@
 rule [foreach-spec]:
 	<k> foreach(L:Loc, Pattern:K, Stmt:K) => 
 		'ListWrap(
 			'Expr(reset(L)),,
 			'Expr('Assign('Variable('Simple("crnt")),,key(L))),,
-			while('IsNotIdentical('False(.KList),,'Variable('Simple("crnt"))),
+			'While('IsNotIdentical('False(.KList),,'Variable('Simple("crnt"))),
 					*Cond(
 						isCrntVisib(L),
 						'ListWrap(
@@ -447,7 +443,6 @@ rule [foreach-spec]:
 	when (V isCompoundValue)
 	[internal]
 */
-
 syntax K ::= "ArrayCrnt2None" "(" Loc ")"
 
 rule 
