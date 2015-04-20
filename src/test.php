@@ -1,5 +1,4 @@
 <?php
-
 // test passing parameters by ref
 // this was challenging 
 
@@ -10,7 +9,6 @@ function foo(&$x) {
 	$x = 0;
 }
 foo($v);
-
 
 
 ?>
