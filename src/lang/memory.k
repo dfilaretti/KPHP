@@ -148,6 +148,13 @@ syntax Type ::= "int"   | "integer"
         	  | "unset"
 		  | "unknown" // internal!!!
 
+
+syntax Type ::= "lub_type" "(" Type "," Type ")" [function]
+rule lub_type(T1,T1) => T1
+rule lub_type(T1,T2) => unknown when T1 =/=K T2
+
+
+
 /*@ For semantic purposes, we actually need types to be considered as values. For clarity we 
 	choose not to directly add types to the set of values, but instead we just add the following 
 	line, telling the \K tool that a type is to be considered as a KResult, i.e something which 

@@ -49,6 +49,32 @@ rule    <k> initStatus => . ... </k>
 
 rule [init-builtin-functions]:    
 	<k> initBuiltinFunctions => . ... </k>
+	<thematrix>
+	...
+	. =>
+	L1' |-> L1
+	L2' |-> L2
+	L3' |-> L3
+	L4' |-> L4
+	L5' |-> L5
+	L6' |-> L6
+	L7' |-> L7
+	L8' |-> L8
+	L9' |-> L9
+	L10' |-> L10
+	L11' |-> L11
+	L12' |-> L12
+	L13' |-> L13
+	L14' |-> L14
+	L15' |-> L15
+	L16' |-> L16
+	L17' |-> L17
+	L18' |-> L18
+	L19' |-> L19
+	L20' |-> L20
+	L21' |-> L21
+	...
+	</thematrix>
         <heap> ... 
 		. => 
 		L1 |-> emptyArrayZval
@@ -78,52 +104,52 @@ rule [init-builtin-functions]:
 		.=> "current" |-> f (
 				'ListWrap('ParamRef('Variable('Simple("x")))), 
 				'ListWrap('Return(current('Variable('Simple("x"))))), 
-				@byValue, L1)
+				@byValue, L1')
 				
 			"count" |-> f (
 				'ListWrap('Param('Variable('Simple("x")))), 
 				'ListWrap('Return(count('Variable('Simple("x"))))), 
-				@byValue, L2)
+				@byValue, L2')
 				
 			"array_key_exists" |-> f (
 				'ListWrap('Param('Variable('Simple("k"))),,'ParamRef('Variable('Simple("x")))), 
 				'ListWrap('Return(array_key_exists('Variable('Simple("k")),'Variable('Simple("x"))))), 
-				@byValue, L3)
+				@byValue, L3')
 				
 			"key" |-> f (
 				'ListWrap('ParamRef('Variable('Simple("x")))), 
 				'ListWrap('Return(key('Variable('Simple("x"))))), 
-				@byValue, L4)
+				@byValue, L4')
 				
 			"next" |-> f (
 				'ListWrap('ParamRef('Variable('Simple("x")))), 
 				'ListWrap('Return(next('Variable('Simple("x"))))), 
-				@byValue, L4)
+				@byValue, L5') // !!!!!!
 				
 			"each" |-> f (
 				'ListWrap('ParamRef('Variable('Simple("x")))), 
 				'ListWrap('Return(each('Variable('Simple("x"))))), 
-				@byValue, L6)
+				@byValue, L6')
 				
 			"reset" |-> f (
 				'ListWrap('ParamRef('Variable('Simple("x")))), 
 				'ListWrap('Return(reset('Variable('Simple("x"))))), 
-				@byValue, L7)
+				@byValue, L7')
 			
 			"var_dump" |-> f (
 				'ListWrap('Param('Variable('Simple("x")))), 
 				'ListWrap(var_dump('Variable('Simple("x")))), 
-				@byValue, L8)
+				@byValue, L8')
 			
 			"print_r" |-> f (
 				'ListWrap('Param('Variable('Simple("x")))), 
 				'ListWrap(print_r('Variable('Simple("x")))), 
-				@byValue, L9)
+				@byValue, L9')
 				
 			"strlen" |-> f (
 				'ListWrap('Param('Variable('Simple("x")))), 
 				'ListWrap('Return(strlen('Variable('Simple("x"))))), 
-				@byValue, L10)
+				@byValue, L10')
 				
 			"substr" |-> f (
 				'ListWrap('Param('Variable('Simple("str"))),,
@@ -135,57 +161,57 @@ rule [init-builtin-functions]:
 					'Variable('Simple("start")),
 					'Variable('Simple("len"))
 					))), 
-				@byValue, L11)
+				@byValue, L11')
 			
 			"define" |-> f (
 				'ListWrap('Param('Variable('Simple("name"))),, 'Param('Variable('Simple("value")))), 
 				'ListWrap('Return(define('Variable('Simple("name")), 'Variable('Simple("value"))))), 
-				@byValue, L12)
+				@byValue, L12')
 			
 			"gettype" |-> f (
 				'ListWrap('Param('Variable('Simple("x")))), 
 				'ListWrap('Return(gettype('Variable('Simple("x"))))), 
-				@byValue,  L13)
+				@byValue,  L13')
 				
 			"defined" |-> f (
 				'ListWrap('Param('Variable('Simple("x")))), 
 				'ListWrap('Return(defined('Variable('Simple("x"))))), 
-				@byValue,  L14)
+				@byValue,  L14')
 				
 			"is_float" |-> f (
 				'ListWrap('Param('Variable('Simple("x")))), 
 				'ListWrap('Return(is_float('Variable('Simple("x"))))), 
-				@byValue, L15)
+				@byValue, L15')
 				
 			"is_string" |-> f (
 				'ListWrap('Param('Variable('Simple("x")))), 
 				'ListWrap('Return(is_string('Variable('Simple("x"))))), 
-				@byValue,  L16)
+				@byValue,  L16')
 				
 			"is_array" |-> f (
 				'ListWrap('Param('Variable('Simple("x")))), 
 				'ListWrap('Return(is_array('Variable('Simple("x"))))), 
-				@byValue,  L17)
+				@byValue,  L17')
 				
 			"is_scalar" |-> f (
 				'ListWrap('Param('Variable('Simple("x")))), 
 				'ListWrap('Return(is_scalar('Variable('Simple("x"))))), 
-				@byValue,  L18)
+				@byValue,  L18')
 				
 			"is_numeric" |-> f (
 				'ListWrap('Param('Variable('Simple("x")))), 
 				'ListWrap('Return(is_numeric('Variable('Simple("x"))))), 
-				@byValue,  L19)
+				@byValue,  L19')
 				
 			"user_input" |-> f (
 				'ListWrap(.KList), 
 				'ListWrap('Return(user_input)), 
-				@byValue,  L20)
+				@byValue,  L20')
 				
 			"label" |-> f (
 				'ListWrap('Param('Variable('Simple("x")))), 
 				'ListWrap('Return(label('Variable('Simple("x"))))), 
-				@byValue, L21)
+				@byValue, L21')
 		</functions>
 		when 	fresh(L1:Loc) andBool
 			fresh(L2:Loc) andBool
@@ -207,7 +233,28 @@ rule [init-builtin-functions]:
 			fresh(L18:Loc) andBool
 			fresh(L19:Loc) andBool
 			fresh(L20:Loc) andBool
-			fresh(L21:Loc)	
+			fresh(L21:Loc) andBool
+			fresh(L1':Loc) andBool
+			fresh(L2':Loc) andBool
+			fresh(L3':Loc) andBool
+			fresh(L4':Loc) andBool
+			fresh(L5':Loc) andBool
+			fresh(L6':Loc) andBool
+			fresh(L7':Loc) andBool
+			fresh(L8':Loc) andBool
+			fresh(L9':Loc) andBool
+			fresh(L10':Loc) andBool
+			fresh(L11':Loc) andBool
+			fresh(L12':Loc) andBool
+			fresh(L13':Loc) andBool
+			fresh(L14':Loc) andBool
+			fresh(L15':Loc) andBool
+			fresh(L16':Loc) andBool
+			fresh(L17':Loc) andBool
+			fresh(L18':Loc) andBool
+			fresh(L19':Loc) andBool
+			fresh(L20':Loc) andBool
+			fresh(L21':Loc) 	
 		[internal]
 
 // ---------------------------------------------------------------------------------------------

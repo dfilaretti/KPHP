@@ -562,13 +562,19 @@ rule	<k> runInMem(none, _) => .  ... </k>
                     <globalStaticScope> L3 </globalStaticScope>
                     <superGlobalScope> L4 </superGlobalScope>  
                 </scopes>
-		bagUnwrap(leftElem(mergeArray(
-		    L4,optionLoc2Loc(vheap_read(H1',L4)),
-		    heap_read(H1',H1,L4 ),H1',H1,
-		    heap_read(H2',H2,L4'),H2',H2,
-		    .List,.Map,.Map,.Map)))
-	//	mergeFunStaticScopes(F1,H1,F2,H2)
-	when L1 ==K L2
+		bagUnwrap(
+		    leftElem(
+			mergeArrayInCtx(
+			    pair(
+				bagWrap(<thematrix> .Map </thematrix> <heap> .Map </heap>), 
+				mapWrap(.Map)),
+			    ListItem(
+				mergeArgs(
+				    L4,optionLoc2Loc(vheap_read(H1',L4)),
+				    heap_read(H1',H1,L4 ),H1',H1,
+				    heap_read(H2',H2,L4'),H2',H2))
+			    mergeFunStaticScopes(F1,H1',H1,F2,H2',H2))))	
+		when L1 ==K L2
 
 
 
@@ -597,21 +603,6 @@ rule	<k> runInMem(none, _) => .  ... </k>
                     <globalStaticScope> L3 </globalStaticScope>
                     <superGlobalScope> L4 </superGlobalScope>  
                 </scopes>
-		/*
-		((((bagUnwrap(leftElem(mergeArray(
-		    L4,optionLoc2Loc(vheap_read(H1',L4)),
-		    heap_read(H1',H1,L4 ),H1',H1,
-		    heap_read(H2',H2,L4'),H2',H2,
-		    .List,.Map,.Map,.Map)))
-		+Mem 
-		(mergeStackedScopes(St1,H1',H1,St2,H2',H2)))))
-		+Mem
-		bagUnwrap(leftElem(mergeArray(
-		    L1,optionLoc2Loc(vheap_read(H1',L1)),
-		    heap_read(H1',H1,L1 ),H1',H1,
-		    heap_read(H2',H2,L1'),H2',H2,
-		    .List,.Map,.Map,.Map))))
-		*/
 		bagUnwrap(
 		    leftElem(
 			mergeArrayInCtx(
@@ -629,18 +620,10 @@ rule	<k> runInMem(none, _) => .  ... </k>
 				    heap_read(H1',H1,L1 ),H1',H1,
 				    heap_read(H2',H2,L1'),H2',H2))   
 			    mergeStackedScopes(St1,H1',H1,St2,H2',H2)   
-			    /*mergeFunStaticScopes(F1,H1',H1,F2,H2',H2)*/)))	
-	when L1 =/=K L2
+			    mergeFunStaticScopes(F1,H1',H1,F2,H2',H2))))	
+		when L1 =/=K L2
 	
 
-/*
-syntax Bag ::= Bag "+Mem" Bag [function]
-rule (<thematrix> H1' </thematrix> <heap> H1 </heap>) +Mem
-     (<thematrix> H2' </thematrix> <heap> H2 </heap>) => 
-     (<thematrix> H1' H2' </thematrix> <heap> H1 H2 </heap>)  
-rule .Bag +Mem X => X
-rule X +Mem .Bag => X
-*/
 
 
 
@@ -674,6 +657,7 @@ rule X +Mem .Bag => X
 
 
 
+
     // isScalarZVal
     syntax Bool ::= "isScalar_zval" "(" Zval ")" [predicate]
     rule isScalar_zval(zval(V,_,_,_)) => true 
@@ -681,6 +665,29 @@ rule X +Mem .Bag => X
 
     rule isScalar_zval(zval(V,_,_,_)) => false
         when notBool (isScalarValue(V) ==K true)
+
+    // isArrayZVal
+    syntax Bool ::= "isArray_zval" "(" Zval ")" [predicate]
+    rule isArray_zval(zval(V,_,_,_)) => true 
+        when isArray(V) ==K true
+
+    rule isArray_zval(zval(V,_,_,_)) => false
+        when notBool (isArray(V) ==K true)
+
+    // isObjectZVal
+    syntax Bool ::= "isObject_zval" "(" Zval ")" [predicate]
+    rule isObject_zval(zval(V,_,_,_)) => true 
+        when isObject(V) ==K true
+
+    rule isObject_zval(zval(V,_,_,_)) => false
+        when notBool (isObject(V) ==K true)
+    
+    // zval2ArrayList
+    syntax List ::= "zval2ArrayList" "(" Zval ")" [function]
+    rule zval2ArrayList(zval(Array(_,E),_,_,_)) => E
+
+
+
 
     // set wrap 
     syntax K ::= "setWrap" "(" Set ")"
@@ -727,15 +734,53 @@ rule X +Mem .Bag => X
     syntax Map ::= "add2H'" "(" K "," K ")" [function]
     rule add2H'(none,_) => .Map
     rule add2H'(L,J) => L |-> J when L =/=K none
+
+
+    // update zval ref counter
+    syntax Zval ::= "setZvalRC" "(" Zval "," Int ")" [function]
+    rule setZvalRC(zval(V,T,R',I),R) => zval(V,T,R,I)
+
+    syntax Int ::= "getRC" "(" Zval ")" [function]
+    rule getRC(zval(_,_,RC,_)) => RC
+
+
     // makeH
     syntax Map ::= "makeH" "(" Map "," Loc "," Zval "," Zval ")" [function]
     rule makeH(H,J,ZV1,ZV2) => makeH1(H,J,mergeZval(ZV1,ZV2))
 
     syntax Map ::= "makeH1" "(" Map "," Loc "," Zval ")" [function]
-    rule    makeH1(H,J,ZV) => (J |-> ZV) H 
+
+    // NOTE: could optimize by 
+    //     (i) making mergeZval init the RC with 1
+    //    (ii) avoid the increment in the rule below 
+
+    rule    makeH1(H,J,ZV) => (J |-> setZvalRC(ZV,1 +Int getRC(ZV))) H 
 	when notBool(J in keys(H))
 
-    rule makeH1((J |-> _) H,J,ZV) => (J |-> ZV) H 
+    rule makeH1((J |-> ZV') H,J,ZV) => (J |-> setZvalRC(ZV,1 +Int getRC(ZV'))) H 
+
+   // similar to map union, but if an element is present in both maps, 
+   // the element on the RHS "wins"... 
+   syntax Map ::= Map "<-" Map [function]
+
+   // base
+   rule .Map <- H => H
+   rule H <- .Map => H
+
+   // item in both maps
+   rule (H1 (J |-> V1)) <- (H2 (J |-> V2)) => (J |-> V1) (H1 <- H2)
+
+   // item only in left map
+   rule (H1 (J |-> V1)) <- H2  => (J |-> V1) (H1 <- H2) 
+   	when notBool (J in keys(H2))
+
+   // item only in right map
+   rule H1 <- (H2 (J |-> V2))  => (J |-> V2) (H1 <- H2) 
+	when notBool (J in keys(H1))
+
+    // increment reference counter
+    syntax Map ::= "incRCf" "(" Map "," Loc ")" [function]
+    rule incRCf(L |-> zval(V,T,R,I) H,L) => (L |-> zval(V,T,R +Int 1,I)) H 
 
     // ------------------------------------------------- merging
 
@@ -784,32 +829,16 @@ rule X +Mem .Bag => X
  
     rule    mergeArray(
 		L',L,
-                zval(Array(_,E1),_,_,_),H1',H1,
-                zval(Array(_,E2),_,_,_),H2',H2,                
+                zval(Array(_,E1),_,Rc1,_),H1',H1,
+                zval(Array(_,E2),_,Rc2,_),H2',H2,                
                 E,H',H,Alpha) => 
-		mergeArray1(L',L,E1,H1',H1,E2,H2',H2,E,H',H,Alpha)
+		mergeArray1(L',L,1/*max(Rc1,Rc2)*/,E1,H1',H1,E2,H2',H2,E,H',H,Alpha)
  
-    /* NOTE: old 
-    syntax  Bag ::= "mergeArray" "(" 
-	Loc ","			    // destination
-	Zval "," Map "," Map ","    // memory 1
-	Zval "," Map "," Map ","    // memory 2
-	List "," Map "," Map ")"    // intermediate result
-	[function]
- 
-    rule    mergeArray(
-		L,
-                zval(Array(_,E1),_,_,_),H1',H1,
-                zval(Array(_,E2),_,_,_),H2',H2,                
-                E,H',H) => 
-		mergeArray1(L,E1,H1',H1,E2,H2',H2,E,H',H,.Map)
-    */
-
 
     // ----- step 1: choose variable to merge. Identify locs in the heap.
 
     syntax  Pair ::= "mergeArray1" "(" 
-	OptionLoc "," Loc "," 
+	OptionLoc "," Loc "," Int "," 
 	List "," Map "," Map "," 
 	List "," Map "," Map "," 
 	List "," Map "," Map ","
@@ -817,30 +846,30 @@ rule X +Mem .Bag => X
 	[function]
 
     // base case - none 
-    rule    mergeArray1(none,L,.List,_,_,.List,_,_,E,H',H,Alpha) => 
+    rule    mergeArray1(none,L,Rc,.List,_,_,.List,_,_,E,H',H,Alpha) => 
 		pair(
 		    bagWrap(
-			<heap> (L |-> zval(Array(head(E),E),array,1,false)) H </heap>
+			<heap> (L |-> zval(Array(head(E),E),array,Rc,#if (Rc >Int 1) #then true #else false #fi)) H </heap>
 			<thematrix> H' </thematrix>),
 		    mapWrap(Alpha))
  
     // base case - Loc
-    rule    mergeArray1(L':Loc,L,.List,_,_,.List,_,_,E,H',H,Alpha) => 
+    rule    mergeArray1(L':Loc,L,Rc,.List,_,_,.List,_,_,E,H',H,Alpha) => 
 		pair(
 		    bagWrap(
-			<heap> (L |-> zval(Array(head(E),E),array,1,false)) H </heap>
+			<heap> (L |-> zval(Array(head(E),E),array,Rc,#if (Rc >Int 1) #then true #else false #fi)) H </heap>
 			<thematrix> (L' |-> L) H' </thematrix>),
 		    mapWrap(Alpha))
  
     // left
     rule    mergeArray1(
-		L',L,
+		L',L,Rc,
 		(ListItem([X,Vis,L1']) E1),H1',H1,
                 E2,H2',H2,                
                 E,H',H,
 		Alpha) =>
 	    mergeArray2(
-		L',L,
+		L',L,Rc,
 		E1,H1',H1,
 		arrayRemove(E2,X),H2',H2,
 		E,H',H,
@@ -852,13 +881,13 @@ rule X +Mem .Bag => X
 	
     // right
     rule    mergeArray1(
-		L',L,
+		L',L,Rc,
 		E1,H1',H1,
                 (ListItem([X,Vis,L2']) E2),H2',H2,                
                 E,H',H,
 		Alpha) =>
 	    mergeArray2(
-		L',L,
+		L',L,Rc,
 		arrayRemove(E1,X),H1',H1,
 		E2,H2',H2,
 		E,H',H, 
@@ -867,64 +896,12 @@ rule X +Mem .Bag => X
 		pair(
 		    vheap_read(H1',(array_read_v(E1,X))), 
 		    vheap_read(H2',L2')))
-
-    /*
-    syntax  Bag ::= "mergeArray1" "(" 
-	Loc "," 
-	List "," Map "," Map "," 
-	List "," Map "," Map "," 
-	List "," Map "," Map ","
-	Map ")"
-	[function]
-
-    
-    // base case  
-    rule    mergeArray1(L,.List,_,_,.List,_,_,E,H',H,_) => 
-                <heap> (L |-> zval(Array(head(E),E),array,1,false)) H </heap>
-		<thematrix> H' </thematrix>
-  
-    // left
-    rule    mergeArray1(
-		L,
-		(ListItem([X,Vis,L1']) E1),H1',H1,
-                E2,H2',H2,                
-                E,H',H,
-		Alpha) =>
-	    mergeArray2(
-		L,
-		E1,H1',H1,
-		arrayRemove(E2,X),H2',H2,
-		E,H',H,
-		Alpha,
-		pair(X,Vis),
-		pair(
-		    vheap_read(H1',L1'), 
-		    vheap_read(H2',array_read_v(E2,X)))) 
-	
-    // right
-    rule    mergeArray1(
-		L,
-		E1,H1',H1,
-                (ListItem([X,Vis,L2']) E2),H2',H2,                
-                E,H',H,
-		Alpha) =>
-	    mergeArray2(
-		L,
-		arrayRemove(E1,X),H1',H1,
-		E2,H2',H2,
-		E,H',H, 
-		Alpha,
-		pair(X,Vis),
-		pair(
-		    vheap_read(H1',(array_read_v(E1,X))), 
-		    vheap_read(H2',L2')))
-    */    
 
 
 
     // ----- step 2: retrieve heap locs
     syntax  Pair ::= "mergeArray2" "(" 
-	OptionLoc "," Loc "," 
+	OptionLoc "," Loc "," Int ","
 	List "," Map "," Map "," 
 	List "," Map "," Map "," 
 	List "," Map "," Map ","
@@ -935,7 +912,7 @@ rule X +Mem .Bag => X
 
 
     rule    mergeArray2(
-		L',L,
+		L',L,Rc,
 		E1,H1',H1,
                 E2,H2',H2,                
                 E,H',H,
@@ -943,7 +920,7 @@ rule X +Mem .Bag => X
 		Var,
 		pair(J1,J2)) =>
 	    mergeArray3(
-		L',L,
+		L',L,Rc,
 		E1,H1',H1,
 		E2,H2',H2, 
 		E,H',H,
@@ -951,45 +928,13 @@ rule X +Mem .Bag => X
 		Var,
 		pair(J1, J2),
 		preimage(H1',J1) preimage(H2',J2))
-
-
-    /*
-    syntax  Bag ::= "mergeArray2" "(" 
-	Loc "," 
-	List "," Map "," Map "," 
-	List "," Map "," Map "," 
-	List "," Map "," Map ","
-	Map ","
-	Pair ","		    // the variable (and visibility) being mergedd
-	Pair ")"		    // the pair of heap locations 
-	[function]
-
-
-    rule    mergeArray2(
-		L,
-		E1,H1',H1,
-                E2,H2',H2,                
-                E,H',H,
-		Alpha,
-		Var,
-		pair(J1,J2)) =>
-	    mergeArray3(
-		L,
-		E1,H1',H1,
-		E2,H2',H2, 
-		E,H',H,
-		Alpha,
-		Var,
-		pair(J1, J2),
-		preimage(H1',J1) preimage(H2',J2))
-    */
 
 
     // ----- step 2: make env entry
 
 
     syntax  Pair ::= "mergeArray3" "(" 
-	OptionLoc "," Loc "," 
+	OptionLoc "," Loc "," Int ","
 	List "," Map "," Map "," 
 	List "," Map "," Map "," 
 	List "," Map "," Map ","
@@ -999,9 +944,10 @@ rule X +Mem .Bag => X
 	Set ")"			    // codomain
 	[function]
 
-    
+
+
     rule    mergeArray3(
-		L',L,
+		L',L,Rc,
 		E1,H1',H1,
                 E2,H2',H2,                
                 E,H',H,
@@ -1010,15 +956,15 @@ rule X +Mem .Bag => X
 		_,
 		C:Set) =>
 	    mergeArray1(
-		L',L,
+		L',L,Rc,
 		E1,H1',H1,
 		E2,H2',H2,
-		E ListItem([X,Vis,L1']),H',H, 
+		E ListItem([X,Vis,L1']),H',incRCf(H,optionLoc2Loc(vheap_read(H',L1'))), 
 		(setWrap(C) |-> L1' Alpha))
 
 
     rule    mergeArray3(
-		L',L,
+		L',L,Rc,
 		E1,H1',H1,
                 E2,H2',H2,                
                 E,H',H,
@@ -1027,7 +973,7 @@ rule X +Mem .Bag => X
 		LocPair,
 		C) =>
 	    mergeArray4(
-		L',L,
+		L',L,Rc,
 		E1,H1',H1,
 		E2,H2',H2,
 		E ListItem([X,Vis,L1']),H',H,
@@ -1046,63 +992,11 @@ rule X +Mem .Bag => X
 
 
 
-    /*
-    syntax  Bag ::= "mergeArray3" "(" 
-	Loc "," 
-	List "," Map "," Map "," 
-	List "," Map "," Map "," 
-	List "," Map "," Map ","
-	Map ","
-	Pair ","		    // the variable being merged
-	Pair ","		    // the pair of heap locations 
-	Set ")"			    // codomain
-	[function]
-
-    
-    rule    mergeArray3(
-		L,
-		E1,H1',H1,
-                E2,H2',H2,                
-                E,H',H,
-		(setWrap(C) |-> L' Alpha),
-		pair(X,Vis),
-		_,
-		C:Set) =>
-	    mergeArray1(
-		L,
-		E1,H1',H1,
-		E2,H2',H2,
-		E ListItem([X,Vis,L']),H',H, 
-		(setWrap(C) |-> L' Alpha))
-
-
-    rule    mergeArray3(
-		L,
-		E1,H1',H1,
-                E2,H2',H2,                
-                E,H',H,
-		Alpha,
-		pair(X,Vis),
-		LocPair,
-		C) =>
-	    mergeArray4(
-		L,
-		E1,H1',H1,
-		E2,H2',H2,
-		E ListItem([X,Vis,L']),H',H,
-		(setWrap(C) |-> L') Alpha,
-		LocPair,
-		C SetItem(L'),
-		unify(H',C))
-    when (notBool(setWrap(C) in keys(Alpha))) andBool (fresh(L':Loc))  
-    */
-
-
 
     // ----- step 3: 
 
     syntax  Pair ::= "mergeArray4" "(" 
-	OptionLoc "," Loc "," 
+	OptionLoc "," Loc "," Int ","
 	List "," Map "," Map "," 
 	List "," Map "," Map "," 
 	List "," Map "," Map ","
@@ -1112,9 +1006,11 @@ rule X +Mem .Bag => X
 	Loc ")"
 	[function]
 
+    // TODO: all the following should incfement ref counter of J 
+
     // variable only in left branch - scalar
     rule    mergeArray4(
-		L',L,
+		L',L,Rc,
 		E1,H1',(J1 |-> ZV1) H1,
                 E2,H2',H2,                
                 E,H',H,
@@ -1123,7 +1019,7 @@ rule X +Mem .Bag => X
 		C,
 		J) =>
 	    mergeArray1(
-		L',L,
+		L',L,Rc,
 		E1,H1',(J1 |-> ZV1) H1,
 		E2,H2', H2,
 		E, 
@@ -1134,7 +1030,7 @@ rule X +Mem .Bag => X
 
     // variable only in right branch - scalar
     rule    mergeArray4(
-		L',L,
+		L',L,Rc,
 		E1,H1',H1,
                 E2,H2',(J2 |-> ZV2) H2,                
                 E,H',H,
@@ -1143,7 +1039,7 @@ rule X +Mem .Bag => X
 		C,
 		J) =>
 	    mergeArray1(
-		L',L,
+		L',L,Rc,
 		E1,H1',H1,
 		E2,H2', (J2 |-> ZV2) H2,
 		E, 
@@ -1154,7 +1050,7 @@ rule X +Mem .Bag => X
 
     // variable in both branches - scalar OR (scalar + array)
     rule    mergeArray4(
-		L',L,
+		L',L,Rc,
 		E1,H1',(J1 |-> ZV1) H1,
                 E2,H2',(J2 |-> ZV2) H2,                
                 E,H',H,
@@ -1163,7 +1059,7 @@ rule X +Mem .Bag => X
 		C,
 		J) =>
 	    mergeArray1(
-		L',L,
+		L',L,Rc,
 		E1,H1',(J1 |-> ZV1) H1,
 		E2,H2',(J2 |-> ZV2) H2,
 		E, 
@@ -1172,6 +1068,72 @@ rule X +Mem .Bag => X
 		Alpha)
 	when isScalar_zval(ZV1) orBool isScalar_zval(ZV2) 
 
+    // variable only in left branch - array
+    rule    mergeArray4(
+		L',L,Rc,
+		E1,H1',(J1 |-> ZV1) H1,
+                E2,H2',H2,                
+                E,H',H,
+		Alpha,
+		pair(J1,none),
+		C,
+		J) =>
+	  mergeArray5(
+		L',L,Rc,
+		E1,H1',(J1 |-> ZV1) H1,
+		E2,H2',H2,
+		E,
+		H' makeH'(H',C,J),
+		H, 
+		Alpha,
+		bagUnwrap(leftElem(mergeArray(none,J,ZV1,H1',H1,emptyArrayZval,.Map,.Map,.List,.Map,.Map,Alpha))))
+    when isArray_zval(ZV1) 
+
+
+    // variable only in right branch - array
+    rule    mergeArray4(
+		L',L,Rc,
+		E1,H1',H1,
+                E2,H2',(J2 |-> ZV2) H2,                
+                E,H',H,
+		Alpha,
+		pair(none,J2),
+		C,
+		J) =>
+	    mergeArray5(
+		L',L,Rc,
+		E1,H1',H1,
+		E2,H2',(J2 |-> ZV2) H2,
+		E,
+		H' makeH'(H',C,J),
+		H, 
+		Alpha,
+		bagUnwrap(leftElem(mergeArray(none,J,emptyArrayZval,.Map,.Map,ZV2,H2',H2,.List,.Map,.Map,Alpha))))
+    when isArray_zval(ZV2)
+
+    // variable in both branches - array 
+    rule    mergeArray4(
+		L',L,Rc,
+		E1,H1',
+		(J1 |-> ZV1) H1,
+                E2,H2',
+		(J2 |-> ZV2) H2,                
+                E,H',H,
+		Alpha,
+		pair(J1,J2),
+		C,
+		J) =>
+	    mergeArray5(
+		L',L,Rc,
+		E1,H1',(J1 |-> ZV1) H1,
+		E2,H2',(J2 |-> ZV2) H2,
+		E,
+		H' makeH'(H',C,J),
+		H, 
+		Alpha,
+		bagUnwrap(leftElem(mergeArray(none,J,ZV1,H1',H1,ZV2,H2',H2,.List,.Map,.Map,Alpha))))
+    when isArray_zval(ZV1) andBool isArray_zval(ZV2)
+    /*
     // variable only in left branch - array
     rule    mergeArray4(
 		L',L,
@@ -1234,151 +1196,17 @@ rule X +Mem .Bag => X
 		H, 
 		Alpha,
 		bagUnwrap(leftElem(mergeArray1(none,J,E1',H1',H1,E2',H2',H2,.List,.Map,.Map,Alpha))))
-
-
-    /*
-    syntax  Bag ::= "mergeArray4" "(" 
-	Loc "," 
-	List "," Map "," Map "," 
-	List "," Map "," Map "," 
-	List "," Map "," Map ","
-	Map ","
-	Pair ","		    // the pair of heap locations 
-	Set ","
-	Loc ")"
-	[function]
-
-    // variable only in left branch - scalar
-    rule    mergeArray4(
-		L,
-		E1,H1',(J1 |-> ZV1) H1,
-                E2,H2',H2,                
-                E,H',H,
-		Alpha,
-		pair(J1,none),
-		C,
-		J) =>
-	    mergeArray1(
-		L,
-		E1,H1',(J1 |-> ZV1) H1,
-		E2,H2', H2,
-		E, 
-		H' makeH'(H',C,J),	    
-		makeH(H,J,ZV1,ZV1),  
-		Alpha)
-    when isScalar_zval(ZV1)   
-
-    // variable only in right branch - scalar
-    rule    mergeArray4(
-		L,
-		E1,H1',H1,
-                E2,H2',(J2 |-> ZV2) H2,                
-                E,H',H,
-		Alpha,
-		pair(none,J2),
-		C,
-		J) =>
-	    mergeArray1(
-		L,
-		E1,H1',H1,
-		E2,H2', (J2 |-> ZV2) H2,
-		E, 
-		H' makeH'(H',C,J),	    
-		makeH(H,J,ZV2,ZV2),  
-		Alpha)
-    when isScalar_zval(ZV2)  
-
-    // variable in both branches - scalar OR (scalar + array)
-    rule    mergeArray4(
-		L,
-		E1,H1',(J1 |-> ZV1) H1,
-                E2,H2',(J2 |-> ZV2) H2,                
-                E,H',H,
-		Alpha,
-		pair(J1,J2),
-		C,
-		J) =>
-	    mergeArray1(
-		L,
-		E1,H1',(J1 |-> ZV1) H1,
-		E2,H2',(J2 |-> ZV2) H2,
-		E, 
-		H' makeH'(H',C,J),	    
-		makeH(H,J,ZV1,ZV2),  
-		Alpha)
-	when isScalar_zval(ZV1) orBool isScalar_zval(ZV2) 
-
-    // variable only in left branch - array
-    rule    mergeArray4(
-		L,
-		E1,H1',(J1 |-> zval(Array(_,E1'),_,_,_)) H1,
-                E2,H2',H2,                
-                E,H',H,
-		Alpha,
-		pair(J1,none),
-		C,
-		J) =>
-	  mergeArray5(
-		L,
-		E1,H1',H1,
-		E2,H2',H2,
-		E,
-		H' makeH'(H',C,J),
-		H, 
-		Alpha,
-		mergeArray1(J,E1',H1',H1,.List,.Map,.Map,.List,.Map,.Map,Alpha))
- 
-    // variable only in right branch - array
-    rule    mergeArray4(
-		L,
-		E1,H1',H1,
-                E2,H2',(J2 |-> zval(Array(_,E2'),_,_,_)) H2,                
-                E,H',H,
-		Alpha,
-		pair(none,J2),
-		C,
-		J) =>
-	    mergeArray5(
-		L,
-		E1,H1',H1,
-		E2,H2',H2,
-		E,
-		H' makeH'(H',C,J),
-		H, 
-		Alpha,
-		mergeArray1(J,.List,.Map,.Map,E2',H2',H2,.List,.Map,.Map,Alpha))
- 
-
-    // variable in both branches - array 
-    rule    mergeArray4(
-		L,
-		E1,H1',
-		(J1 |-> zval(Array(_,E1'),_,_,_)) H1,
-                E2,H2',
-		(J2 |-> zval(Array(_,E2'),_,_,_)) H2,                
-                E,H',H,
-		Alpha,
-		pair(J1,J2),
-		C,
-		J) =>
-	    mergeArray5(
-		L,
-		E1,H1',H1,
-		E2,H2',H2,
-		E,
-		H' makeH'(H',C,J),
-		H, 
-		Alpha,
-		mergeArray1(J,E1',H1',H1,E2',H2',H2,.List,.Map,.Map,Alpha))
-    */    
-
+    */
 
 
     // ----- step 3: 
 
 
+
+
+    // TODO: should increment ref count of J 
     syntax  Pair ::= "mergeArray5" "(" 
-	OptionLoc "," Loc "," 
+	OptionLoc "," Loc "," Int ","
 	List "," Map "," Map "," 
 	List "," Map "," Map "," 
 	List "," Map "," Map ","
@@ -1387,74 +1215,42 @@ rule X +Mem .Bag => X
 	[function]
     
     rule    mergeArray5(
-		L',L,
+		L',L,Rc,
 		E1,H1',H1,
                 E2,H2',H2,                
                 E,H',H,
 		Alpha,
 		<heap> H3 </heap> <thematrix> H3' </thematrix>) =>
 	    mergeArray1(
-		L',L,
+		L',L,Rc,
 		E1,H1',H1,
 		E2,H2',H2,
-		E, (H' H3'), (H H3),  
+		E, (H' H3'), (H <- H3),  
 		Alpha)
 
-    /*
-    syntax  Bag ::= "mergeArray5" "(" 
-	Loc "," 
-	List "," Map "," Map "," 
-	List "," Map "," Map "," 
-	List "," Map "," Map ","
-	Map ","
-	Bag ")"
-	[function]
-    
-    rule    mergeArray5(
-		L,
-		E1,H1',H1,
-                E2,H2',H2,                
-                E,H',H,
-		Alpha,
-		<heap> H3 </heap> <thematrix> H3' </thematrix>) =>
-	mergeArray1(
-		L,
-		E1,H1',H1,
-		E2,H2',H2,
-		E, (H' H3'), (H H3),  
-		Alpha)
-    */
 
 
 
 
-
-
-
-
-
+/*
     // merges two "array entries" (TODO properly)
     syntax  ArrayItem ::= "merge_ArrayItem" "(" Loc "," ArrayItem "," ArrayItem ")" [function]
     rule    merge_ArrayItem(L,[X,V1,_],[X,V2,_]) => [X,V1,L]
-                        
-    // merges two zvals V1 and V2, then creates the entry L |-> lub(V1,V2)
-    /* TODO: remove if not used anymore
-    syntax  Map ::= "mergeZval" "(" Loc "," Zval "," Map "," Zval "," Map ")" [function]
-
-    // scalar case
-    rule    mergeZval(L,zval(V,T,R,I),_,zval(V',T',R',I'),_) => 
-		(L |-> zval(lub(V,V'),T,1,false))  
-            when (isScalarValue(V) ==K true) orBool (isScalarValue(V') ==K true)
-
-    // array case
-
-    rule    mergeZval(L,zval(Array(_,V.),T,R,I),H1,zval(Array(_,V'),T',R',I'),H2) => 
-               mergeArray1(L,V,H1,V',H2,.List,.Map)
 */
+    ///////////////////////////////////////////////////////////////////////////
+    /*@ \subsection{merge two zvals. */
+    ///////////////////////////////////////////////////////////////////////////
+                       
+    // notice that only zvals containing scalars arrive here...
 
-
+    // TODO: should NOT update refcount
     syntax  Zval ::= "mergeZval" "(" Zval "," Zval ")" [function]
-    rule    mergeZval(zval(V,T,R,I),zval(V',T',R',I')) => zval(lub(V,V'),T,1,false)  
+    rule    mergeZval(zval(V,T,R,I),zval(V',T',R',I')) => 
+	    zval(
+	        lub(V,V'),
+	        lub_type(T,T'),
+	        0, // TODO: can remove max(R,R'), if not used
+	        I orBool I')  
 
     ///////////////////////////////////////////////////////////////////////////
     /*@ \subsection{merge the function's static vars part of the heap} */
