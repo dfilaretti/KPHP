@@ -411,13 +411,13 @@ syntax K ::= "foreach" "(" Loc "," K "," K ")"  [strict(1)]
 
 // TODO: replace 'crnt' with some variable name which will not interfere with 
 //       user-defined variables
-/*@
+
 rule [foreach-spec]:
 	<k> foreach(L:Loc, Pattern:K, Stmt:K) => 
 		'ListWrap(
 			'Expr(reset(L)),,
 			'Expr('Assign('Variable('Simple("crnt")),,key(L))),,
-			'While('IsNotIdentical('False(.KList),,'Variable('Simple("crnt"))),
+			'While('IsNotIdentical('False(.KList),,'Variable('Simple("crnt"))),,
 					*Cond(
 						isCrntVisib(L),
 						'ListWrap(
@@ -437,12 +437,13 @@ rule [foreach-spec]:
 					)
 				)	
 		) ... </k>
-		<heap> ... L |-> zval(V:Value,_,_,_) ... </heap>
+		<heap> ... L2 |-> zval(V:Value,_,_,_) ... </heap>
+		<thematrix> ... L |-> L2 ... </thematrix>
 		<currentForeachItem> L1:Loc </currentForeachItem>
 	<trace> Trace:List => Trace ListItem("foreach-spec") </trace>
 	when (V isCompoundValue)
 	[internal]
-*/
+	
 syntax K ::= "ArrayCrnt2None" "(" Loc ")"
 
 rule 
