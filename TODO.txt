@@ -1,5 +1,15 @@
 test zend/lang/30 : dynamic function call
 
+==Type unsound (unknown type has same type as everything), maybe types should be abstract values ?
+
 zend/basic/25 FunctionCall(var_dump, list(_POST, HTTP_RAW_POST_DATA), loc) ?
 
 ObjectProperty ("a") not reduced : "a" is not a Value because not abstracted ?
+
+foreach zend/lang/foreachLoop.001.phpt
+
+	heap L->V:CompoundValue, but it's indirect in the tests with heap : L2->V thematrix : L->L2
+
+	Assign 0 (or concrete string ?) because it's an array key (var_dump)
+
+	maybe have a Key type ?
