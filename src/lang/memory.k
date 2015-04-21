@@ -293,6 +293,12 @@ rule [zval-read-value]:
 	<heap> ... L |-> zval(V,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("zval-read-value") </trace>
 	[internal]
+	
+rule [zval-read-value]:
+	<k> zvalRead(L, @Value) => V ... </k>
+	<heap> ... L |-> zval(V,_,_,_) ... </heap>
+	<trace> Trace:List => Trace ListItem("zval-read-value") </trace>
+	[internal]
 
 rule [zval-read-type]:
 	<k> zvalRead(L',@Type) => T ... </k>

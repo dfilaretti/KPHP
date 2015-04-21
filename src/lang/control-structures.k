@@ -126,12 +126,10 @@ rule [continue-none]:
  
 context 'Continue('Some(HOLE))
 
-/* TODO: later
 rule
 	<k> 'Continue('Some(R:ConvertibleToLanguageValue => convertToLanguageValue(R))) ... </k>
 	<trace> Trace:List => Trace ListItem("continue-arg2LangValue") </trace>
 	[intermediate] 
-*/
 
 rule [continue-some]: 	
 	<k> 'Continue('Some(Steps:Int)) => 'Continue(Steps) ... </k>

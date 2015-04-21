@@ -137,6 +137,14 @@ module OPS
     rule    [toBoolean-array]:    
 	        <k> *toBoolean(Array(_,Elems)) => ABool ... </k>
 	        [internal]
+			
+	rule	[toBoolean-true]:    
+	        <k> *toBoolean(true) => ABool ... </k>
+	        [internal]
+	
+	rule 	[toBoolean-false]:    
+	        <k> *toBoolean(false) => ABool ... </k>
+	        [internal]
 
 // Object case: we add it, even if the online docs says this behaviour is "PHP 4 only"
 // Since the expected behaviour for PHP 5 is not mentioned, I guess it is undefined..?
@@ -295,6 +303,6 @@ module OPS
 				| "isIntString" "(" AString ")" [function]	
 				| "isFloatString" "(" AString ")" [function]	
 	
-	
+	rule strlen(S:AString) => AInt
 	
 endmodule

@@ -194,7 +194,7 @@ rule [key.none]:
 
 // Array (current)   
 rule [key-some]:    
-	<k> key(L':Loc) => X ... </k>
+	<k> key(L':Loc) => alpha(X) ... </k>
 	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(Array([X,_],_),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("key-some") </trace>
