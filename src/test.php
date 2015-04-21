@@ -1,13 +1,18 @@
 --TEST--
-Testing eval function inside user-defined function
+Testing stack after early function return
 --FILE--
 <?php 
-function F ($a) { 
-	eval($a);
+function F () { 
+	if(1) {
+		return("Hello");
+	}
 }
 
-error_reporting(0);
-F("echo \"Hello\";");
+$i=1;
+while ($i == 2) {
+	echo F();
+	$i++;
+}
 ?>
 --EXPECT--
-Hello
+HelloHello

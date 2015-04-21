@@ -245,7 +245,8 @@ rule	<k> runInMem(none, _) => .  ... </k>
                     <globalScope> L2 </globalScope>
                     <globalStaticScope> L3 </globalStaticScope>
                     <superGlobalScope> L4 </superGlobalScope> 
-                </scopes> 
+                </scopes>
+		<thematrix> H1' </thematrix>  
                 <heap> H1 </heap>,
                 <scopes> 
                     <currentScope> L1' </currentScope>
@@ -253,11 +254,64 @@ rule	<k> runInMem(none, _) => .  ... </k>
                     <globalStaticScope> L3' </globalStaticScope>
                     <superGlobalScope> L4' </superGlobalScope>   
                 </scopes> 
-                <heap> H2 </heap>) => H1 ==Map H2
+		<thematrix> H2' </thematrix>
+                <heap> H2 </heap>) => 
+		(H1',H1,H2',H2) |- isomorph(heap_read(H1',H1,L1),heap_read(H2',H2,L1')) 
 
-    ///////////////////////////////////////////////////////////////////////////
     // Memory equality (modulo isomorphism)
     ///////////////////////////////////////////////////////////////////////////
+
+    	syntax  Bool ::= "(" Map "," Map "," Map "," Map ")"   
+			"|-" "isomorph"  "(" Zval "," Zval ")" [predicate]
+	
+	// scalar
+        rule    (_,_,_,_) |- isomorph(zval(V1:ScalarValue,_,_,_),zval(V2:ScalarValue,_,_,_)) => 
+			V1 ==K V2
+	
+	// array 
+    	rule    (H1',H1,H2',H2) |- isomorph(
+			zval(Array(_,L1:List),_,_,_),
+			zval(Array(_,L2:List),_,_,_)) => 
+				(H1',H1,H2',H2) |- isomorph1(L1,L2)
+		
+	// object
+   	 rule    (H1',H1,H2',H2) |- isomorph(
+			zval(OID(Loc1,_,_),_,_,_),
+			zval(OID(Loc2,_,_),_,_,_)) =>
+				(H1',H1,H2',H2) |- isomorph(
+					heap_read(H1',H1,Loc1),
+					heap_read(H2',H2,Loc2))
+	
+    	syntax  Bool ::= "(" Map "," Map "," Map "," Map ")"   
+			"|-" "isomorph1" "(" List "," List ")" [predicate]
+
+	//@ base cases
+	rule    (_,_,_,_) |- isomorph1(.List,.List) => true
+  
+  	rule    (_,_,_,_) |- isomorph1(ListItem([X,_,_]) A1,A2:List) => false
+	when notBool(A2 hasProperty X)
+
+  	rule    (_,_,_,_) |- isomorph1(A1:List, ListItem([X,_,_]) A2) => false
+	when notBool(A1 hasProperty X)
+
+    // cons cases
+
+    rule    (H1',H1,H2',H2) |- isomorph1(ListItem([X,_,L1]) A1, A2) => 
+	    (H1',H1,H2',H2) |- isomorph1(A1,arrayRemove(A2,X))
+            when  (A2 hasProperty X) andBool 
+		((H1',H1,H2',H2) |- isomorph(
+			heap_read(H1',H1,L1), 
+			heap_read(H2',H2,optionLoc2Loc(array_read_v(A2,X)))))
+
+
+    rule    (H1',H1,H2',H2) |- isomorph1(ListItem([X,_,L1]) A1, A2) => false
+            when  (A2 hasProperty X) andBool 
+		(notBool ((H1',H1,H2',H2) |- isomorph(
+			heap_read(H1',H1,L1), 
+			heap_read(H2',H2,optionLoc2Loc(array_read_v(A2,X))))))
+
+/*
+    // Old version. TODO: remove if new version works. 
 
     syntax  Bool ::= "(" Map "," Map ")"   "|-" "isomorph"  "(" Zval "," Zval ")" [predicate]
 
@@ -308,6 +362,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
             when  (A2 hasProperty X) andBool 
 	(notBool ((H',H) |- isomorph(heap_read(H',H,L1), heap_read(H',H,optionLoc2Loc(array_read_v(A2,X))))))
 
+*/
 
 ///////////////////////////////////////////////////////////////////////////////
 /*@ \subsection{Fixpoint computation} */
@@ -320,9 +375,10 @@ rule	<k> runInMem(none, _) => .  ... </k>
     syntax K ::= "LFP" "(" OptionBag "," K ")"
     
     //@ fixpoint has been reached
-    rule    <k> LFP(some(E), _) => . ... </k>
-            <mem> E:Bag </mem>
-
+    rule    <k> LFP(some(E1), _) => . ... </k>
+	    <mem> E:Bag </mem>
+	    when ==Mem(E,E1)
+ 
     //@ fixpoint not reached, run computation again
     rule    <k> LFP(some(E1:Bag), K) => K ~> LFP(some(E), K) ... </k>
             <mem> E:Bag </mem>
@@ -348,13 +404,14 @@ rule	<k> runInMem(none, _) => .  ... </k>
     their two memories are isomoprphic.  */
 
     rule	(H',H) |- similar(sf(_,A1':Loc,_,_,_,_,L1:Int),sf(_,A2':Loc,_,_,_,_,L2:Int)) => 
-			((H',H) |- isomorph(heap_read(H',H,A1'),heap_read(H',H,A2')))
+			((H',H,H',H) |- isomorph(heap_read(H',H,A1'),heap_read(H',H,A2')))
 			andBool (L1 ==K L2)
 
-    /* OLD
-    rule	Sto |- similar(sf(_,H1:Loc,_,_,_,_,L1:Int),sf(_,H2:Loc,_,_,_,_,L2:Int)) => 
-			(Sto |- isomorph(heap_read(Sto,H1),heap_read(Sto,H2)))
-				andBool (L1 ==K L2)
+    /*
+    // old. TODO: remove when finished with new
+    rule	(H',H) |- similar(sf(_,A1':Loc,_,_,_,_,L1:Int),sf(_,A2':Loc,_,_,_,_,L2:Int)) => 
+			((H',H) |- isomorph(heap_read(H',H,A1'),heap_read(H',H,A2')))
+			andBool (L1 ==K L2)
     */
 
     /*@ Given a stack frame, decided wether a similar (as defined above) 
