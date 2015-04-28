@@ -11,7 +11,7 @@ module ALPHA
 
 	rule alpha(B:Bool) => ABool	 [structural]
 
-	rule alpha(S:String) => AStringUntainted [structural]
+	rule alpha(S:String) => S [structural]
 
 	rule alpha(NULL) => NULL [structural]
 	

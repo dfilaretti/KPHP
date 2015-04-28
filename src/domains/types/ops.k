@@ -190,17 +190,17 @@ module OPS
 	syntax K ::= "*toString" "(" LanguageValue ")" [strict]
 
 	rule [toString-int]:
-			<k> *toString(I:AInt) => AStringUntainted ... </k>
+			<k> *toString(I:AInt) => AStringTop ... </k>
 			<trace> Trace:List => Trace ListItem("toString-int") </trace>
 			[internal]
 	
 	rule [toString-bool]:
-			<k> *toString(B:ABool) => AStringUntainted ... </k>
+			<k> *toString(B:ABool) => AStringTop ... </k>
 			<trace> Trace:List => Trace ListItem("toString-bool") </trace>
 			[internal]
 			
 	rule [toString-float]:   
-			<k> *toString(F:AFloat) => AStringUntainted ... </k>
+			<k> *toString(F:AFloat) => AStringTop ... </k>
 			<trace> Trace:List => Trace ListItem("toString-float") </trace>
 			[internal]
 	rule [toString-string]:   
@@ -209,7 +209,7 @@ module OPS
 			[internal]
 
 	rule [toString-array]:   
-			<k> *toString(Arr:Array) => AStringUntainted ... </k> //concrete string is "Array" ?
+			<k> *toString(Arr:Array) => AStringTop ... </k> //concrete string is "Array" ?
 			<trace> Trace:List => Trace ListItem("toString-array") </trace>
 			[internal]
 	
@@ -227,41 +227,41 @@ module OPS
 			[internal, error]
 
 	rule [toString-null]:   
-			<k> *toString(NULL) => AStringUntainted ... </k>
+			<k> *toString(NULL) => "" ... </k>
 			<trace> Trace:List => Trace ListItem("toString-null") </trace>
 			[internal]
 	
 	syntax K ::= "string2Number" "(" AString ")"
 	
 	rule [string2Number]:
-			<k> string2Number(S:AString) => AInt ... </k>
+			<k> string2Number(S:AString) => ANum ... </k>
 			<trace> Trace:List => Trace ListItem("string2Number") </trace>
 			[internal]
 	
 	// String concatenation operation
-	rule [concat-string-untainted-1]:    
-	<k> 'Concat(AStringUntainted,, S:AString) => S ... </k>
-	<trace> Trace:List => Trace ListItem("concat-string-untainted-1") </trace>
+	rule [concat-string-concrete]:
+	<k> 'Concat(S1:String,, S2:String) => S1 +String S2 ... </k>
+	<trace> Trace:List => Trace ListItem("concat-string-concrete") </trace>
 	[step]
 	
-	rule [concat-string-untainted-2]:    
-	<k> 'Concat(S:AString,, AStringUntainted) => S ... </k>
-	<trace> Trace:List => Trace ListItem("concat-string-untainted-2") </trace>
+	rule [concat-string-top-1]:
+	<k> 'Concat(AStringTop,, S:AString) => AStringTop ... </k>
+	<trace> Trace:List => Trace ListItem("concat-string-top-1") </trace>
 	[step]
 	
-	rule [concat-string-tainted-1]:
-	<k> 'Concat(AStringTainted,, S:AString) => AStringTainted ... </k>
-	<trace> Trace:List => Trace ListItem("concat-string-tainted-1") </trace>
+	rule [concat-string-top-2]:
+	<k> 'Concat(S:AString,, AStringTop) => AStringTop ... </k>
+	<trace> Trace:List => Trace ListItem("concat-string-top-2") </trace>
 	[step]
 	
-	rule [concat-string-tainted-2]:
-	<k> 'Concat(S:AString,, AStringTainted) => AStringTainted ... </k>
-	<trace> Trace:List => Trace ListItem("concat-string-tainted-2") </trace>
+	rule [concat-string-bot-1]:
+	<k> 'Concat(AStringBot,, S:AString) => AStringBot ... </k>
+	<trace> Trace:List => Trace ListItem("concat-string-bot-1") </trace>
 	[step]
 	
-	rule [concat-string-top]:
-	<k> 'Concat(AStringTop,, AStringTop) => AStringTop ... </k>
-	<trace> Trace:List => Trace ListItem("concat-string-tainted-2") </trace>
+	rule [concat-string-bot-2]:
+	<k> 'Concat(S:AString,, AStringBot) => AStringBot ... </k>
+	<trace> Trace:List => Trace ListItem("concat-string-bot-2") </trace>
 	[step]
 	
     syntax  ABool ::= "notABool" ABool [function]
@@ -294,7 +294,7 @@ module OPS
     syntax K ::= "user_input"
 	
     rule [input]:
-    	<k>  user_input => AStringTainted ...</k>
+    	<k>  user_input => AStringTop ...</k>
 	
 	
 	//can't be resolved in this domain

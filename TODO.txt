@@ -17,3 +17,8 @@ foreach zend/lang/foreachLoop.001.phpt
 	added a zvalRead for direct heap to value link, is that supposed to happen ?
 
 	invalid argument to foreach : break, Loc may not hold a compound value
+
+
+Keep track of numeric strings ?
+
+Constant propagation should be ok
