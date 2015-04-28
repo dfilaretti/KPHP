@@ -10,6 +10,7 @@ function F () {
 
 $i=1;
 while ($i == 2) {
+	echo 1 + "2";
 	echo F();
 	$i++;
 }
