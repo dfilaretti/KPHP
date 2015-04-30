@@ -10,3 +10,7 @@ while ($a<10) {
 ?>
 --EXPECT--
 123456789
+--EXPECTTYPES--
+AInt
+--EXPECTSIGNS--
+Pos

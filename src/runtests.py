@@ -252,7 +252,7 @@ def dict_2_string(d):
 # parse a phpt file, and return a dictionary containing all the fields
 def parse_phpt_file(file_name):
     file_content = get_file_content(file_name)
-    splitted_file = re.split('--(TEST|FILE|FILEOF|EXPECT|EXPECTF|EXPECTREGEX|INI|SKIPIF|FILEOF|GET|POST|POST_RAW)--' , file_content)
+    splitted_file = re.split('--(TEST|FILE|FILEOF|EXPECT|EXPECTF|EXPECTREGEX|EXPECTSIGNS|EXPECTTYPES|INI|SKIPIF|FILEOF|GET|POST|POST_RAW)--' , file_content)
     del splitted_file[0]
     test = {}
     for i in range (0, len(splitted_file) - 1):
@@ -279,21 +279,8 @@ def run_test(filename):
         print ("=> " + outcome)
         return [outcome, "KPHP ERROR: GET and POST not supported yet.", "-", "-", {}]
 
-    # get the expected result
-    # TODO: manage EXPECTREGEX properly
-    if ('EXPECT' in crnt_test):
-        expected_result = crnt_test['EXPECT'].strip();
-    if ('EXPECTF' in crnt_test):
-        expected_result = crnt_test['EXPECTF'].strip();
-    if ('EXPECTREGEX' in crnt_test):
-        expected_result = crnt_test['EXPECTREGEX'].strip()
 
-    # create version of expected result without newlines
-    expected_result_new_line = expected_result.translate( None, string.whitespace )
-    expected_result_pattern = expected_result_new_line
-    if ('EXPECTF' in crnt_test or 'EXPECTREGEX' in crnt_test):
-        expected_result_pattern = fromScanfStyleToRegexp(expected_result_new_line)
-        expected_result_pattern = fromScanfStyleToRegexp(expected_result_new_line)
+
         
     # create the script file to be run by K
     input_file_for_k = filename + ".phptemp"
@@ -324,19 +311,37 @@ def run_test(filename):
         konfig = parseString(get_file_content(temp_file))
         kcell = str(konfig.getElementsByTagName("k")[0].toxml()).strip("\n\t ")
         trace = str(konfig.getElementsByTagName("trace")[0].toxml())
+        domain = str(konfig.getElementsByTagName("domain")[0].toxml()).replace("<domain>", "").replace("</domain>", "").translate(None, string.whitespace)
         outcell = str(konfig.getElementsByTagName("out")[0].toxml())
         residual = kcell.replace("<k>", "").replace("</k>", "").strip("\n\t ")
-        result = outcell.replace("<out>", "").replace("</out>", "").replace("\t", "").replace(" ", "")
+        result = outcell.replace("<out>", "").replace("</out>", "").replace("\t", "").replace(" ", "").replace("&quot;", "").replace("\\r\\n", "")
         #result=re.sub(r'.out.(.*)..out.', r'\1', outcell)
         result2=re.sub(r'ListItem\((.*?)\)\n', r'\1\n', result)
-        result3=re.sub(r'#(ostream|buffer)(.*?)\n', "", result2)
+        result3=re.sub(r'#(ostream|buffer|\r)(.*?)\n', "", result2)
         result_new_line = result3.translate( None, string.whitespace)
-        print result_new_line
+        #print result3
         errorcode = int(str(konfig.getElementsByTagName("errorManagement")[0].toxml()).replace("<errorManagement>", "").replace("</errorManagement>", "").strip("\n"))
     except ExpatError :
         kcell = "UNABLE TO PARSE CONFIG, CHECK MANUALLY!"
         errorcode = 4
-            
+    # get the expected result
+    # TODO: manage EXPECTREGEX properly
+    if ('EXPECT' in crnt_test):
+        expected_result = crnt_test['EXPECT'].strip();
+    if ('EXPECTF' in crnt_test):
+        expected_result = crnt_test['EXPECTF'].strip();
+    if (('EXPECTTYPES' in crnt_test) and (domain=="Types")):
+        expected_result = crnt_test['EXPECTTYPES'].strip();
+    if (('EXPECTSIGNS' in crnt_test) and (domain=="Signs")):
+        expected_result = crnt_test['EXPECTSIGNS'].strip();
+    if ('EXPECTREGEX' in crnt_test):
+        expected_result = crnt_test['EXPECTREGEX'].strip()	
+	# create version of expected result without newlines
+    expected_result_new_line = expected_result.translate( None, string.whitespace )
+    expected_result_pattern = expected_result_new_line
+    if ('EXPECTF' in crnt_test or 'EXPECTREGEX' in crnt_test):
+        expected_result_pattern = fromScanfStyleToRegexp(expected_result_new_line)
+        expected_result_pattern = fromScanfStyleToRegexp(expected_result_new_line)
     # Passing conditions.
     try:
         regexp_match = (re.match(expected_result_pattern, result_new_line))
@@ -359,8 +364,10 @@ def run_test(filename):
         rule_coverage = {}
     else:
         outcome = "fail"
-    print ("=> " + outcome)
     
+    print ("Expected : " + expected_result)
+    print ("Actual : " + result3)
+    print ("=> " + outcome)
     # coverage information
     # empty dictionary
     if (outcome != "parsing_issue"):

@@ -3,6 +3,7 @@ require "../../lang/arith-ops.k"
 module OPS
        imports LATTICE
 	   imports ARITH-OPS
+	   imports INIT
 	   
        syntax AInt ::= AInt "+AInt" AInt [function]
        syntax AInt ::= AInt "-AInt" AInt [function]
@@ -304,5 +305,9 @@ module OPS
 				| "isFloatString" "(" AString ")" [function]	
 	
 	rule strlen(S:AString) => AInt
+	
+	rule [init-domain]:
+		<k> initDomain => . ... </k>
+		<domain> .K => Types </domain>
 	
 endmodule

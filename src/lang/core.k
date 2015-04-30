@@ -13,7 +13,12 @@ module CORE
 	//imports EMPTY-DOMAIN
     //imports MYSIGNS-DOMAIN
 	imports TYPES-DOMAIN
-	
+
+
+syntax Domain ::= "Concrete"
+				| "Signs"
+				| "Types"
+
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 /*@ \section{Core} */

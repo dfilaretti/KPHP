@@ -21,15 +21,18 @@ module INIT
 // ---------------------------------------------------------------------------------------------
 
 syntax  Internal ::= "buildInitState" 
+				   | "initDomain"
 				   | "initScopes"
 				   | "initBuiltinFunctions"
 				   | "initBuiltinClasses"
 				   | "initSuperGlobals"
                    | "initStatus"
+				   
 
 rule [built-init-state]:	
 	<k> buildInitState =>
-        	initStatus ~> 
+		initDomain ~>
+        initStatus ~> 
 		initScopes ~>
 		initBuiltinFunctions ~>
 		initBuiltinClasses ~>
