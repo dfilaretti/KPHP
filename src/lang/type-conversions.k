@@ -475,9 +475,10 @@ syntax K ::= "*toArray" "(" LanguageValue ")" [strict]
 // cast to array for scalar values
 
 rule [toArray-scalar]:    
-	<k> *toArray(S:ScalarValue) =>  makeArrayFromScalar(S, 0) ... </k>
+	<k> *toArray(S:ScalarValue) =>  makeArrayFromScalar(S, alpha(0)) ... </k>
 	<trace> Trace:List => Trace ListItem("toArray-scalar") </trace>
 	[internal]
+
 
 // cast to object for compound values. 
 

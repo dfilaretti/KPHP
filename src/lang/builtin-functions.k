@@ -566,8 +566,8 @@ syntax K ::= "dump_content" "(" List ")"
 /* This auxiliary predicte tells wether a key is string or int  */
 
 syntax Bool ::= Key "isStringKey" [function]
-rule K:String isStringKey => true
-rule K:Int isStringKey => false
+rule K:AString isStringKey => true
+rule K:AInt isStringKey => false
 
 /* recursively var_dumps array elements  */
 rule [dump-content-1]:   

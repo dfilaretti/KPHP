@@ -47,7 +47,7 @@ syntax ArrayItemVisibility ::= "public" | "protected" | "private" "(" Id ")"
 
 // Keys can be Int or String. We use NULL to designate cases when no key is provided when 
 // accessing an array (e.g. $x[] = 0). In such cases a default integer key will be provided.
-syntax Key ::= Int | String | SpecialValue
+syntax Key ::= AInt | AString | SpecialValue
 rule isKResult(K:Key) => true
 
 // For specification purpose language values are not enough, so we need to add other
@@ -78,6 +78,10 @@ syntax LiteralValue ::= "Literal" "(" K ")" [klabel('lit)]
 syntax Value ::= LanguageValue | SemanticValue 
 syntax KResult ::= Value  
 
+// NOTE: aven if the particular domain has no concrete integers, we might want them to 
+// be KResults anyway. For example, we might still use them for reference counting... 
+
+syntax KResult ::= Int
 
 /* For convenience, we define a set of option types */
 
@@ -680,16 +684,20 @@ rule len(ListItem(_) Tail) => 1 +Int len(Tail)
 
 /* Returns the max int key in a list  */
 
-syntax Int ::= "biggestIntKey" "(" List ")" [function]
-rule biggestIntKey(.List) => -1
-rule biggestIntKey(ListItem([Key:String,_,_]) Tail) => biggestIntKey(Tail)
-rule biggestIntKey(ListItem([Key:Int,_,_]) Tail) => max(Key, biggestIntKey(Tail))
+syntax AInt ::= "biggestIntKey" "(" List ")" [function]
+rule biggestIntKey(.List) => alpha(-1)
+rule biggestIntKey(ListItem([Key:AString,_,_]) Tail) => biggestIntKey(Tail)
+rule biggestIntKey(ListItem([Key:AInt,_,_]) Tail) => max(Key, biggestIntKey(Tail))
 
-/* Return the biggest of two integers  */
+/* Return the biggest of two (abstract) integers  */
 
-syntax Int ::= "max" "(" Int "," Int ")" [function]
-rule max(I1, I2) => I1	when I1 >=Int I2
-rule max(I1, I2) => I2	when I1 <Int I2
+syntax AInt ::= "max" "(" AInt "," AInt ")" [function]
+
+/* TODO: it used to work in concrete. What about abstract?
+rule max(I1, I2) => I1	when I1 >=AInt I2
+rule max(I1, I2) => I2	when I1 <AInt I2
+*/
+
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Macros} 
@@ -959,17 +967,20 @@ rule [rget-null]:
 	<trace> Trace:List => Trace ListItem("rget-null") </trace>
 	[internal]
 
-// String element access. Most likely we'll need to change this one 
+// String element access.
+// TODO: must be abstracted. substrString moved into domain?
 
+/*
 rule [rget-string-index]:	
-	<k> RgetRef(ref(L':Loc, Index:Int),_) => substrString(Str, Index, Index +Int 1) ... </k>
+	<k> RgetRef(ref(L':Loc, Index:AInt),_) => substrString(Str, Index, Index +Int 1) ... </k>
 	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(Str:String,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("rget-string-index") </trace>
 	[internal]
+*/
 
 rule [rget-string-undef]:	
-	<k> RgetRef(ref(L':Loc, Index:String),_) => locNull ... </k>
+	<k> RgetRef(ref(L':Loc, Index:AString),_) => locNull ... </k>
 	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(Str:String,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("rget-string-undef") </trace>
@@ -1123,7 +1134,7 @@ rule [lget-not-found-in-obj]:
 
 rule [lget-not-found-default-array-key]:    
 	<k> LgetRef(ref(L':Loc,NULL), T) => 
-		LgetRef(ref(L',biggestIntKey(Elems) +Int 1),T) ... </k>
+		LgetRef(ref(L',biggestIntKey(Elems) +AInt alpha(1)),T) ... </k>
 	<thematrix> ... L' |-> L ... </thematrix> 
 	<heap> ... L |-> zval(Array(_,Elems:List),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("lget-not-found-default-array-key") </trace>

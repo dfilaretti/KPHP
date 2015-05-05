@@ -330,6 +330,7 @@ rule [variable-variable]	:
 // ---------------------------------------------------------------------------------------------
 
 // Array access is strict in both arguments
+// NOTE: is this non-deterministic?
 
 context [array-access-strict-LHS]: 
 	'ArrayAccess(HOLE,,_)
@@ -349,12 +350,12 @@ rule [array-access-LHS2LangValue]:
 // The RHS must be a key (int or string). If it's not, we try to convert it to Int as follows
 
 rule [array-access-key-cast-float]:	
-	<k> 'ArrayAccess(_,,(F:Float => 'IntCast(F))) ... </k>
+	<k> 'ArrayAccess(_,,(F:AFloat => 'IntCast(F))) ... </k>
 	<trace> Trace:List => Trace ListItem("array-access-key-cast-float") </trace>
 	[intermediate]
 	
 rule [array-access-key-cast-bool]:	
-	<k> 'ArrayAccess(_,,(B:Bool => 'IntCast(B))) ... </k>
+	<k> 'ArrayAccess(_,,(B:ABool => 'IntCast(B))) ... </k>
 	<trace> Trace:List => Trace ListItem("array-access-key-cast-bool") </trace>
 	[intermediate]
 
@@ -385,7 +386,22 @@ rule [array-access-nested]:
 	<trace> Trace:List => Trace ListItem("array-access-nested") </trace>
 	[step]
 
+/* TODO: was 1st attempt in abstracting. Looks wrong, remove!
+rule [array-access-simple]:	
+	<k> 'ArrayAccess(L:Loc,,X:Key) => ref(L, X) ... </k>
+	<trace> Trace:List => Trace ListItem("array-access-simple") </trace>
+	when isGammaSingleton(X)
+	[step]
+
+rule [array-access-nested]: 	
+	<k> 'ArrayAccess(R:Ref,,K:Key) => lref(R,K,arr) ... </k>
+	<trace> Trace:List => Trace ListItem("array-access-nested") </trace>
+	when isGammaSingleton(K)
+	[step]
+*/
+
 // This is not a real rule of the semantics. We just use it to catch a parser bug
+// TODO: probably also need update
 
 rule [array-access-parsing-error]:	
 	<k> 'ArrayAccess(S:String,,_) ~> K:K => print("PARSING BUG!!!") ... </k>
