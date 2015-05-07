@@ -25,6 +25,8 @@ module OPS
        syntax AFloat ::= AFloat "/AFloat" AFloat [function]
        syntax AFloat ::= "negative_AFloat" "(" AFloat ")" [function]
 
+	   syntax K ::= "stopDebug"
+	   
        rule  AFloat +AFloat AFloat => AFloat
        rule  AFloat -AFloat AFloat => AFloat
        rule  AFloat *AFloat AFloat => AFloat

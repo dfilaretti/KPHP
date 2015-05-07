@@ -187,6 +187,7 @@ rule Abexp1(V:KResult, M:OptionBag) =>
 
     rule    <k> runInMem(some(M:Bag), B:K) => updateMem(some(M)) ~> B ... </k>
             <status> _ => NEXT </status>
+			<trace> Trace:List => Trace ListItem("run-in-mem-some") </trace>
             [transition]
     
 rule	<k> runInMem(none, _) => .  ... </k> 
@@ -206,7 +207,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
     //@ Return current configuration
     ///////////////////////////////////////////////////////////////////////////
  
-	syntax  K ::= "getCurrentConfig"
+	syntax  K ::= "getCurrentConfig" [klabel('GetCurrentConfig)]
 
     rule 	<kphp>
                 <script>
@@ -223,6 +224,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	syntax  K ::= "runAndGetConfig"	"(" K ")" 	
 
 	rule 	<k> runAndGetConfig(S) => S ~> getCurrentConfig ... </k>
+			<trace>  Trace:List => Trace ListItem("run-and-get-config") </trace>
             [transition]
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -474,7 +476,8 @@ rule	<k> runInMem(none, _) => .  ... </k>
     /*@ This is misleading. It doesn't mean DONE. This is the case when 
     one branch is not executed at all. Should find better naming. */
 
-    rule    mergeConfigs(config(A),config(B)) => updateConfig(config(A)) 
+    rule    <k> mergeConfigs(config(A),config(B)) => updateConfig(config(A)) </k>
+			<trace> Trace:List => Trace ListItem("merge-configs-B-done") </trace>
             when (configGetStatus(B) ==K DONE)
             [transition]
 
@@ -506,7 +509,12 @@ rule	<k> runInMem(none, _) => .  ... </k>
 			<tables>
 			    Tables1:Bag
 			    <functions> F1 </functions>
-			</tables>),
+			</tables>
+			<IO>
+				IO1:Bag
+				<out> O1 </out>
+			</IO>
+			),
                 config(
                         C2:Bag
 			<returns> R2 </returns> 
@@ -520,10 +528,16 @@ rule	<k> runInMem(none, _) => .  ... </k>
 			<tables>
 			    Tables2:Bag
 			    <functions> F2 </functions>
-			</tables>)) =>
+			</tables>
+			<IO>
+				IO2:Bag
+				<out> O2 </out>
+			</IO>
+			)
+			) =>
 
                 updateConfig(config(
-                        C1 // TODO 
+                        C2 // TODO 
 			<returns-loc> RL1 RL2 </returns-loc>
 			<returns> mergeReturns(R1,R2) </returns> 
 			<status> mergeStatus(S1,S2) </status>
@@ -535,7 +549,12 @@ rule	<k> runInMem(none, _) => .  ... </k>
 			<tables>
 			    Tables1 // TODO
 			    <functions> mergeFunctions(F1,F2) </functions>
-			</tables>))
+			</tables>
+			<IO>
+			IO1
+			<out> mergeOutputs(O1, O2) </out>
+			</IO>
+			))
                   
                     [transition]
 
@@ -1469,12 +1488,40 @@ rule	<k> runInMem(none, _) => .  ... </k>
     */
 
 
+	///////////////////////////////////////////////////////////////////////////
+    /*@ \subsubsection{Merging outputs} */
+    ///////////////////////////////////////////////////////////////////////////
 
+	
+	syntax List ::= "mergeOutputs" "(" List "," List ")"	[function]
+	
+	rule mergeOutputs(.List, L2:List) => ListItem("(") ListItem("/") L2 ListItem(")")
+	
+	rule mergeOutputs(L1:List, .List) => ListItem("(") L1 ListItem("/") ListItem(")")
+	
+	rule mergeOutputs(ListItem(A) L1:List, ListItem(B) L2:List) => ListItem(A) mergeOutputs(L1, L2)
+	when A ==K B
+	
+	rule mergeOutputs(ListItem(A) L1:List, ListItem(B) L2:List) => ListItem("(") ListItem(A) L1 ListItem("/") ListItem(B) L2 ListItem(")")
+	when A =/=K B
 
+	///////////////////////////////////////////////////////////////////////////
+    /*@ \subsubsection{Merging outputs} */
+    ///////////////////////////////////////////////////////////////////////////
 
-
-
-
+	
+	syntax K ::= "cleanUntilGetCfg" "(" K ")" [function]
+	
+	rule [clean-empty]:
+	<k> cleanUntilGetCfg(.K) => K </k>
+	<loopStack> ListItem(loopFrame(K,none)) => .List ... </loopStack>
+	
+	rule [clean-get-cfg]:
+	<k> cleanUntilGetCfg( getCurrentConfig ~> T:K) => getCurrentConfig ~> T ... </k>
+	
+	rule [clean-default]:
+	<k> cleanUntilGetCfg (H:K ~> T:K) => cleanUntilGetCfg (T) </k>
+	when ((getKLabel(H) =/=KLabel 'GetCurrentConfig) andBool (H =/=K .K))
 
 
 endmodule

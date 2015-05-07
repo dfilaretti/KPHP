@@ -106,11 +106,16 @@ rule [break-n]:
 	[intermediate]
 
 rule [break-1-normal]:
+	<k> 'Break(1) ~> T:K => cleanUntilGetCfg(T) </k>
+	[step]
+	
+/*
+rule [break-1-normal]:
 	<k> 'Break(1) ~> _ => K </k>
 	<loopStack> ListItem(loopFrame(K,none)) => .List ... </loopStack>
 	[step]
-	
-rule [break-1-special-some]:
+*/	
+rule [break-1-special-some]:												//TODO : change this like above ?
 	<k> 'Break(1) ~> _ => syncArrayCurrent(Lorig, Llocal) ~> K </k>
 	<loopStack> ListItem(loopFrame(K:K,foreachArrayPair(Lorig, Llocal))) => .List ... </loopStack>
 	[step]
