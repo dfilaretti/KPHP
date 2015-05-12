@@ -760,7 +760,8 @@ rule [write-locNull]:
 	<trace> Trace:List => Trace ListItem("write-locNull") </trace>
 	[internal]
 
-syntax K ::= "allocValue" "(" Value ")" [strict]
+// NOTE: the input type used to be Value
+syntax K ::= "allocValue" "(" K ")" [strict]
 
 rule [alloc-value]: 	
 	<k> allocValue(V:Value) => copyValueToLoc(V,L) ~> L ... </k>
@@ -834,6 +835,189 @@ rule [copyArrayMembers-nil]:
 		extensively in the semantics. */
 // ---------------------------------------------------------------------------------------------
 
+
+
+
+
+
+
+
+// ---------------------------------------------------------------------------------------------
+// Auxiliary operations for static analysis
+// ---------------------------------------------------------------------------------------------
+
+syntax 	Set ::= "getLTKeys" "(" List "," Key ")"		[function]
+
+rule	getLTKeys(.List,_) => .Set
+
+rule 	getLTKeys(ListItem([K1,_,_]) Elems ,K) => SetItem(K1) getLTKeys(Elems,K) 
+	when K1 <Lattice K
+
+rule 	getLTKeys(ListItem([K1,_,_]) Elems ,K) => getLTKeys(Elems,K) 
+	when (notBool (K1 <Lattice K)) orBool (K1 ==K K)
+
+
+syntax 	Set ::= "getGEQKeys" "(" List "," Key ")" 	[function]
+
+rule	getGEQKeys(.List,_) => .Set
+
+rule 	getGEQKeys(ListItem([K1,_,_]) Elems ,K) => SetItem(K1) getGEQKeys(Elems,K) 
+	when (K <Lattice K1) orBool (K1 ==K K)
+
+rule 	getGEQKeys(ListItem([K1,_,_]) Elems ,K) => getGEQKeys(Elems,K) 
+	when (notBool (K <Lattice K1))
+
+// fully and partially fragmented predicates. 
+// NOTE; the definition of fullyFragmented is bogus. 
+// (see comments somewhere else in the code). 
+// It should be imoproved OR we could use worst-case always
+
+syntax 	Bool ::= Key "fullyFragmentedIn" Set		[predicate]
+
+rule 	K fullyFragmentedIn S => true 	
+	when lubAllSetElements(S) ==K K
+
+syntax 	Bool ::= Key "partiallyFragmentedIn" Set	[predicate]
+
+rule 	K partiallyFragmentedIn S => true 	
+	when lubAllSetElements(S) <Lattice K
+
+// LUBs a set of values 
+syntax 	PlainLanguageValue ::= "lubAllSetElements" "(" Set ")" [function]
+
+rule	lubAllSetElements(.Set) => Bot
+
+rule	lubAllSetElements(SetItem(V:PlainLanguageValue) S) => lub(V,lubAllSetElements(S))
+
+// Takes a bunch of locations and merge the contained values
+syntax K ::= "mergeValuesAtLocs" "(" RefType "," Set ")"
+
+rule [merge-values-at-locs-null]:
+	<k> mergeValuesAtLocs(nul,.Set) => NULL ... </k>
+
+rule [merge-values-ar-locs-array]:
+	<k> mergeValuesAtLocs(arr,.Set) => emptyArray ... </k>
+
+// TODO: object case
+
+rule [merge-values-at-locs-cons:
+	<k> 
+		mergeValuesAtLocs(InitValue,SetItem(L') LocSet) =>
+		do_lub(zval2val(heap_read(H',H,L')), mergeValuesAtLocs(InitValue,LocSet)) ... 
+	</k>
+	<thematrix> H' </thematrix>
+	<heap> H </heap>
+
+// evaluates the arguments, then LUBs them
+syntax K ::= "do_lub" "(" K "," K ")" [strict(2)]
+rule do_lub(V1:PlainLanguageValue,V2:PlainLanguageValue) => lub(V1,V2)
+
+// extract a value from a zval
+// NOTE: perhaps something similar already exists somewhere?
+syntax PlainLanguageValue ::= "zval2val" "(" Zval ")" [function] 
+rule zval2val(zval(V:PlainLanguageValue,_,_,_)) => V
+
+
+
+
+
+
+
+
+// Inserts a key into an array 
+// the insertion strategy depends on wether there exist a "bigger" key or 
+// wether the key is "fragmented" in the array 
+
+syntax K ::= "insertKey" "(" Loc "," Key "," Set "," Set "," RefType ")"
+
+rule [insert-key]:
+	<k>
+		insertKey(L',K,KLT,KGEQ,InitValue) =>
+		ArrayCreateElem(L', K, public, 
+			allocValue(mergeValuesAtLocs(InitValue,KeySet2LocSet(KLT KGEQ,ArrayElems)))) ~>
+		insertKey1(L',K,(KLT KGEQ),InitValue) ...
+	</k>
+	<thematrix> ... L' |-> L ... </thematrix>
+	<heap> ... L |-> zval(Array(_,ArrayElems),_,_,_) ... </heap>
+
+syntax K ::= "insertKey1" "(" Loc "," Key "," Set "," RefType ")"
+
+rule [insert-key-1]:
+	<k>
+		insertKey1(L',K,KeySet,_) =>
+		aliasAllKeys2Loc(
+			L',
+			KeySet,
+			optionLoc2Loc(
+				vheap_read(
+					H',
+					array_read_v(
+						arrayZval2ArrayProps(heap_read(H',H,L')),K)))) ~>
+		/* TODO: decomment
+		#if (K partiallyFragmentedIn KGEQ) #then
+			'Assign(ref(L',K),,NULL) // new semantics 'Assign semantics required
+		#else .K ~>	
+		*/
+		Rget(ref(L',K)) ...
+	</k>
+	<thematrix> H' </thematrix>
+	<heap> H </heap> 
+
+
+// Given a zval containing an array, returns its property list
+syntax List ::= "arrayZval2ArrayProps" "(" Zval ")" [function]
+rule arrayZval2ArrayProps(zval(Array(_,ArrayProps:List),_,_,_)) => ArrayProps:List
+
+
+// Alias a set of "virtual locations" to a given "concrete location"
+syntax K ::= "aliasAllKeys2Loc" "(" Loc "," Set "," Loc ")"
+
+rule [alias-all-keys-2-loc]:
+	<k> 
+		aliasAllKeys2Loc(L',KeySet,TargetLoc) => 
+		aliasAllKeys2Loc1(KeySet2LocSet(KeySet,ArrayElems),TargetLoc) ...
+	</k>
+	<thematrix> ... L' |-> L ... </thematrix>
+	<heap> ... L |-> zval(Array(_,ArrayElems),_,_,_) ... </heap>
+	
+syntax K ::= "aliasAllKeys2Loc1" "(" Set "," Loc ")"
+
+// base case
+rule [alias-all-keys-2-loc-1-nil]:
+	<k> 
+		aliasAllKeys2Loc1(.Set,TargetLoc) => .  ...
+	</k>
+
+// cons case
+rule [alias-all-keys-2-loc-1-cons]:
+	<k> 
+		aliasAllKeys2Loc1(SetItem(L') LocSet,TargetLoc) => 
+	 	aliasAllKeys2Loc1(LocSet,TargetLoc) ...
+	</k>
+	<thematrix> ... L' |-> (_ => TargetLoc) ... </thematrix>
+ 
+
+
+// Given a set of keys and an array (as the list of properties) 
+// returns the locations associated to those keys in the given array
+syntax Set ::= "KeySet2LocSet" "(" Set "," List ")" [function]
+
+rule 	KeySet2LocSet(.Set,ArrayElems) => .Set 
+
+rule 	KeySet2LocSet(SetItem(K) Keys,ArrayElems) => 
+	SetItem(array_read_v(ArrayElems,K)) KeySet2LocSet(Keys,ArrayElems) 	
+
+
+
+
+
+
+
+
+// ---------------------------------------------------------------------------------------------
+// Reference operations
+// ---------------------------------------------------------------------------------------------
+
 /*@ get operations take a reference as input and returns a memory location */
 
 syntax K ::= "Rget" "(" Ref ")" 				[strict]
@@ -848,8 +1032,12 @@ rule [rget-default]:
 rule [rget-propagate]:    
 	<k> RgetRef(lref(R:Ref, X:Key, T1:RefType),T2:RefType) => RgetRef(ref(RgetRef(R,T1), X), T2) ... </k>
 	[structural]
-	
+
+
 // Reading an array property
+
+/*
+// Original rules - TODO: remove
 
 rule [rget-array-prop]:
 	<k> RgetRef(ref(L':Loc, X:Key), _) =>  L1 ... </k>
@@ -864,11 +1052,146 @@ rule [rget-array-prop-undefined]:
 	<heap>... L |-> zval(Array(_,ArrayElements),_,_,_)  ...</heap>
 	when notBool (ArrayElements hasProperty X)
 	[internal, error]
+*/
+
+
+// We are ready to resolve a reference. Therefore we calculate the set of keys which 
+// are < and >= the given case, so that we can do case analysis in the following rules...
+
+rule [rget-array-prop]:
+	<k> 
+		RgetRef(ref(L':Loc, X:Key),InitValue) =>  
+		RgetRef1(L',X,getLTKeys(ArrayValues,X), getGEQKeys(ArrayValues,X),InitValue) ... 
+	</k>
+	<thematrix> ... L' |-> L ... </thematrix>
+	<heap>... L |-> zval(Array(_,ArrayValues),_,_,_)  ...</heap>
+	[internal]
+
+// We now define the auxiliary RgetRef1 operation. 
+// It is used to distinguish among cases when the actual RgetRef operation 
+// has fully evaluated the reference to be resolved 
+
+syntax K ::= "RgetRef1" "(" Loc "," Key "," Set "," Set "," RefType ")"
+
+// Case 1: the key X is "not present" at all in the array i.e. there are no other keys 
+// which are =, < or >= to X. 
+// This is our old "key not found" case.
+
+rule [rget1-array-prop-undefined]:
+	<k> 
+		RgetRef1(L',X,KLT,KGEQ,_) => 
+		NOTICE("Undefined variable: %s in %s on line %d\n") ~> 
+		locNull ... 
+	</k>
+	when (KLT ==Set .Set) andBool (KGEQ ==Set .Set) 
+
+// Case 1: the key X is actually present in the array. 
+// This case resembles the original "key found" case. 
+// Notice that I check wether (X in KGEQ) and this may not be necessary...
+// (but it helps me keeping track of the various cases I wrote on paper)
+
+rule [rget1-array-prop-literally-found]:
+	<k> RgetRef1(L',X,_,KGEQ,_) =>  L1 ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
+	<heap>... L |-> zval(Array(_,_:List ListItem([X,public,L1]) _:List),_,_,_)  ...</heap>
+	when (X in KGEQ) 
+	[internal]
+
+
+// Case 3: the key X is not present, but a "bigger" key, say X1 is present 
+// (e.g. X = Pos, X1 = Top | NZ | ... )
+// In this case we insert the key using the insertKey internal operation. 
+// NOTE: are we sure we want to insert it and not reading one of the "bigger" keys?  
+
+
+rule [rget1-array-prop-bigger]:
+	<k> RgetRef1(L',X,KLT,KGEQ,InitValue) => insertKey(L',X,KLT,KGEQ,InitValue) ... </k>
+	when (KGEQ =/=Set .Set) andBool (notBool X in KGEQ) 
+
+// Case 4: they key X is "fully fragmented" in the array. This happens e.g. if 
+// X = {Pos -> v1, Neg -> v2} and X = NZ
+// Again, we insert the key 
+
+// TODO: the fullyFragmented predicate is broken! 
+//       it is true for cases which ARE NOT fully fragmented! 
+//       E.g.: Top fullyFragmentedIn {Pos, Neg} => true
+//       but we know it should be false!
+
+rule [rget1-array-prop-fully-fragmented]:
+	<k> RgetRef1(L',X,KLT,KGEQ,InitValue) => insertKey(L',X,KLT,KGEQ,InitValue) ... </k>
+	when (KGEQ ==Set .Set) andBool (X fullyFragmentedIn KLT) 
+
+
+// Case 5: they key X is "partialy fragmented" in the array. This happens e.g. if 
+// X = {Pos -> v1, Neg -> v2} and X = Top
+// Again, we insert the key but also LUB the value with NULL
+
+
+rule [rget1-array-prop-partially-fragmented]:
+	<k> RgetRef1(L',X,KLT,KGEQ,InitValue) => insertKey(L',X,KLT,KGEQ,InitValue) ... </k>
+	when (KGEQ ==Set .Set) andBool (X partiallyFragmentedIn KLT) 
+
+
+// TODO: I guess cases 3, 4 and 5 could be factorised. I.e. we would then have 3 cases
+//       (i) "no key"
+//       (ii) "key found ="
+//       (iii) all other cases: key < or key fragmented (fully7partially)
+//       The insertKey procedure would in turn do the case analysis
+
+
+
+
+// not a compound value
+// NOTE: no need to change anything here: should work for new semantics as well.
+rule [rget-obj-scalar]:
+	<k> RgetRef(ref(L':Loc,_),_) =>  locNull ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
+	<heap> ... L |-> zval(V:Value,_,_,_) ... </heap>
+	<trace> Trace:List => Trace ListItem("rget-obj-scalar") </trace>
+	when (notBool (isArrayType(V))) andBool (notBool (isStringType(V))) andBool (notBool (isObjectType(V)))
+	[internal]
+
+rule [rget-null]: 	
+	<k> RgetRef(ref(locNull, _), _) => locNull ... </k>
+	<trace> Trace:List => Trace ListItem("rget-null") </trace>
+	[internal]
+
+// String element access.
+// TODO: broken now - must be abstracted. move substrString into domain?
+rule [rget-string-undef]:	
+	<k> RgetRef(ref(L':Loc, Index:AString),_) => locNull ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
+	<heap> ... L |-> zval(Str:String,_,_,_) ... </heap>
+	<trace> Trace:List => Trace ListItem("rget-string-undef") </trace>
+	[internal]
+
+/*
+// Original (pre-abstraction) rule
+
+rule [rget-string-index]:	
+	<k> RgetRef(ref(L':Loc, Index:AInt),_) => substrString(Str, Index, Index +Int 1) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
+	<heap> ... L |-> zval(Str:String,_,_,_) ... </heap>
+	<trace> Trace:List => Trace ListItem("rget-string-index") </trace>
+	[internal]
+*/
+
+
+
+
+
+
+
+
+
+
+// TODO TODO TODO TODO TODO 
 
 // Reading an object property
+// NOTE: I'm leaving the following unchanged, as I concentrate on writing new ("abstract")
+//       rules for the (base) array case above. 
 
 // public (i.e. no restrictions)
-
 rule [rget-obj-prop-public]:
 	<k> RgetRef(ref(L':Loc, X:String), _) => L2 ... </k>
 	<class> Context:K </class>
@@ -889,7 +1212,6 @@ rule [rget-obj-prop-public]:
 	[internal]
 
 // protected        
-
 rule [rget-obj-prop-protected]:    
 	<k> RgetRef(ref(L':Loc, X:String), _) => 
 		*Cond(isVisible(ObjClass, Context, protected), L2, ERROR("ERROR-PROTECTED")) ... </k>
@@ -911,7 +1233,6 @@ rule [rget-obj-prop-protected]:
 	[internal]
 	
 // private
-
 rule [rget-obj-prop-private]:
 	<k> RgetRef(ref(L':Loc, X:String),_) => L2 ... </k>
 	<class> Context </class>
@@ -931,7 +1252,6 @@ rule [rget-obj-prop-private]:
 	[internal]
 
 // non-existent property
-
 rule [rget-obj-prop-undefined]:    
 	<k> RgetRef(ref(L':Loc, X:String), _) => 
 		NOTICE("Undefined property: %s in %s on line %d\n") ~> 
@@ -952,39 +1272,16 @@ rule [rget-obj-prop-undefined]:
 	when notBool (E hasProperty X)
 	[internal]
 
-// not a compound value
+// TODO TODO TODO TODO TODO 
 
-rule [rget-obj-scalar]:
-	<k> RgetRef(ref(L':Loc,_),_) =>  locNull ... </k>
-	<thematrix> ... L' |-> L ... </thematrix>	
-	<heap> ... L |-> zval(V:Value,_,_,_) ... </heap>
-	<trace> Trace:List => Trace ListItem("rget-obj-scalar") </trace>
-	when (notBool (isArrayType(V))) andBool (notBool (isStringType(V))) andBool (notBool (isObjectType(V)))
-	[internal]
 
-rule [rget-null]: 	
-	<k> RgetRef(ref(locNull, _), _) => locNull ... </k>
-	<trace> Trace:List => Trace ListItem("rget-null") </trace>
-	[internal]
 
-// String element access.
-// TODO: must be abstracted. substrString moved into domain?
 
-/*
-rule [rget-string-index]:	
-	<k> RgetRef(ref(L':Loc, Index:AInt),_) => substrString(Str, Index, Index +Int 1) ... </k>
-	<thematrix> ... L' |-> L ... </thematrix>	
-	<heap> ... L |-> zval(Str:String,_,_,_) ... </heap>
-	<trace> Trace:List => Trace ListItem("rget-string-index") </trace>
-	[internal]
-*/
 
-rule [rget-string-undef]:	
-	<k> RgetRef(ref(L':Loc, Index:AString),_) => locNull ... </k>
-	<thematrix> ... L' |-> L ... </thematrix>	
-	<heap> ... L |-> zval(Str:String,_,_,_) ... </heap>
-	<trace> Trace:List => Trace ListItem("rget-string-undef") </trace>
-	[internal]
+
+
+
+
 	
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Lget} 
@@ -1008,23 +1305,98 @@ rule [lget-propagate]:
 	<trace> Trace:List => Trace ListItem("lget-propagate") </trace>
 	[structural]
 
-/* Case 1: the reference exists. RGet is called */
+
+
 
 // Array case
+rule [lget-array-prop]:
+	<k> 
+		LgetRef(ref(L':Loc, X:Key),InitValue) =>  
+		LgetRef1(L',X,getLTKeys(ArrayValues,X), getGEQKeys(ArrayValues,X),InitValue) ... 
+	</k>
+	<thematrix> ... L' |-> L ... </thematrix>
+	<heap>... L |-> zval(Array(_,ArrayValues),_,_,_)  ...</heap>
+	[internal]
 
+syntax K ::= "LgetRef1" "(" Loc "," Key "," Set "," Set "," RefType ")"
 
-rule [lget-found-array]:
-	<k> LgetRef(ref(L':Loc,X:Key), _) => Rget(ref(L',X)) ... </k>
-	<thematrix> ... L' |-> L ... </thematrix> 
-	<heap> ... L |-> zval(Array(_,ArrayElems),_,_,_) ... </heap>    
-	<trace> Trace:List => Trace ListItem("lget-found-array") </trace>
-	when (ArrayElems hasProperty X) andBool (L =/=K LError) // TODO: L or L'?!?!
+// Case 1: the key X is "not present" at all in the array i.e. there are no other keys 
+// which are =, < or >= to X. 
+// It needs to be inserted!
+
+rule [lget1-array-prop-undefined]:
+	<k> 
+		LgetRef1(L',X,KLT,KGEQ,InitValue) => insertKey(L',X,KLT,KGEQ,InitValue) ... 
+	</k>
+	when (KLT ==Set .Set) andBool (KGEQ ==Set .Set) 
+
+// Case 1: the key X is actually present in the array. 
+// As in the original rules, we call Rget
+
+rule [lget1-array-prop-literally-found]:
+	<k> LgetRef1(L',X,KLT,KGEQ,InitValue) => Rget(ref(L',X))  ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
+	<heap>... L |-> zval(Array(_,_:List ListItem([X,public,L1]) _:List),_,_,_)  ...</heap>
+	when (X in KGEQ) 
 	[internal]
 
 
+// Case 3: the key X is not present, but a "bigger" key, say X1 is present 
+// (e.g. X = Pos, X1 = Top | NZ | ... )
+// In this case we insert the key using the insertKey internal operation. 
+// NOTE: are we sure we want to insert it and not reading one of the "bigger" keys?  
+
+rule [lget1-array-prop-bigger]:
+	<k> LgetRef1(L',X,KLT,KGEQ,InitValue) => insertKey(L',X,KLT,KGEQ,InitValue) ... </k>
+	when (KGEQ =/=Set .Set) andBool (notBool X in KGEQ) 
+
+// Case 4: they key X is "fully fragmented" in the array. This happens e.g. if 
+// X = {Pos -> v1, Neg -> v2} and X = NZ
+// Again, we insert the key 
+
+// TODO: the fullyFragmented predicate is broken! 
+//       it is true for cases which ARE NOT fully fragmented! 
+//       E.g.: Top fullyFragmentedIn {Pos, Neg} => true
+//       but we know it should be false!
+
+rule [lget1-array-prop-fully-fragmented]:
+	<k> LgetRef1(L',X,KLT,KGEQ,InitValue) => insertKey(L',X,KLT,KGEQ,InitValue) ... </k>
+	when (KGEQ ==Set .Set) andBool (X fullyFragmentedIn KLT) 
+
+
+// Case 5: they key X is "partialy fragmented" in the array. This happens e.g. if 
+// X = {Pos -> v1, Neg -> v2} and X = Top
+// Again, we insert the key but also LUB the value with NULL
+
+
+rule [lget1-array-prop-partially-fragmented]:
+	<k> LgetRef1(L',X,KLT,KGEQ,InitValue) => insertKey(L',X,KLT,KGEQ,InitValue) ... </k>
+	when (KGEQ ==Set .Set) andBool (X partiallyFragmentedIn KLT) 
+
+
+// TODO: I guess cases 3, 4 and 5 could be factorised. I.e. we would then have 3 cases
+//       (i) "no key"
+//       (ii) "key found ="
+//       (iii) all other cases: key < or key fragmented (fully7partially)
+//       The insertKey procedure would in turn do the case analysis
+
+
+// Error case
+rule [lget-error-1]:    
+	<k> LgetRef(ref(L':Loc,X:Key),_) => 
+		WARNING("Cannot use a scalar value as an array in %s on line %d\n") ~> 	
+		locNull ... 
+	</k>
+	<thematrix> ... L' |-> L ... </thematrix>  
+	<heap>... L |-> zval(V:Value,_,_,_)  ...</heap>
+	<trace> Trace:List => Trace ListItem("lget-error-1") </trace>
+	when (notBool (isArrayType(V))) andBool (notBool (isObjectType(V)))
+	[internal, error]
+
+
+
 // Object case
-
-
+// TODO TODO TODO TODO TODO
 rule [lget-found-obj]:
 	<k> LgetRef(ref(L':Loc, X:Key),_) =>  Rget(ref(L', X)) ... </k>
 	<thematrix> 
@@ -1042,25 +1414,13 @@ rule [lget-found-obj]:
 	<trace> Trace:List => Trace ListItem("lget-found-obj") </trace>
 	when (Elems hasProperty X)
 	[internal]
+// TODO TODO TODO TODO TODO 
 
 	
 /* Case 2: the reference does not exists. */
 
 // Array 
-
-/*
-rule [lget-not-found-init-null]:
-	<k> LgetRef(ref(L:Loc,X:Key), nul) =>   
-		ArrayCreateElem(L, X, public, allocValue(NULL)) ~> 
-		Rget(ref(L,X)) ... </k>
-	<heap> ... L |-> zval(Array(_,ArrayElems),_,_,_) ... </heap>
-	<trace> Trace:List => Trace ListItem("lget-not-found-init-null") </trace>
-	when (notBool ArrayElems hasProperty X) andBool
-	(L =/=K LError) andBool (X =/=K NULL)
-	[internal]
-*/
-
-
+/* REMOVE
 rule [lget-not-found-init-null]:
 	<k> LgetRef(ref(L':Loc,X:Key), nul) =>   
 		ArrayCreateElem(L', X, public, allocValue(NULL)) ~> 
@@ -1070,10 +1430,6 @@ rule [lget-not-found-init-null]:
 	when (notBool ArrayElems hasProperty X) andBool
 	(L =/=K LError) andBool (X =/=K NULL)
 	[internal]
-
-
-
-
 
 rule [lget-not-found-init-array]:    
 	<k> LgetRef(ref(L':Loc,X:Key), arr) =>   
@@ -1095,23 +1451,12 @@ rule [lget-not-found-init-obj]:
 	when (notBool Elems hasProperty X) andBool 
     	 (L =/=K LError) andBool (X =/=K NULL)
 	[internal]
-
-// Object
-
-/*
-rule [lget-not-found-in-obj]:    
-	<k> LgetRef(ref((L:Loc => L2),X:Key), _) ... </k>
-	<heap> 
-	... 
-		L |-> zval(OID(L2:Loc,_,_),_,_,_)  
-		L2 |-> zval(Array(_,ArrayElems),_,_,_) 
-	... 
-	</heap>
-	<trace> Trace:List => Trace ListItem("lget-not-found-in-obj") </trace>
-	when (notBool ArrayElems hasProperty X)
-	[internal]
 */
 
+
+// TODO TODO TODO TODO TODO 
+
+// Object
 rule [lget-not-found-in-obj]:    
 	<k> LgetRef(ref((L':Loc => L2),X:Key), _) ... </k>
 	<thematrix>
@@ -1131,7 +1476,6 @@ rule [lget-not-found-in-obj]:
 	[internal]
 
 // Default array key
-
 rule [lget-not-found-default-array-key]:    
 	<k> LgetRef(ref(L':Loc,NULL), T) => 
 		LgetRef(ref(L',biggestIntKey(Elems) +AInt alpha(1)),T) ... </k>
@@ -1141,15 +1485,6 @@ rule [lget-not-found-default-array-key]:
 	when  (L =/=K LError)
 	[internal]
 
-// Error
 
-rule [lget-error-1]:    
-	<k> LgetRef(ref(L':Loc,X:Key),_) => 
-		WARNING("Cannot use a scalar value as an array in %s on line %d\n") ~> locNull ... </k>
-	<thematrix> ... L' |-> L ... </thematrix>  
-	<heap>... L |-> zval(V:Value,_,_,_)  ...</heap>
-	<trace> Trace:List => Trace ListItem("lget-error-1") </trace>
-	when (notBool (isArrayType(V))) andBool (notBool (isObjectType(V)))
-	[internal, error]
-	
+
 endmodule
