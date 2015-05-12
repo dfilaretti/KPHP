@@ -472,7 +472,7 @@ syntax  Zval ::= "emptyArrayZval" [function]
 syntax K ::= "ArrayCreateEmpty" "(" Loc ")" 
 
 rule [array-create-empty]: 	
-	<k> ArrayCreateEmpty(L:Loc) => write(emptyArray,L) ... </k>
+	<k> ArrayCreateEmpty(L:Loc) => write(emptyArray,L,true) ... </k>
 	<trace> Trace:List => Trace ListItem("array-create-empty") </trace>
 	[structural]
 
@@ -727,10 +727,12 @@ rule [read-string]:
 	<trace> Trace:List => Trace ListItem("read-string") </trace>
 	[internal]
 
-syntax K ::= "write" "(" Value "," Loc ")" [strict] 
+syntax K ::= "write" "(" Value "," Loc "," Bool ")" [strict] 
 
+
+// strong update
 rule [write-loc-exists]:
-	<k> write(V:KResult, L':Loc) => 
+	<k> write(V:KResult,L':Loc,true) => 
 		zvalWrite(L', @Value, V) ~> 
 		zvalWrite(L', @Type, typeOf(V)) ... </k>
 	<thematrix> ... L' |-> L ... </thematrix>	
@@ -738,7 +740,25 @@ rule [write-loc-exists]:
 	<trace> Trace:List => Trace ListItem("write-loc-exists") </trace>
 	[internal]
 
-/*
+
+// weak update
+
+// TODO: it seems there is always NULL when this rule is called, therefore
+// everything gets merged with NULL.
+// Not sure this is what we want!
+
+rule [write-loc-exists]:
+	<k> write(V:KResult,L':Loc,false) => 
+		zvalWrite(L', @Value, lub(V,V1)) ~> 
+		zvalWrite(L', @Type, typeOf(lub(V,V1))) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
+	<heap> ... L |-> zval(V1,_,_,_) ... </heap>
+	<trace> Trace:List => Trace ListItem("write-loc-exists") </trace>
+	[internal]
+
+
+
+/* OLD
 rule [write-loc-undef]:    
 	<k> write(V:KResult, L:Loc) => zvalCreate(L, V, typeOf(V), 0, false) ...  </k>
 	<heap> Mem:Map </heap>
@@ -748,7 +768,7 @@ rule [write-loc-undef]:
 */
 
 rule [write-loc-undef]:    
-	<k> write(V:KResult, L':Loc) => zvalCreate(L', V, typeOf(V), 0, false) ...  </k>
+	<k> write(V:KResult,L':Loc,_) => zvalCreate(L', V, typeOf(V), 0, false) ...  </k>
 	<thematrix> Mem:Map </thematrix>
 	<trace> Trace:List => Trace ListItem("write-loc-undef") </trace>
 	when (notBool (L' in keys(Mem))) andBool (L' =/=K locNull)                                                                                                         	
@@ -756,7 +776,7 @@ rule [write-loc-undef]:
 
 // This is needed for cases like $c[$c=1] = 0; (when $c is not initialised)
 rule [write-locNull]:    
-	<k> write(_, locNull) => . ...  </k>
+	<k> write(_,locNull,_) => . ...  </k>
 	<trace> Trace:List => Trace ListItem("write-locNull") </trace>
 	[internal]
 
@@ -764,22 +784,42 @@ rule [write-locNull]:
 syntax K ::= "allocValue" "(" K ")" [strict]
 
 rule [alloc-value]: 	
-	<k> allocValue(V:Value) => copyValueToLoc(V,L) ~> L ... </k>
+	<k> allocValue(V:Value) => copyValueToLoc(V,L,true) ~> L ... </k>
 	<trace> Trace:List => Trace ListItem("alloc-value") </trace>
 	when fresh(L:Loc)
 	[internal]
 
-syntax K ::= "copyValueToLoc" "(" Value "," Loc ")" [strict]
 
+
+
+
+
+syntax K ::= "copyValueToLoc" "(" Value "," Loc "," Bool ")" [strict]
+
+/*
 rule [copy-value-to-loc-scalar]:
-	<k> copyValueToLoc(V:LanguageValue, L:Loc) => 
+	<k> copyValueToLoc(V:LanguageValue,L:Loc,_) => 
 	write(V, L) ... </k>
 	<trace> Trace:List => Trace ListItem("copy-value-to-loc-scalar") </trace>
 	when notBool (isArrayType(V) orBool isObjectType(V))
 	[internal]
+*/
+
+rule [copy-value-to-loc-scalar]:
+	<k> 
+		copyValueToLoc(V:LanguageValue,L:Loc,UpdateType) => 
+		write(V,L,UpdateType) 
+	... </k>
+	<trace> Trace:List => Trace ListItem("copy-value-to-loc-scalar") </trace>
+	when notBool (isArrayType(V) orBool isObjectType(V))
+	[internal]
+
+
+
+
 
 rule [copy-value-to-loc-array]:    
-	<k> copyValueToLoc(Array(Crnt,Elems), L:Loc) => 
+	<k> copyValueToLoc(Array(Crnt,Elems),L:Loc,_) => 
 	ArrayCreateEmpty(L) ~> 
 	copyArrayMembers(L,Elems) ~>
 	ArrayInitCrnt(L, ArrayIndexOf(Crnt,Elems)) 
@@ -788,21 +828,33 @@ rule [copy-value-to-loc-array]:
 	[internal]
     
 rule [copy-value-to-loc-obj]:    
-	<k> copyValueToLoc(OID(L1,ClassName,InstanceN), L:Loc) => 
-	incRefCount(L1) ~> write(OID(L1,ClassName,InstanceN), L)
+	<k> copyValueToLoc(OID(L1,ClassName,InstanceN),L:Loc,_) => 
+	incRefCount(L1) ~> write(OID(L1,ClassName,InstanceN), L,true)
 	... </k>
 	<trace> Trace:List => Trace ListItem("copy-value-to-loc-obj") </trace>
 	[internal]
 
 rule [copy-value-to-loc-array-literal]: 	
-	<k> copyValueToLoc(Literal('Array(Elems:K)),L1) => makeArrayLiteral(L1, Elems) ... </k>
+	<k> copyValueToLoc(Literal('Array(Elems:K)),L1,_) => makeArrayLiteral(L1, Elems) ... </k>
 	<trace> Trace:List => Trace ListItem("copy-value-to-loc-array-literal") </trace>
 	[internal]
 
 rule [copy-value-to-loc-object-literal]: 	
-	<k> copyValueToLoc(Literal('ObjectCreation(ClassName:Id,, Args:K)),L1) => makeNewObject(L1, ClassName, Args) ... </k>
+	<k> copyValueToLoc(Literal('ObjectCreation(ClassName:Id,, Args:K)),L1,_) => makeNewObject(L1, ClassName, Args) ... </k>
 	<trace> Trace:List => Trace ListItem("copy-value-to-loc-object-literal") </trace>
 	[internal]
+
+
+
+
+
+
+
+
+
+
+
+
 
 syntax K ::= "copyArrayMembers" "(" Loc "," List ")"    
 
@@ -900,7 +952,7 @@ rule [merge-values-ar-locs-array]:
 
 // TODO: object case
 
-rule [merge-values-at-locs-cons:
+rule [merge-values-at-locs-cons]:
 	<k> 
 		mergeValuesAtLocs(InitValue,SetItem(L') LocSet) =>
 		do_lub(zval2val(heap_read(H',H,L')), mergeValuesAtLocs(InitValue,LocSet)) ... 

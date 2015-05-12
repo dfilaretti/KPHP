@@ -421,6 +421,71 @@ context [assign-strict-RHS]:
 	'Assign(_:KResult,,HOLE) 
 	[structural]
 
+
+// convert LHS reference to basic one
+
+
+rule [assign-2-basic-ref]:
+	<k> 'Assign((LR:LRef => toBasicRef(LR)),, V:Value) ... </k>
+	[intermediate]
+
+rule [assign-LHS2-gamma]:
+	<k> 'Assign(ref(L,X),,V:KResult) => 
+		assign1(
+			Lget(ref(L,X)),
+			V,
+			isGammaSingleton(X)) // weak VS strong update
+	... 
+	</k>
+	[intermediate]
+
+syntax K ::= "assign1" "(" K "," K "," Bool ")" [strict(1,2)]
+
+
+rule [assign-RHS2Loc-NonLiteral]:    
+	<k>  assign1(_:KResult, (V:ConvertibleToLoc => convertToLoc(V,r)),UpdateType) ... </k>
+	when notBool (isLiteral(V))
+	[intermediate]
+
+
+rule [assign-RHS2LangValue-overflow]:    
+	<k> assign1(L:Loc,L1':Loc,UpdateType) =>  
+			'Expr(assign1(L,convertToLanguageValue(L1'),UpdateType)) ~>
+			'Expr(reset(L)) ~>
+			convertToLanguageValue(L) ...
+	</k>
+	<thematrix> ... L1' |-> L1 ... </thematrix>
+	<heap> M:Map </heap>
+	when currentOverflow(M,L1) // TODO: check side conditions!
+	[intermediate]
+
+rule [assign-RHS2LangValue-no-overflow]:    
+	<k> assign1(L:Loc,(L1':Loc => convertToLanguageValue(L1')),UpdateType) ... </k>  
+	<thematrix> ... L1' |-> L1 ... </thematrix>	
+	<heap> M:Map </heap>
+	when notBool (currentOverflow(M,L1))
+	[intermediate]
+
+rule [assign-RHS2LangValue-locNull]:    
+	<k> assign1(L:Loc,(locNull => NULL),UpdateType) ... </k>
+	[intermediate]
+
+rule [assign]:
+	<k> assign1(L:Loc,V:LanguageValue,UpdateType) => 
+		copyValueToLoc(V,L,UpdateType) ~> 
+		zvalRead(L,@Value) ... </k>
+	[step] // last K was "V"
+
+rule [assign-error]:
+	<k> assign1(thisTag(L:K),_,_) =>  ERROR("Cannot re-assign $this in %s on line %d") ... </k>
+	[step, error]
+
+
+
+
+
+/* 
+// OLD
 rule [assign-LHS2Loc]:
 	<k> 'Assign((R:Ref => convertToLoc(R,l)),,_:KResult) ... </k>
 	<trace> Trace:List => Trace ListItem("assign-LHS2Loc") </trace>
@@ -466,6 +531,7 @@ rule [assign-error]:
 	<k> 'Assign(thisTag(L:K),, _) =>  ERROR("Cannot re-assign $this in %s on line %d") ... </k>
 	<trace> Trace:List => Trace ListItem("assign-error") </trace>
 	[step, error]
+*/
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Shortcuts} */

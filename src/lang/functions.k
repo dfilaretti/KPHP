@@ -468,7 +468,7 @@ rule [set-crnt-obj]:
 syntax K ::= "allocCrntObj" "(" OptionLoc ")"
 
 rule [alloc-crnt-obj]:    
-	<k> allocCrntObj(Obj':Loc) => write(V, L1) ... </k>
+	<k> allocCrntObj(Obj':Loc) => write(V,L1,true) ... </k>
 	<object> _ => L1 </object>
 	<thematrix> ... Obj' |-> Obj ... </thematrix>	
 	<heap> ... Obj |-> zval(V:Object,_,_,_) ... </heap> 
