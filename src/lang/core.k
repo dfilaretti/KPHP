@@ -621,6 +621,13 @@ rule [ref-assign-fresh-obj-prop]:
 	when notBool (Elems hasProperty X)
 	[intermediate]
 
+
+
+
+
+
+
+/* OLD, remove when new stuff works
 rule [ref-assign-fresh-array-elem]:
 	<k> 'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  
             	ArrayUpdateElem(L', X, L1') ~> ref(L', X) ... </k>
@@ -637,9 +644,55 @@ rule [ref-assign-fresh-array-elem]:
 	... 
 	</heap>
 	<trace> Trace:List => Trace ListItem("ref-assign-fresh-array-elem") </trace>
-	when notBool (Elems hasProperty X)
+	//when notBool (Elems hasProperty X)
 	[step]
-			
+*/
+
+
+rule [ref-assign-fresh-array-elem]:
+	<k> 
+		'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  
+            	ArrayUpdateElem(L', X, L1') ~> 
+		aliasAllKeys2Loc(
+			L',
+			getLTKeys(Elems,X) getGEQKeys(Elems,X),
+			L1) ~>
+			/*	
+			write(
+				mergeValuesAtLocs(
+					nul,
+					KeySet2LocSet(getLTKeys(Elems,X) getGEQKeys(Elems,X),Elems)),
+					L1',
+					true) ~>
+			*/
+		ref(L', X) 
+	... </k>
+	<thematrix> 
+	... 
+		L'  |-> L 
+		L1' |-> L1
+	... 
+	</thematrix>	
+        <heap> 
+	... 
+		L  |-> zval(Array(_,Elems),_,_,_) 
+		L1 |-> _ 
+	... 
+	</heap>
+	<trace> Trace:List => Trace ListItem("ref-assign-fresh-array-elem") </trace>
+	//when notBool (Elems hasProperty X)
+	[step]
+
+
+
+
+
+
+
+
+
+
+/* TODO: this looks redundant to me, REMOVE
 rule [ref-assign-existent-array-elem]:
 	<k> 'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  
             	ArrayUpdateElem(L', X, L1') ~> ref(L', X) ... </k>
@@ -656,9 +709,10 @@ rule [ref-assign-existent-array-elem]:
 	... 
 	</heap>
 	<trace> Trace:List => Trace ListItem("ref-assign-existent-array-elem") </trace>
-	when L1 =/=K L2 // TODO: do we need this side conditions?
+	when L1 =/=K L2
         [step]
-        	
+
+      	
 rule [ref-assign-existent-array-elem-same]:
 	<k> 'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  ref(L',X) ... </k>
 	<thematrix> 
@@ -675,6 +729,8 @@ rule [ref-assign-existent-array-elem-same]:
 	</heap>
 	<trace> Trace:List => Trace ListItem("ref-assign-existent-array-elem-same") </trace>
 	[step]
+*/
+
 
 rule [ref-assign-language-value]:
 	<k> 'ReferenceAssign(ref(L:Loc, X:Key),,V:PlainLanguageValue) => 

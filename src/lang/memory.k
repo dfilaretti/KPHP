@@ -104,6 +104,9 @@ rule lub(V1:AInt,V2:AInt) => lub_AInt(V1,V2)
 //rule lub(V1:ABool,V2:ABool) => lub_ABool(V1,V2) TODO
 rule lub(V1:AString,V2:AString) => lub_AString(V1,V2)
 
+rule lub(Top,_) => Top
+rule lub(_,Top) => Top
+
 rule lub(Bot,X) => X
 rule lub(X,Bot) => X
 
