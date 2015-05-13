@@ -652,19 +652,20 @@ rule [ref-assign-fresh-array-elem]:
 rule [ref-assign-fresh-array-elem]:
 	<k> 
 		'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  
-            	ArrayUpdateElem(L', X, L1') ~> 
+            	ArrayUpdateElem(L', X, L1') ~>
+			
+		write(
+			mergeValuesAtLocs(
+				bot,
+				SetItem(L1') 
+				KeySet2LocSet(getLTKeys(Elems,X) getGEQKeys(Elems,X),Elems)),
+			L1',
+			true) ~>
+	 	
 		aliasAllKeys2Loc(
 			L',
 			getLTKeys(Elems,X) getGEQKeys(Elems,X),
-			L1) ~>
-			/*	
-			write(
-				mergeValuesAtLocs(
-					nul,
-					KeySet2LocSet(getLTKeys(Elems,X) getGEQKeys(Elems,X),Elems)),
-					L1',
-					true) ~>
-			*/
+			L1) ~>				
 		ref(L', X) 
 	... </k>
 	<thematrix> 

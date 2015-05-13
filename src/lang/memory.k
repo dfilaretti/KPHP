@@ -62,7 +62,9 @@ syntax Loc ::= "locNull"
 // treated as arrays here) and a key. Keys can be integer or string. 
 // Also, for semantic purposes, we allow the NULL key. 
 
-syntax RefType  ::= "arr" | "obj" | "nul"
+syntax RefType  ::= "arr" | "obj" | "nul" 
+		  | "bot" // only used in 'ReferenceAssign
+
 syntax Ref ::= BasicRef | LRef | "refNull"
 syntax BasicRef ::= "ref" "(" Loc "," Key ")" [strict(1), klabel('ref)] 
 syntax LRef 	::= "lref" "(" Ref "," Key "," RefType ")" [strict(1), klabel('lref)]  
@@ -946,6 +948,9 @@ rule	lubAllSetElements(SetItem(V:PlainLanguageValue) S) => lub(V,lubAllSetElemen
 
 // Takes a bunch of locations and merge the contained values
 syntax K ::= "mergeValuesAtLocs" "(" RefType "," Set ")"
+
+rule [merge-values-at-locs-bot]:
+	<k> mergeValuesAtLocs(bot,.Set) => Bot ... </k>
 
 rule [merge-values-at-locs-null]:
 	<k> mergeValuesAtLocs(nul,.Set) => NULL ... </k>
