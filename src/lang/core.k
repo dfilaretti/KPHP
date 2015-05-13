@@ -649,19 +649,31 @@ rule [ref-assign-fresh-array-elem]:
 */
 
 
+// TODO: move
+syntax Set ::= "removeFromSet" "(" Set "," K ")" [function]
+
+rule 	removeFromSet(.Set,_) => .Set
+rule 	removeFromSet(SetItem(Y) S,X) => removeFromSet(S,X)
+	when X ==K Y
+rule 	removeFromSet(SetItem(Y) S, X) => SetItem(Y) removeFromSet(S,X) 
+	when X =/=K Y
+
+
 rule [ref-assign-fresh-array-elem]:
 	<k> 
 		'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  
             	ArrayUpdateElem(L', X, L1') ~>
-			
+		// merge the target location with all possible affected values			
 		write(
 			mergeValuesAtLocs(
 				bot,
 				SetItem(L1') 
-				KeySet2LocSet(getLTKeys(Elems,X) getGEQKeys(Elems,X),Elems)),
+				KeySet2LocSet(
+					removeFromSet(getLTKeys(Elems,X) getGEQKeys(Elems,X),X),
+					Elems)),
 			L1',
 			true) ~>
-	 	
+	 	// alias the affected key to the target
 		aliasAllKeys2Loc(
 			L',
 			getLTKeys(Elems,X) getGEQKeys(Elems,X),
