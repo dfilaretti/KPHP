@@ -1,6 +1,6 @@
 module LATTICE
        
-       syntax AString ::= "AStringTop" | "AStringBot" | String
+       syntax AString ::= "AStringTop" | String
        
        syntax AInt ::= "AInt"
 
@@ -29,10 +29,6 @@ module LATTICE
        rule lub_AString(AStringTop, X)=>AStringTop
 
        rule lub_AString(X, AStringTop)=>AStringTop
-
-       rule lub_AString(AStringBot,X)=>X
-       
-       rule lub_AString(X,AStringBot)=>X
 	   
 	   syntax ANum ::= "lub_ANum" "(" ANum "," ANum ")" [function]
 
@@ -47,6 +43,35 @@ module LATTICE
 	   rule lub_ANum(AInt, AInt) => AInt
 
 	   rule lub_ANum(AFloat, AFloat) => AFloat
+	   
+	   
+	   
+	   syntax 	Bool ::= K "<Lattice" K		[function]
+	   
+	   rule Top <Lattice X:K => false
+	   rule X:K <Lattice Bot => false
+	   
+	   rule X:K <Lattice Top => true
+	   when X =/=K Top
+	   
+	   rule Bot <Lattice X:K => true
+	   when X =/=K Bot
+	   
+	   rule AInt <Lattice AInt => false
+	   rule AFloat <Lattice AFloat => false
+	   rule ANum <Lattice X:ANum => false
+	   rule AInt <Lattice AFloat => false
+	   rule AFloat <Lattice AInt => false
+	   rule AInt <Lattice ANum => true
+	   rule AFloat <Lattice ANum => true
+	   
+	   rule AStringTop <Lattice X:AString => false
+	   rule S:String <Lattice S2:String => false
+	   rule S:String <Lattice AStringTop => true
+	   
+	   syntax 	Bool ::= K ">Lattice" K		[function]
+	   
+	   rule A:K >Lattice B:K => B <Lattice A
 	   
 	   
 	   syntax  Bool ::= "valid" "(" ABool ")"	                [predicate]

@@ -543,15 +543,15 @@ rule	<k> runInMem(none, _) => .  ... </k>
 			<status> mergeStatus(S1,S2) </status>
                         <mem> mergeMem(0,M1,St1,F1,M2,St2,F2) </mem>
 			<control>
-			    Ctr1    // TODO
+			    Ctr2    // TODO
 			    <functionStack> mergeFunctionStack(St1,St2) </functionStack>
 			</control>
 			<tables>
-			    Tables1 // TODO
+			    Tables2 // TODO
 			    <functions> mergeFunctions(F1,F2) </functions>
 			</tables>
 			<IO>
-			IO1
+			IO2
 			<out> mergeOutputs(O1, O2) </out>
 			</IO>
 			))

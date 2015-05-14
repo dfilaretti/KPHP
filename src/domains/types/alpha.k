@@ -15,5 +15,25 @@ module ALPHA
 
 	rule alpha(NULL) => NULL [structural]
 	
-	//used only for literals ?
+syntax Bool ::= "isGammaSingleton" "(" K ")" [function]
+
+rule isGammaSingleton(NULL) => true
+
+rule isGammaSingleton(AInt) => false
+
+rule isGammaSingleton(AFloat) => false
+
+rule isGammaSingleton(ANum)=> false
+
+rule isGammaSingleton(ABool) => false
+
+rule isGammaSingleton(S:String) => true
+
+rule isGammaSingleton(AStringTop) => false
+
+rule isGammaSingleton(Top) => false
+
+//what about Bot ?
+
+
 endmodule
