@@ -342,7 +342,7 @@ rule [foreach-arg2Loc]:
 
 rule [foreach-with-local-copy]: 	
 	<k> ('ForEach(L':Loc,,Pattern:K,,Stmt:K) ~> K:K) => 
-			write(V,Lx) ~> 
+			write(V,Lx,true) ~> 
 			pushLoopContext(loopFrame(K, foreachArrayPair(L',Lx))) ~> 
 			foreach(Lx, Pattern, Stmt) ~>
 			popLoopContext
@@ -356,7 +356,7 @@ rule [foreach-with-local-copy]:
 	
 rule [foreach-without-local-copy]: 	
 	<k> ('ForEach(L':Loc,,Pattern:K,,Stmt:K) ~> K:K) => 
-			write(V,Lx) ~> 
+			write(V,Lx,true) ~> 
 			pushLoopContext(loopFrame(K, foreachArrayPair(L', none))) ~> 
 			foreach(Lx, Pattern, Stmt) ~>
 			popLoopContext

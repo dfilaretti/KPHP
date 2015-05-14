@@ -449,7 +449,7 @@ syntax K ::= "makeObjectFromArray" "(" Array ")" [strict]
 
 rule [make-object-from-array]:
 	<k> makeObjectFromArray(A) => 
-			copyValueToLoc(A, L) ~> 
+			copyValueToLoc(A,L,true) ~> 
 			*Cond(arrayCurrentOverflow(A), 'Expr(reset(L)), .K) ~>
 			OID(L, String2Id("stdClass"), 0) ... </k>
 	<trace> Trace:List => Trace ListItem("make-object-from-array") </trace>
@@ -482,9 +482,10 @@ syntax K ::= "*toArray" "(" LanguageValue ")" [strict]
 // cast to array for scalar values
 
 rule [toArray-scalar]:    
-	<k> *toArray(S:ScalarValue) =>  makeArrayFromScalar(S, 0) ... </k>
+	<k> *toArray(S:ScalarValue) =>  makeArrayFromScalar(S, alpha(0)) ... </k>
 	<trace> Trace:List => Trace ListItem("toArray-scalar") </trace>
 	[internal]
+
 
 // cast to object for compound values. 
 
@@ -495,7 +496,7 @@ rule [toArray-array]:
 	
 rule [toArray-object]:    
 	<k> *toArray(OID(L',_,_)) => 
-			copyValueToLoc(A, L1) ~> 
+			copyValueToLoc(A,L1,true) ~> 
 			*Cond(arrayCurrentOverflow(A), 'Expr(reset(L1)), .K) ~>
 			L1 
 	... </k>

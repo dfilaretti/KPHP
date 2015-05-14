@@ -133,7 +133,7 @@ syntax K ::= "makeNewObject" "(" Loc "," Id "," K ")" [strict(1)]
 rule [make-new-obj]:
 	<k> makeNewObject(L1:Loc, ClassName:Id, ConstructArgs:K) =>  
 		ArrayCreateEmpty(L) ~>
-		objectInit(L, ClassName) ~> copyValueToLoc(OID(L, ClassName, 0), L1) ~> 
+		objectInit(L, ClassName) ~> copyValueToLoc(OID(L, ClassName, 0), L1,true) ~> 
 		allocAndRunConstructor(L1, ConstructArgs) ... </k>
 	<trace> Trace:List => Trace ListItem("make-new-obj") </trace>
 	when fresh(L:Loc)

@@ -1,19 +1,9 @@
---TEST--
-Testing stack after early function return
---FILE--
 <?php 
-function F () { 
-	if(1) {
-		return("Hello");
-	}
-}
 
-$i=1;
-while ($i == 2) {
-	echo 1 + "2";
-	echo F();
-	$i++;
-}
+
+	$x[1] = 1;
+	$x[1 - 1] = 1;
+
+	$y =& $x[3];
+
 ?>
---EXPECT--
-HelloHello

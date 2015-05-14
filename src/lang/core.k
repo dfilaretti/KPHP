@@ -316,6 +316,7 @@ rule [variable-variable]	:
 // ---------------------------------------------------------------------------------------------
 
 // Array access is strict in both arguments
+// NOTE: is this non-deterministic?
 
 context [array-access-strict-LHS]: 
 	'ArrayAccess(HOLE,,_)
@@ -335,12 +336,12 @@ rule [array-access-LHS2LangValue]:
 // The RHS must be a key (int or string). If it's not, we try to convert it to Int as follows
 
 rule [array-access-key-cast-float]:	
-	<k> 'ArrayAccess(_,,(F:Float => 'IntCast(F))) ... </k>
+	<k> 'ArrayAccess(_,,(F:AFloat => 'IntCast(F))) ... </k>
 	<trace> Trace:List => Trace ListItem("array-access-key-cast-float") </trace>
 	[intermediate]
 	
 rule [array-access-key-cast-bool]:	
-	<k> 'ArrayAccess(_,,(B:Bool => 'IntCast(B))) ... </k>
+	<k> 'ArrayAccess(_,,(B:ABool => 'IntCast(B))) ... </k>
 	<trace> Trace:List => Trace ListItem("array-access-key-cast-bool") </trace>
 	[intermediate]
 
@@ -371,7 +372,22 @@ rule [array-access-nested]:
 	<trace> Trace:List => Trace ListItem("array-access-nested") </trace>
 	[step]
 
+/* TODO: was 1st attempt in abstracting. Looks wrong, remove!
+rule [array-access-simple]:	
+	<k> 'ArrayAccess(L:Loc,,X:Key) => ref(L, X) ... </k>
+	<trace> Trace:List => Trace ListItem("array-access-simple") </trace>
+	when isGammaSingleton(X)
+	[step]
+
+rule [array-access-nested]: 	
+	<k> 'ArrayAccess(R:Ref,,K:Key) => lref(R,K,arr) ... </k>
+	<trace> Trace:List => Trace ListItem("array-access-nested") </trace>
+	when isGammaSingleton(K)
+	[step]
+*/
+
 // This is not a real rule of the semantics. We just use it to catch a parser bug
+// TODO: probably also need update
 
 rule [array-access-parsing-error]:	
 	<k> 'ArrayAccess(S:String,,_) ~> K:K => print("PARSING BUG!!!") ... </k>
@@ -391,6 +407,71 @@ context [assign-strict-RHS]:
 	'Assign(_:KResult,,HOLE) 
 	[structural]
 
+
+// convert LHS reference to basic one
+
+
+rule [assign-2-basic-ref]:
+	<k> 'Assign((LR:LRef => toBasicRef(LR)),, V:Value) ... </k>
+	[intermediate]
+
+rule [assign-LHS2-gamma]:
+	<k> 'Assign(ref(L,X),,V:KResult) => 
+		assign1(
+			Lget(ref(L,X)),
+			V,
+			isGammaSingleton(X)) // weak VS strong update
+	... 
+	</k>
+	[intermediate]
+
+syntax K ::= "assign1" "(" K "," K "," Bool ")" [strict(1,2)]
+
+
+rule [assign-RHS2Loc-NonLiteral]:    
+	<k>  assign1(_:KResult, (V:ConvertibleToLoc => convertToLoc(V,r)),UpdateType) ... </k>
+	when notBool (isLiteral(V))
+	[intermediate]
+
+
+rule [assign-RHS2LangValue-overflow]:    
+	<k> assign1(L:Loc,L1':Loc,UpdateType) =>  
+			'Expr(assign1(L,convertToLanguageValue(L1'),UpdateType)) ~>
+			'Expr(reset(L)) ~>
+			convertToLanguageValue(L) ...
+	</k>
+	<thematrix> ... L1' |-> L1 ... </thematrix>
+	<heap> M:Map </heap>
+	when currentOverflow(M,L1) // TODO: check side conditions!
+	[intermediate]
+
+rule [assign-RHS2LangValue-no-overflow]:    
+	<k> assign1(L:Loc,(L1':Loc => convertToLanguageValue(L1')),UpdateType) ... </k>  
+	<thematrix> ... L1' |-> L1 ... </thematrix>	
+	<heap> M:Map </heap>
+	when notBool (currentOverflow(M,L1))
+	[intermediate]
+
+rule [assign-RHS2LangValue-locNull]:    
+	<k> assign1(L:Loc,(locNull => NULL),UpdateType) ... </k>
+	[intermediate]
+
+rule [assign]:
+	<k> assign1(L:Loc,V:LanguageValue,UpdateType) => 
+		copyValueToLoc(V,L,UpdateType) ~> 
+		zvalRead(L,@Value) ... </k>
+	[step] // last K was "V"
+
+rule [assign-error]:
+	<k> assign1(thisTag(L:K),_,_) =>  ERROR("Cannot re-assign $this in %s on line %d") ... </k>
+	[step, error]
+
+
+
+
+
+/* 
+// OLD
 rule [assign-LHS2Loc]:
 	<k> 'Assign((R:Ref => convertToLoc(R,l)),,_:KResult) ... </k>
 	<trace> Trace:List => Trace ListItem("assign-LHS2Loc") </trace>
@@ -436,6 +517,7 @@ rule [assign-error]:
 	<k> 'Assign(thisTag(L:K),, _) =>  ERROR("Cannot re-assign $this in %s on line %d") ... </k>
 	<trace> Trace:List => Trace ListItem("assign-error") </trace>
 	[step, error]
+*/
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Shortcuts} */
@@ -525,6 +607,13 @@ rule [ref-assign-fresh-obj-prop]:
 	when notBool (Elems hasProperty X)
 	[intermediate]
 
+
+
+
+
+
+
+/* OLD, remove when new stuff works
 rule [ref-assign-fresh-array-elem]:
 	<k> 'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  
             	ArrayUpdateElem(L', X, L1') ~> ref(L', X) ... </k>
@@ -541,9 +630,68 @@ rule [ref-assign-fresh-array-elem]:
 	... 
 	</heap>
 	<trace> Trace:List => Trace ListItem("ref-assign-fresh-array-elem") </trace>
-	when notBool (Elems hasProperty X)
+	//when notBool (Elems hasProperty X)
 	[step]
-			
+*/
+
+
+// TODO: move
+syntax Set ::= "removeFromSet" "(" Set "," K ")" [function]
+
+rule 	removeFromSet(.Set,_) => .Set
+rule 	removeFromSet(SetItem(Y) S,X) => removeFromSet(S,X)
+	when X ==K Y
+rule 	removeFromSet(SetItem(Y) S, X) => SetItem(Y) removeFromSet(S,X) 
+	when X =/=K Y
+
+
+rule [ref-assign-fresh-array-elem]:
+	<k> 
+		'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  
+            	ArrayUpdateElem(L', X, L1') ~>
+		// merge the target location with all possible affected values			
+		write(
+			mergeValuesAtLocs(
+				bot,
+				SetItem(L1') 
+				KeySet2LocSet(
+					removeFromSet(getLTKeys(Elems,X) getGEQKeys(Elems,X),X),
+					Elems)),
+			L1',
+			true) ~>
+	 	// alias the affected key to the target
+		aliasAllKeys2Loc(
+			L',
+			getLTKeys(Elems,X) getGEQKeys(Elems,X),
+			L1) ~>				
+		ref(L', X) 
+	... </k>
+	<thematrix> 
+	... 
+		L'  |-> L 
+		L1' |-> L1
+	... 
+	</thematrix>	
+        <heap> 
+	... 
+		L  |-> zval(Array(_,Elems),_,_,_) 
+		L1 |-> _ 
+	... 
+	</heap>
+	<trace> Trace:List => Trace ListItem("ref-assign-fresh-array-elem") </trace>
+	//when notBool (Elems hasProperty X)
+	[step]
+
+
+
+
+
+
+
+
+
+
+/* TODO: this looks redundant to me, REMOVE
 rule [ref-assign-existent-array-elem]:
 	<k> 'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  
             	ArrayUpdateElem(L', X, L1') ~> ref(L', X) ... </k>
@@ -560,9 +708,10 @@ rule [ref-assign-existent-array-elem]:
 	... 
 	</heap>
 	<trace> Trace:List => Trace ListItem("ref-assign-existent-array-elem") </trace>
-	when L1 =/=K L2 // TODO: do we need this side conditions?
+	when L1 =/=K L2
         [step]
-        	
+
+      	
 rule [ref-assign-existent-array-elem-same]:
 	<k> 'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  ref(L',X) ... </k>
 	<thematrix> 
@@ -579,6 +728,8 @@ rule [ref-assign-existent-array-elem-same]:
 	</heap>
 	<trace> Trace:List => Trace ListItem("ref-assign-existent-array-elem-same") </trace>
 	[step]
+*/
+
 
 rule [ref-assign-language-value]:
 	<k> 'ReferenceAssign(ref(L:Loc, X:Key),,V:PlainLanguageValue) => 

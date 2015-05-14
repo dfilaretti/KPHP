@@ -1,16 +1,5 @@
 module LATTICE
 
-    // Language values are partitioned into Scalar, compound and special values. 
-/*
-    syntax  LanguageValue ::= PlainLanguageValue | LiteralValue
-
-    syntax  PlainLanguageValue ::= ScalarValue | CompoundValue | SpecialValue
-    syntax  ScalarValue ::= AInt | AFloat | ABool | AString     
-    syntax  CompoundValue ::= Object | Array
-    syntax  Null ::= "NULL"
-    syntax  SpecialValue ::= Null
-*/
-
     syntax  AInt ::= "AIntTop" 
                    | "AIntBot" 
                    | "AIntZero" 
@@ -30,37 +19,77 @@ module LATTICE
  
     syntax  AString ::= "AStringTop" | String | "AStringBot"
 
+/*@ \subsection{Lattice ordering} */
 
-/*@ \section{The SIGN abstract domain} */
+// NOTE: theoretically, this should be defined for everything. 
+//       In practice, I only need it for Keys (int and string)
+
+syntax 	Bool ::= K "<Lattice" K		[function]
+
+	rule 	AIntBot <Lattice AIntBot	=> false
+	rule 	AIntBot <Lattice AIntNeg 	=> true
+	rule 	AIntBot <Lattice AIntZero 	=> true
+	rule 	AIntBot <Lattice AIntPos 	=> true
+	rule 	AIntBot <Lattice AIntTop 	=> true
+	
+	rule 	AIntTop <Lattice AIntBot 	=> false
+	rule 	AIntTop <Lattice AIntNeg 	=> false
+	rule 	AIntTop <Lattice AIntZero 	=> false
+	rule 	AIntTop <Lattice AIntPos 	=> false
+	rule 	AIntTop <Lattice AIntTop 	=> false
+	
+	rule 	AIntNeg <Lattice AIntBot 	=> false
+	rule 	AIntNeg <Lattice AIntNeg 	=> false
+	rule 	AIntNeg <Lattice AIntZero 	=> false
+	rule 	AIntNeg <Lattice AIntPos 	=> false
+	rule 	AIntNeg <Lattice AIntTop 	=> true
+
+	rule 	AIntZero <Lattice AIntBot 	=> false
+	rule 	AIntZero <Lattice AIntNeg 	=> false
+	rule 	AIntZero <Lattice AIntZero 	=> false
+	rule 	AIntZero <Lattice AIntPos 	=> false
+	rule 	AIntZero <Lattice AIntTop 	=> true
+
+	rule 	AIntPos <Lattice AIntBot 	=> false
+	rule 	AIntPos <Lattice AIntNeg 	=> false
+	rule 	AIntPos <Lattice AIntZero 	=> false
+	rule 	AIntPos <Lattice AIntPos 	=> false
+	rule 	AIntPos <Lattice AIntTop 	=> true
+
 /*
-	syntax  Sign ::= "Top" | "Bot" | "Zero" | "Pos" | "Neg"
-	syntax  AbstractBool ::= "BTrue" | "BFalse" | "BTop" | "BBot"
-    syntax  AbstractErr  ::= "AArithError" | "AGenericError" | "AErr" | "AErrBot"
-    syntax  AbstractString ::= String
+syntax 	Bool ::= K ">Lattice" K [predicate]
 
-
-    syntax  SignLangValScalar ::= Sign | AbstractBool | AbstractString
-    syntax  SignLangValCompound ::= ArrayValue 
-
-    syntax  SignLangVal ::= SignLangValScalar | SignLangValCompound
-
-    syntax  SignSemVal  ::= Loc
-    syntax  SignRegVal  ::= SignLangVal | SignSemVal
-    syntax  SignErrVal  ::= AbstractErr
-    syntax  SignVal ::= SignRegVal | SignErrVal
-
-    syntax  AExp ::= SignVal
-    syntax  BExp ::= SignVal
-
-    syntax  Bool ::= "isErrorValue" "(" SignVal ")" [predicate]
-
-    rule    isErrorValue(E:SignErrVal) => true
-    rule    isErrorValue(E:SignRegVal) => false
-
-    syntax  Bool ::= "isScalarValue" "(" SignVal ")" [predicate]
-    rule    isScalarValue(E:SignLangValCompound) => false
-    rule    isScalarValue(E:SignLangValScalar) => true
+	rule V1:AInt >Lattice V2:AInt => V2 <Lattice V1
 */
+
+
+//syntax 	Bool ::= AString "<Lattice" AString	 [function]
+
+	rule AStringBot <Lattice AStringBot => false
+
+	rule AStringBot <Lattice S:AString => true
+	when (S =/=K AStringBot)
+
+
+	rule S1:String <Lattice S2:String => false
+
+	rule S1:String <Lattice AStringTop => true
+	
+	rule AStringTop <Lattice AStringTop => false
+
+	rule S:AString <Lattice AStringTop => true
+	when (S =/=K AStringTop)
+
+/*
+syntax 	Bool ::= AString ">Lattice" AString [function]
+
+	rule V1:AString >Lattice V2:AString => 
+	(notBool V1 <Lattice V2) andBool (notBool V1 ==K V2)
+*/
+
+
+
+
 
 /*@ \subsection{Lattice Operations} */
 
