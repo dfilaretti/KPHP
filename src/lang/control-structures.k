@@ -52,11 +52,16 @@ rule [if-guard2Bool]:
 
 // Abstract semantics
 rule [if]:	
+    <kphp>
+         <script>
         <k> 'If(C,,B1,,'ListWrap(.KList),,B2) => 
 	mergeConfigs(
-		runAndGetConfig(runInMem(Abexp(C, some(E)), B1)),
-		runAndGetConfig(runInMem(Abexp('Not(C), some(E)), B2))) ... </k>
-        <mem> E </mem>
+		runAndGetConfig(runInConf(AbexpConf(C, config(Cfg)), B1)),
+		runAndGetConfig(runInConf(AbexpConf('Not(C), config(Cfg)), B2))) ... </k>
+         _
+        </script>
+	Cfg:Bag
+    </kphp> 
 	
 ///////////////////////////////////////////////////////////////////////////////
 /*@ \subsection{Conditional expression (ternary)} 
@@ -172,11 +177,19 @@ rule
 //@ compute a "single step" of while loop
 syntax K ::= "#whileStep" "(" K "," K ")" 
 
-rule    <k> #whileStep(B,S) => 
+rule    
+		<kphp>
+		<script>
+		<k> #whileStep(B,S) => 
  		mergeConfigs(
-			runAndGetConfig(runInMem(Abexp(B, some(E)), S)),
-                    	runAndGetConfig(runInMem(Abexp('Not(B), some(E)), .K))) ... </k>
-        <mem> E </mem>         
+			runAndGetConfig(runInConf(AbexpConf(B, config(Cfg)), S)),
+            runAndGetConfig(runInConf(AbexpConf('Not(B), config(Cfg)), .K))) ... 
+		</k>
+		_
+		</script>
+        Cfg:Bag
+		</kphp>
+		//<mem> E </mem>         
         //<niter> N => N +Int 1 </niter> 
       	[transition] 
 

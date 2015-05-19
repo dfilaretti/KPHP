@@ -1,9 +1,25 @@
 <?php 
 
+$x="base";
 
-	$x[1] = 1;
-	$x[1 - 1] = 1;
+function F()
+{
+global $x;
+$x="guard";
+return true;
+}
 
-	$y =& $x[3];
+
+if (F()) {
+echo "true";
+echo $x;
+}
+else {
+echo "false"; 
+echo $x;
+}
+
+
+
 
 ?>

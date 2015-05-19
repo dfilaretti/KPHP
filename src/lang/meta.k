@@ -78,23 +78,35 @@ syntax  K ::= "mergeConfigs" "(" BoxedConfig "," BoxedConfig ")" [strict(1,2)]
 ///////////////////////////////////////////////////////////////////////////////
 
 syntax  K ::= "Abexp"  "(" K "," OptionBag ")"
-syntax  K ::= "Abexp1" "(" K "," OptionBag ")" [strict(1)]
+syntax  K ::= "Abexp1" "(" K ")" [strict]
 
-rule Abexp(K,M) => Abexp1(runInMem(M,K),M)
+rule Abexp(K,M) => Abexp1(runInMem(M,K))
 
 
 
-rule Abexp1(V:KResult, M:OptionBag) =>
-	#if valid(V) #then 
-            M
-    #else
-            #if unsatisfiable(V) #then
-                none
-            #else
-                M   
-            #fi
-    #fi
+rule <k> Abexp1(V:KResult) => some(M) ... </k>
+	<mem> M:Bag </mem>
+	when valid(V) orBool (notBool(unsatisfiable(V)))
     [transition]
+
+rule <k> Abexp1(V:KResult) => none	... </k>
+	when unsatisfiable(V) andBool (notBool(valid(V)))
+    [transition]
+	
+	
+syntax K ::= "AbexpConf" "(" K "," BoxedConfig ")"
+syntax K ::= "AbexpConf1" "(" K ")" [strict]
+
+rule AbexpConf(K,C) => AbexpConf1(runInConf(C,K))
+
+rule <k> AbexpConf1(V:KResult) => getCurrentConfig ... </k>
+	when valid(V) orBool (notBool(unsatisfiable(V)))
+    [transition]
+	
+rule <k> AbexpConf1(V:KResult) => none	... </k>
+	when unsatisfiable(V) andBool (notBool(valid(V)))
+    [transition]
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /*@ \subsection{Return codes} */
@@ -116,7 +128,7 @@ rule Abexp1(V:KResult, M:OptionBag) =>
     generic and will work even if more cell are added to the language 
     (i.e. everyting of sort Bag can go there). */
 
-    syntax BoxedConfig ::= "config" "(" Bag ")"
+    syntax BoxedConfig ::= "config" "(" Bag ")" | None
     syntax KResult ::= BoxedConfig
 
     // option bag
@@ -165,7 +177,7 @@ rule Abexp1(V:KResult, M:OptionBag) =>
     */
             
     ///////////////////////////////////////////////////////////////////////////
-    //@ Update current mconfiguration
+    //@ Update current configuration
     ///////////////////////////////////////////////////////////////////////////
  
 	syntax K ::= "updateConfig" "(" BoxedConfig ")" [strict]
@@ -184,7 +196,7 @@ rule Abexp1(V:KResult, M:OptionBag) =>
     ///////////////////////////////////////////////////////////////////////////
 
     syntax K ::= "runInMem" "(" OptionBag "," K ")" [strict(1)]
-
+	
     rule    <k> runInMem(some(M:Bag), B:K) => updateMem(some(M)) ~> B ... </k>
             <status> _ => NEXT </status>
 			<trace> Trace:List => Trace ListItem("run-in-mem-some") </trace>
@@ -201,7 +213,11 @@ rule	<k> runInMem(none, _) => .  ... </k>
 
     syntax K ::= "runInConf" "(" BoxedConfig "," K ")"     [strict(1)] 
 	
-	rule	runInConf(C, K) => updateConfig(C) ~> K 
+	rule	runInConf(config(C), K) => updateConfig(config(C)) ~> K 
+	
+	rule 	<k> runInConf(None, K) => . ... </k>
+		<status> _ => DONE </status>
+		[transition]
     
     ///////////////////////////////////////////////////////////////////////////
     //@ Return current configuration
@@ -498,6 +514,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
     rule    mergeConfigsBase(
                 config( 
                         C1:Bag
+			<trace> T1 </trace>
 			<returns> R1 </returns>  
 			<returns-loc> RL1 </returns-loc>
 			<status> S1 </status> 	                 
@@ -517,6 +534,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
 			),
                 config(
                         C2:Bag
+			<trace> T2 </trace>
 			<returns> R2 </returns> 
 			<returns-loc> RL2 </returns-loc>
 			<status> S2 </status> 	
@@ -538,6 +556,10 @@ rule	<k> runInMem(none, _) => .  ... </k>
 
                 updateConfig(config(
                         C2 // TODO 
+			<trace> 
+			//mergeOutputs(T1,T2) 
+			T2 //TODO
+			</trace>
 			<returns-loc> RL1 RL2 </returns-loc>
 			<returns> mergeReturns(R1,R2) </returns> 
 			<status> mergeStatus(S1,S2) </status>
@@ -1496,8 +1518,12 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	syntax List ::= "mergeOutputs" "(" List "," List ")"	[function]
 	
 	rule mergeOutputs(.List, L2:List) => ListItem("(") ListItem("/") L2 ListItem(")")
+	when L2 =/=List .List
 	
 	rule mergeOutputs(L1:List, .List) => ListItem("(") L1 ListItem("/") ListItem(")")
+	when L1 =/=List .List
+	
+	rule mergeOutputs(.List, .List) => ListItem("DEBUG : mergeEmpty")
 	
 	rule mergeOutputs(ListItem(A) L1:List, ListItem(B) L2:List) => ListItem(A) mergeOutputs(L1, L2)
 	when A ==K B
