@@ -753,8 +753,8 @@ rule	<k> runInMem(none, _) => .  ... </k>
     rule rightElem(pair(_,R)) => R 
 
 
-
-
+    // NOTE: this is just a shortcut. Sure we want this?
+    rule isScalarValue(Top) => true
 
     // isScalarZVal
     syntax Bool ::= "isScalar_zval" "(" Zval ")" [predicate]

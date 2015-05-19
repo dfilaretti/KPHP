@@ -1,5 +1,4 @@
 <?php 
-
 $x="base";
 
 function F()
@@ -19,7 +18,5 @@ echo "false";
 echo $x;
 }
 
-
-
-
+	
 ?>
