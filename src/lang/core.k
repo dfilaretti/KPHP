@@ -627,10 +627,80 @@ rule [ref-assign-fresh-obj-prop]:
 
 
 
-/* OLD, remove when new stuff works
+
+// TODO: move
+syntax Set ::= "removeFromSet" "(" Set "," K ")" [function]
+
+rule 	removeFromSet(.Set,_) => .Set
+rule 	removeFromSet(SetItem(Y) S,X) => removeFromSet(S,X)
+	when X ==K Y
+rule 	removeFromSet(SetItem(Y) S, X) => SetItem(Y) removeFromSet(S,X) 
+	when X =/=K Y
+
+
+
+
+
+
+
+
+syntax K ::= "rebuildArray" "(" Loc "," Key "," Key "," 
+				Loc "," Loc "," 
+				List ")"
+
+rule rebuildArray(L',X,MaxKey,L1',L1,Elems) =>
+	// write the lub 
+	write(
+		mergeValuesAtLocs(
+			bot,
+			SetItem(L1') 
+			KeySet2LocSet(getLTKeys(Elems,MaxKey) getGEQKeys(Elems,MaxKey),Elems)),
+		L1',
+		true) ~>
+	// alias the affected key to the target
+	aliasAllKeys2Loc(L',getLTKeys(Elems,MaxKey) getGEQKeys(Elems,MaxKey) ,L1)				
+
+
+
+
+
+// given a set of keys, returns the maximum
+// (according to lattice ordering)
+
+syntax 	K ::= "getMaxKey" "(" Key "," Set ")" [function]
+
+rule 	getMaxKey(DefaultKey,.Set) => DefaultKey
+rule 	getMaxKey(DefaultKey,KeySet) => getMaxKey1(DefaultKey,KeySet)
+	when KeySet =/=Set .Set
+
+syntax 	K ::= "getMaxKey1" "(" Key "," Set ")" [function]
+
+rule	getMaxKey1(K,.Set) => K
+
+rule 	getMaxKey1(K1,SetItem(K2) KeySet) => 
+		#if (K1 <Lattice K2) #then
+			getMaxKey1(K2,KeySet)
+		#else
+			getMaxKey1(K1,KeySet) 
+		#fi
+ 
+
+
+
+
+
+
+
 rule [ref-assign-fresh-array-elem]:
-	<k> 'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  
-            	ArrayUpdateElem(L', X, L1') ~> ref(L', X) ... </k>
+	<k> 
+		'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  
+            	ArrayUpdateElem(L', X, L1') ~>
+		rebuildArray(
+			L',X,
+			getMaxKey(X,getLTKeys(Elems,X) getGEQKeys(Elems,X)),
+			L1',L1,Elems) ~>
+		ref(L', X) 
+	... </k>
 	<thematrix> 
 	... 
 		L'  |-> L 
@@ -646,19 +716,15 @@ rule [ref-assign-fresh-array-elem]:
 	<trace> Trace:List => Trace ListItem("ref-assign-fresh-array-elem") </trace>
 	//when notBool (Elems hasProperty X)
 	[step]
-*/
 
 
-// TODO: move
-syntax Set ::= "removeFromSet" "(" Set "," K ")" [function]
-
-rule 	removeFromSet(.Set,_) => .Set
-rule 	removeFromSet(SetItem(Y) S,X) => removeFromSet(S,X)
-	when X ==K Y
-rule 	removeFromSet(SetItem(Y) S, X) => SetItem(Y) removeFromSet(S,X) 
-	when X =/=K Y
 
 
+
+
+
+
+/* OLD: remove when fixed
 rule [ref-assign-fresh-array-elem]:
 	<k> 
 		'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  
@@ -695,6 +761,13 @@ rule [ref-assign-fresh-array-elem]:
 	<trace> Trace:List => Trace ListItem("ref-assign-fresh-array-elem") </trace>
 	//when notBool (Elems hasProperty X)
 	[step]
+*/
+
+
+
+
+
+
 
 
 
