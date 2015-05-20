@@ -624,11 +624,9 @@ rule [ref-assign-fresh-obj-prop]:
 
 
 
+// --------------- AUXILIARY OPS FOR REFERENCE ASSIGN --------------------
+// .................... TODO: MOVE? --------------------------------------
 
-
-
-
-// TODO: move
 syntax Set ::= "removeFromSet" "(" Set "," K ")" [function]
 
 rule 	removeFromSet(.Set,_) => .Set
@@ -638,11 +636,9 @@ rule 	removeFromSet(SetItem(Y) S, X) => SetItem(Y) removeFromSet(S,X)
 	when X =/=K Y
 
 
-
-
-
-
-
+// Auxiliary operation used by the reference assignment. 
+// It takes care of aliasing the required keys (in case there is more
+// then one)....
 
 syntax K ::= "rebuildArray" "(" Loc "," Key "," Key "," 
 				Loc "," Loc "," 
@@ -653,15 +649,13 @@ rule rebuildArray(L',X,MaxKey,L1',L1,Elems) =>
 	write(
 		mergeValuesAtLocs(
 			bot,
-			SetItem(L1') 
+			SetItem(L1')
+			// NOTE: in the old rule, I used to REMOVE X from the set below... 
 			KeySet2LocSet(getLTKeys(Elems,MaxKey) getGEQKeys(Elems,MaxKey),Elems)),
 		L1',
 		true) ~>
 	// alias the affected key to the target
 	aliasAllKeys2Loc(L',getLTKeys(Elems,MaxKey) getGEQKeys(Elems,MaxKey) ,L1)				
-
-
-
 
 
 // given a set of keys, returns the maximum
@@ -684,6 +678,9 @@ rule 	getMaxKey1(K1,SetItem(K2) KeySet) =>
 			getMaxKey1(K1,KeySet) 
 		#fi
  
+
+// --------------- AUXILIARY OPS FOR REFERENCE ASSIGN --------------------
+// .................... END ------- --------------------------------------
 
 
 
