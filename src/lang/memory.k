@@ -1378,6 +1378,27 @@ rule [lget-array-prop]:
 	<heap>... L |-> zval(Array(_,ArrayValues),_,_,_)  ...</heap>
 	[internal]
 
+
+
+rule [lget-obj-prop]:
+	<k> LgetRef(ref((L':Loc => L1'), X:Key),InitValue)  ... </k>
+	<thematrix> 
+	... 
+		L'  |-> L 
+		L1' |-> L1
+	... 
+	</thematrix>
+	<heap>
+	... 
+		L  |-> zval(OID(L1':Loc,_,_),_,_,_)
+		L1 |-> zval(Array(_,Elems:List),_,_,_)  
+	...
+	</heap>
+
+
+
+
+
 syntax K ::= "LgetRef1" "(" Loc "," Key "," Set "," Set "," RefType ")"
 
 // Case 1: the key X is "not present" at all in the array i.e. there are no other keys 
@@ -1455,8 +1476,8 @@ rule [lget-error-1]:
 
 
 
-// Object case
-// TODO TODO TODO TODO TODO
+// Object case (OLD, REMOVE)
+/*
 rule [lget-found-obj]:
 	<k> LgetRef(ref(L':Loc, X:Key),_) =>  Rget(ref(L', X)) ... </k>
 	<thematrix> 
@@ -1474,51 +1495,11 @@ rule [lget-found-obj]:
 	<trace> Trace:List => Trace ListItem("lget-found-obj") </trace>
 	when (Elems hasProperty X)
 	[internal]
-// TODO TODO TODO TODO TODO 
-
 	
-/* Case 2: the reference does not exists. */
-
-// Array 
-/* REMOVE
-rule [lget-not-found-init-null]:
-	<k> LgetRef(ref(L':Loc,X:Key), nul) =>   
-		ArrayCreateElem(L', X, public, allocValue(NULL)) ~> 
-		Rget(ref(L',X)) ... </k>
-	<thematrix> ... L' |-> L ... </thematrix>
-	<heap> ... L |-> zval(Array(_,ArrayElems),_,_,_) ... </heap>
-	when (notBool ArrayElems hasProperty X) andBool
-	(L =/=K LError) andBool (X =/=K NULL)
-	[internal]
-
-rule [lget-not-found-init-array]:    
-	<k> LgetRef(ref(L':Loc,X:Key), arr) =>   
-		ArrayCreateElem(L', X, public, allocValue(emptyArray)) ~> Rget(ref(L',X)) ... </k>
-	<thematrix> ... L' |-> L ... </thematrix>
-	<heap> ... L |-> zval(Array(_,ArrayElems),_,_,_) ... </heap>
-	<trace> Trace:List => Trace ListItem("lget-not-found-init-array") </trace>
-	when (notBool ArrayElems hasProperty X) andBool 
-    	 (L =/=K LError) andBool (X =/=K NULL)
-	[internal]
-
-rule [lget-not-found-init-obj]:    
-	<k> LgetRef(ref(L':Loc,X:Key), obj) => 
-		'Expr('Assign(ref(L', X),, ('ObjectCreation("stdClass")))) ~> 
-		Rget(ref(L',X)) ...  </k>
-	<thematrix> ... L' |-> L ... </thematrix>
-	<heap> ... L |-> zval(Array(_,Elems:List), _, _, _) ... </heap>
-	<trace> Trace:List => Trace ListItem("lget-not-found-init-obj") </trace>
-	when (notBool Elems hasProperty X) andBool 
-    	 (L =/=K LError) andBool (X =/=K NULL)
-	[internal]
-*/
-
-
-// TODO TODO TODO TODO TODO 
 
 // Object
 rule [lget-not-found-in-obj]:    
-	<k> LgetRef(ref((L':Loc => L2),X:Key), _) ... </k>
+	<k> LgetRef(ref((L':Loc => L2'),X:Key), _) ... </k>
 	<thematrix>
 	... 
 		L'  |-> L 
@@ -1534,6 +1515,8 @@ rule [lget-not-found-in-obj]:
 	<trace> Trace:List => Trace ListItem("lget-not-found-in-obj") </trace>
 	when (notBool ArrayElems hasProperty X)
 	[internal]
+*/
+
 
 // Default array key
 rule [lget-not-found-default-array-key]:    
