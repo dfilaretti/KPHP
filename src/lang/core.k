@@ -191,18 +191,24 @@ rule [block]:
         normally, but if the status is e.g. RET or ERR, statements are not 
         executed. */
 ///////////////////////////////////////////////////////////////////////////////
-
-rule [seq-cons]:
-	<k> 'ListWrap(S:K,, Ss:KList) => S ~> runStmt('ListWrap(Ss)) ... </k>	
-	[structural]
+rule [seq-cons-continue]:
+	<k> 'ListWrap(S:K,, Ss:KList) => S ~> 'ListWrap(Ss) ... </k>	
+	<status> C:ContinuingCode </status>
+	[transition]
+	
+rule [seq-cons-skip]:
+	<k> 'ListWrap(S:K,, Ss:KList) => . ... </k>	
+	<status> C:SkippingCode </status>
+	[transition]
 
 rule [seq-empty]:
 	<k> 'ListWrap(.KList) => . ... </k>
-	[structural]
+	[transition]
 
 rule [empty]:	
 	<k> 'Empty(.KList) => . ... </k>
-	[structural]
+	[transition]
+	/*
 
 //@ statements might or might not be executed, depending on the status 
 syntax K ::= "runStmt" "(" K ")"
@@ -223,7 +229,7 @@ rule    <k> runStmt(S) ~> K => . ... </k>
         <status> LOOP </status> 
         [transition]
 
-
+*/
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Expression as a statement} */

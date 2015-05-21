@@ -104,6 +104,12 @@ rule [break-some]:
 
 // Here we finally give the semantics for Break
 
+rule [break]:
+	<k> 'Break(N:Int) => . ... </k>
+	<status> NEXT => BREAK(N) </status>
+	[step]
+
+/*
 rule [break-n]: 	
 	<k> 'Break(NSteps => NSteps -Int 1) ... </k>
 	<loopStack> ListItem(K) => .List ... </loopStack>
@@ -113,7 +119,7 @@ rule [break-n]:
 rule [break-1-normal]:
 	<k> 'Break(1) ~> T:K => cleanUntilGetCfg(T) </k>
 	[step]
-	
+*/	
 /*
 rule [break-1-normal]:
 	<k> 'Break(1) ~> _ => K </k>
@@ -124,7 +130,32 @@ rule [break-1-special-some]:												//TODO : change this like above ?
 	<k> 'Break(1) ~> _ => syncArrayCurrent(Lorig, Llocal) ~> K </k>
 	<loopStack> ListItem(loopFrame(K:K,foreachArrayPair(Lorig, Llocal))) => .List ... </loopStack>
 	[step]
+	
+syntax K ::= "decreaseBreak"
 
+rule <k> decreaseBreak => . ... </k>
+	<status> BREAK(N:Int) => BREAK(N -Int 1) </status>
+	when N >Int 1
+
+rule <k> decreaseBreak => . ... </k>
+	<status> BREAK(1) => NEXT </status>
+
+rule <k> decreaseBreak => . ... </k>
+	<status> RET </status>
+
+rule <k> decreaseBreak => . ... </k>
+	<status> DONE </status>
+
+rule <k> decreaseBreak => . ... </k>
+	<status> LOOP </status>
+	
+rule <k> decreaseBreak => . ... </k>
+	<status> NEXT </status>
+
+rule <k> decreaseBreak => . ... </k>
+	<status> ERR </status>
+	
+	
 ///////////////////////////////////////////////////////////////////////////////
 /*@ \subsection{Continue} */
 ///////////////////////////////////////////////////////////////////////////////
@@ -170,7 +201,7 @@ rule [alt-while]:
 // NOTE: in the following we are ignoring break/continue support
 rule    
 	<k> 'While(B:K,,S:K) => 
-                LFP(none, #whileStep(B,S)) ~> moveOnFromLoop(B) ... </k>		
+                LFP(none, #whileStep(B,S)) ~> moveOnFromLoop(B) ~> decreaseBreak ... </k>		
             //<niter> _ => 0 </niter> TODO 
 		[transition]
 
@@ -196,7 +227,7 @@ rule
 syntax  K ::= "moveOnFromLoop" "(" K ")" [strict]
 
 rule	<k> moveOnFromLoop(V:KResult) => . ... </k>
-	<status> _ => NEXT </status>
+	//<status> _ => NEXT </status>
  	//<niter> _ => 0 </niter> 
  	when notBool (valid(V)) 
 
@@ -270,6 +301,7 @@ rule [switch]:
 	<k> 'Switch(In:KResult,, Clauses:K) ~> K  => 
 		pushLoopContext(loopFrame(K, none)) ~> 
 		switch(In, Clauses) ~> 
+		decreaseBreak ~>
 		popLoopContext </k>
 	<trace> Trace:List => Trace ListItem("switch") </trace>
 	[step]
@@ -385,6 +417,7 @@ rule [foreach]:
 	<k> ('ForEach(L':Loc,,Pattern:K,,Stmt:K) ~> K:K) => 
 			pushLoopContext(loopFrame(K, foreachArrayPair(L', none))) ~> 
 			foreach(L', Pattern, Stmt) ~>
+			decreaseBreak ~>
 			popLoopContext
 	</k>
 	<heap> ... L |-> zval(V:Value,_,N,_) ... </heap>

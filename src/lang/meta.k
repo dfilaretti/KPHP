@@ -113,7 +113,10 @@ rule <k> AbexpConf1(V:KResult) => none	... </k>
 ///////////////////////////////////////////////////////////////////////////////
 
     // TODO: move to memory?
-    syntax ReturnCode ::= "NEXT" | "RET" | "DONE" | "LOOP" | "ERR"
+    syntax ReturnCode ::= SkippingCode | ContinuingCode
+	
+	syntax SkippingCode ::= "RET" | "LOOP" | "ERR" | "DONE" | "BREAK" "(" Int ")"
+	syntax ContinuingCode ::= "NEXT"
 
     //@ get status of a configuration
     syntax  ReturnCode ::= "configGetStatus" "(" Bag ")"    [function]
@@ -614,6 +617,17 @@ rule	<k> runInMem(none, _) => .  ... </k>
     // are we sure?
     rule    mergeStatus(ERR,RET)    => RET
     rule    mergeStatus(RET,ERR)    => RET
+	
+	rule	mergeStatus(BREAK(N1), BREAK(N2)) => BREAK(N1)
+	when N1 ==Int N2
+	
+	
+	// ? TODO
+	rule	mergeStatus(BREAK(N1), BREAK(N2)) => BREAK(N1)
+	when N1 <Int N2
+	
+	rule	mergeStatus(BREAK(N1), BREAK(N2)) => BREAK(N2)
+	when N1 >Int N2
     // ...
 
 
@@ -1523,7 +1537,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	rule mergeOutputs(L1:List, .List) => ListItem("(") L1 ListItem("/") ListItem(")")
 	when L1 =/=List .List
 	
-	rule mergeOutputs(.List, .List) => ListItem("DEBUG : mergeEmpty")
+	rule mergeOutputs(.List, .List) => .List
 	
 	rule mergeOutputs(ListItem(A) L1:List, ListItem(B) L2:List) => ListItem(A) mergeOutputs(L1, L2)
 	when A ==K B
