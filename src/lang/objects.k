@@ -210,7 +210,7 @@ rule [built-obj-prop-list-non-private-skip]:
 
 rule [built-obj-prop-list-private]: 	
 	<k> buildObjElemList(L', ClassName, ListItem(prop(X,private(ClassName),V:Value)) Items:List) => 
-		ArrayCreateElem(L,X,private(ClassName),allocValue(V)) ~>
+		ArrayCreateElem(L',X,private(ClassName),allocValue(V)) ~>
 		buildObjElemList(L', ClassName, Items) ... </k>
 	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(Array(_,ObjItems),_,_,_)  ... </heap>

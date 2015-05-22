@@ -1,26 +1,15 @@
 <?php 
 
 	class A {
-		public $x = 123;
+		//private $x = 1;
+		public $a = 12;
+		private $x = "hello";
 	}
 
-
-	// we need some "StringTop"
-	if (2 == 1) {
-		$k = "hello";
-	}
-	else {
-		$k = "world";
+	class B extends A {
+		public $b = 123;
+		private $x = 2;
 	}
 
-
-	$o = new A();
-	$o -> foo = -1;
-	$o -> foo = 0;
-
-	$k1 = "foo";	
-	
-	$o -> $k =& $k1;
-	
-	//var_dump($o);
+	$o = new B();
 ?>
