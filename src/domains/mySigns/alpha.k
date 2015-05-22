@@ -55,6 +55,7 @@ module ALPHA
 		when F =/=K AFloatZero
 	
 	rule	isGammaSingleton(S:String) => true
+	rule 	isGammaSingleton(AStringTop) => false
 
 	rule	isGammaSingleton(ABoolTop) => false
 	rule	isGammaSingleton(B:ABool) => true

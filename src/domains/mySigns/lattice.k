@@ -76,6 +76,7 @@ syntax 	Bool ::= K ">Lattice" K [predicate]
 	rule S1:String <Lattice AStringTop => true
 	
 	rule AStringTop <Lattice AStringTop => false
+	rule AStringTop <Lattice S:String => false
 
 	rule S:AString <Lattice AStringTop => true
 	when (S =/=K AStringTop)
