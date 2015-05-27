@@ -130,6 +130,7 @@ rule [break-1-special-some]:												//TODO : change this like above ?
 	<k> 'Break(1) ~> _ => syncArrayCurrent(Lorig, Llocal) ~> K </k>
 	<loopStack> ListItem(loopFrame(K:K,foreachArrayPair(Lorig, Llocal))) => .List ... </loopStack>
 	[step]
+
 	
 syntax K ::= "decreaseBreak"
 
@@ -155,6 +156,10 @@ rule <k> decreaseBreak => . ... </k>
 rule <k> decreaseBreak => . ... </k>
 	<status> ERR </status>
 	
+rule <k> decreaseBreak => . ... </k>
+	<status> CONTINUE(_) </status>	
+	
+
 	
 ///////////////////////////////////////////////////////////////////////////////
 /*@ \subsection{Continue} */
@@ -177,10 +182,46 @@ rule [continue-some]:
 	<trace> Trace:List => Trace ListItem("continue-some") </trace>
 	[structural]
 
+/*
 rule [continue-1]:
 	<k> ('Continue(_) ~> _ ) =>  . ... </k>
 	<trace> Trace:List => Trace ListItem("continue-1") </trace>
 	[step]
+*/
+
+rule [continue]:
+	<k> 'Continue(N:Int) => . ... </k>
+	<status> NEXT => CONTINUE(N) </status>
+	[step]
+
+
+syntax K ::= "decreaseContinue"
+
+rule <k> decreaseContinue => . ... </k>
+	<status> CONTINUE(N:Int) => CONTINUE(N -Int 1) </status>
+	when N >Int 1
+
+rule <k> decreaseContinue => . ... </k>
+	<status> CONTINUE(1) => NEXT </status>
+
+rule <k> decreaseContinue => . ... </k>
+	<status> RET </status>
+
+rule <k> decreaseContinue => . ... </k>
+	<status> DONE </status>
+
+rule <k> decreaseContinue => . ... </k>
+	<status> LOOP </status>
+	
+rule <k> decreaseContinue => . ... </k>
+	<status> NEXT </status>
+
+rule <k> decreaseContinue => . ... </k>
+	<status> ERR </status>
+	
+rule <k> decreaseContinue => . ... </k>
+	<status> BREAK(_) </status>	
+	
 
 ///////////////////////////////////////////////////////////////////////////////
 /*@ \subsection{While} */
@@ -213,7 +254,7 @@ rule
 		<script>
 		<k> #whileStep(B,S) => 
  		mergeConfigs(
-			runAndGetConfig(runInConf(AbexpConf(B, config(Cfg)), S)),
+			runAndGetConfig(runInConf(AbexpConf(B, config(Cfg)), 'ListWrap(S ~> decreaseContinue))),
             runAndGetConfig(runInConf(AbexpConf('Not(B), config(Cfg)), 'Break(1)))) ... 
 		</k>
 		_
@@ -231,7 +272,7 @@ rule	<k> moveOnFromLoop(V:KResult) => . ... </k>
  	//<niter> _ => 0 </niter> 
  	when notBool (valid(V)) 
 
-rule    <k> moveOnFromLoop(V:KResult) => . ... </k>      
+rule    <k> moveOnFromLoop(V:KResult) => print("Loop detected !") ... </k>      
 	<status> _ => LOOP </status>
  	//<niter> _ => 0 </niter>  
  	when valid(V)  
@@ -302,6 +343,7 @@ rule [switch]:
 		pushLoopContext(loopFrame(K, none)) ~> 
 		switch(In, Clauses) ~> 
 		decreaseBreak ~>
+		decreaseContinue ~>
 		popLoopContext </k>
 	<trace> Trace:List => Trace ListItem("switch") </trace>
 	[step]
@@ -416,7 +458,7 @@ rule [foreach-without-local-copy]:
 rule [foreach]: 	
 	<k> ('ForEach(L':Loc,,Pattern:K,,Stmt:K) ~> K:K) => 
 			pushLoopContext(loopFrame(K, foreachArrayPair(L', none))) ~> 
-			foreach(L', Pattern, Stmt) ~>
+			foreach(L', Pattern, 'ListWrap(Stmt ~> decreaseContinue)) ~>
 			decreaseBreak ~>
 			popLoopContext
 	</k>

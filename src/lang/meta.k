@@ -113,13 +113,15 @@ rule <k> AbexpConf1(V:KResult) => none	... </k>
 ///////////////////////////////////////////////////////////////////////////////
 
     // TODO: move to memory?
-    syntax ReturnCode ::= SkippingCode | ContinuingCode | BreakCode | NonBreakCode
+    syntax ReturnCode ::= SkippingCode | RunningCode | BreakingCode | NonBreakingCode
 	
-	syntax SkippingCode ::= SkippingNonBreakCode | BreakCode
-	syntax SkippingNonBreakCode ::= "RET" | "LOOP" | "ERR" | "DONE"
+	syntax SkippingCode ::= SkippingNonBreakingCode | BreakingCode
+	syntax SkippingNonBreakingCode ::= "RET" | "LOOP" | "ERR" | "DONE"
+	syntax BreakingCode ::= BreakCode | ContinueCode
+	syntax ContinueCode ::= "CONTINUE" "(" Int ")"
 	syntax BreakCode ::= "BREAK" "(" Int ")"
-	syntax NonBreakCode ::= ContinuingCode | SkippingNonBreakCode
-	syntax ContinuingCode ::= "NEXT"
+	syntax NonBreakingCode ::= RunningCode | SkippingNonBreakingCode
+	syntax RunningCode ::= "NEXT"
 
     //@ get status of a configuration
     syntax  ReturnCode ::= "configGetStatus" "(" Bag ")"    [function]
@@ -508,11 +510,13 @@ rule	<k> runInMem(none, _) => .  ... </k>
             [transition]
 
 			
-	syntax Bool ::= "isStatusBreak" "(" ReturnCode ")" [predicate]
+	syntax Bool ::= "isStatusBreaking" "(" ReturnCode ")" [predicate]
 	
-	rule	isStatusBreak(_:BreakCode) => true
+	rule	isStatusBreaking(_:BreakingCode) => true
 	
-	rule 	isStatusBreak(_:NonBreakCode) => false
+	rule 	isStatusBreaking(_:NonBreakingCode) => false
+	
+	
 	
 	rule    (mergeConfigs(config(A), config(B)) ~> K => 
                 #if (K =/=K .K) #then 
@@ -535,13 +539,13 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	
     rule    isSpecialMergeCase(St1,St2) => ((((St1 ==K DONE) orBool (St2 ==K DONE)) orBool ((St1 ==K RET) =/=Bool (St2 ==K RET))) orBool isNonTrivialBreakCase(St1, St2))
 	
-	rule 	isNonTrivialBreakCase(St1:BreakCode, St2:BreakCode) => St1 =/=K St2
+	rule 	isNonTrivialBreakCase(St1:BreakingCode, St2:BreakingCode) => St1 =/=K St2
 	
-	rule 	isNonTrivialBreakCase(_:NonBreakCode, _:BreakCode) => true
+	rule 	isNonTrivialBreakCase(_:NonBreakingCode, _:BreakingCode) => true
 	
-	rule 	isNonTrivialBreakCase(_:NonBreakCode, _:NonBreakCode) => false
+	rule 	isNonTrivialBreakCase(_:NonBreakingCode, _:NonBreakingCode) => false
 	
-	rule 	isNonTrivialBreakCase(_:BreakCode, _:NonBreakCode) => true
+	rule 	isNonTrivialBreakCase(_:BreakingCode, _:NonBreakingCode) => true
 	
 	
 	
@@ -652,6 +656,14 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	
 	rule	mergeStatus(BREAK(N1), BREAK(N2)) => BREAK(N1)
 	when N1 ==Int N2
+	
+	rule	mergeStatus(CONTINUE(N1), CONTINUE(N2)) => CONTINUE(N1)
+	when N1 ==Int N2
+	
+	// TODO : not sure about this, but should be fine if we print that we detected a loop (Raphaël)
+	
+	rule mergeStatus(LOOP, St:ReturnCode) => St
+	rule mergeStatus(St:ReturnCode, LOOP) => St
 
 
 

@@ -192,18 +192,20 @@ module OPS
 			
 	syntax K ::= "*toString" "(" LanguageValue ")" [strict]
 
+	//TODO : change this when numeric strings get added
+	
 	rule [toString-int]:
-			<k> *toString(I:AInt) => AStringTop ... </k>
+			<k> *toString(I:AInt) => "AInt" ... </k>
 			<trace> Trace:List => Trace ListItem("toString-int") </trace>
 			[internal]
 	
 	rule [toString-bool]:
-			<k> *toString(B:ABool) => AStringTop ... </k>
+			<k> *toString(B:ABool) => "ABool" ... </k>
 			<trace> Trace:List => Trace ListItem("toString-bool") </trace>
 			[internal]
 			
 	rule [toString-float]:   
-			<k> *toString(F:AFloat) => AStringTop ... </k>
+			<k> *toString(F:AFloat) => "AFloat" ... </k>
 			<trace> Trace:List => Trace ListItem("toString-float") </trace>
 			[internal]
 	rule [toString-string]:   

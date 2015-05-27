@@ -193,7 +193,7 @@ rule [block]:
 ///////////////////////////////////////////////////////////////////////////////
 rule [seq-cons-continue]:
 	<k> 'ListWrap(S:K,, Ss:KList) => S ~> 'ListWrap(Ss) ... </k>	
-	<status> C:ContinuingCode </status>
+	<status> C:RunningCode </status>
 	[transition]
 	
 rule [seq-cons-skip]:
