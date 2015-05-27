@@ -1270,7 +1270,8 @@ rule [rget-obj-prop-private]:
 	<trace> Trace:List => Trace ListItem("rget-obj-prop-private") </trace>
 	[internal]
 
-
+// TODO: Seems we miss an error case for when trying to access a private property from 
+// 	 the wrong context.
 
 
 
