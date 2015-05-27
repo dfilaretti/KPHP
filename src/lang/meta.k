@@ -113,9 +113,12 @@ rule <k> AbexpConf1(V:KResult) => none	... </k>
 ///////////////////////////////////////////////////////////////////////////////
 
     // TODO: move to memory?
-    syntax ReturnCode ::= SkippingCode | ContinuingCode
+    syntax ReturnCode ::= SkippingCode | ContinuingCode | BreakCode | NonBreakCode
 	
-	syntax SkippingCode ::= "RET" | "LOOP" | "ERR" | "DONE" | "BREAK" "(" Int ")"
+	syntax SkippingCode ::= SkippingNonBreakCode | BreakCode
+	syntax SkippingNonBreakCode ::= "RET" | "LOOP" | "ERR" | "DONE"
+	syntax BreakCode ::= "BREAK" "(" Int ")"
+	syntax NonBreakCode ::= ContinuingCode | SkippingNonBreakCode
 	syntax ContinuingCode ::= "NEXT"
 
     //@ get status of a configuration
@@ -504,15 +507,44 @@ rule	<k> runInMem(none, _) => .  ... </k>
             when (configGetStatus(A) ==K DONE)
             [transition]
 
+			
+	syntax Bool ::= "isStatusBreak" "(" ReturnCode ")" [predicate]
+	
+	rule	isStatusBreak(_:BreakCode) => true
+	
+	rule 	isStatusBreak(_:NonBreakCode) => false
+	
+	rule    (mergeConfigs(config(A), config(B)) ~> K => 
+                #if (K =/=K .K) #then 
+                    mergeConfigs(runAndGetConfig(runInConf(config(A),K)), runAndGetConfig(runInConf(config(B),K)))
+                #else
+                    mergeConfigsBase(config(A), config(B))       
+                #fi)
+            when isNonTrivialBreakCase(configGetStatus(A), configGetStatus(B))
+            [transition]
+			
+			
     rule    mergeConfigs(config(A), config(B)) => mergeConfigsBase(config(A),config(B))
             when  notBool isSpecialMergeCase(configGetStatus(A),configGetStatus(B))  
 		[transition]
  
     //@ decide wether our merging task is special or not
     syntax Bool ::= "isSpecialMergeCase" "(" ReturnCode "," ReturnCode ")" [predicate]
-
-    rule    isSpecialMergeCase(St1,St2) => ((St1 ==K DONE) orBool (St2 ==K DONE))
-
+	
+	syntax Bool ::= "isNonTrivialBreakCase" "(" ReturnCode "," ReturnCode ")" [predicate]
+	
+    rule    isSpecialMergeCase(St1,St2) => ((((St1 ==K DONE) orBool (St2 ==K DONE)) orBool ((St1 ==K RET) =/=Bool (St2 ==K RET))) orBool isNonTrivialBreakCase(St1, St2))
+	
+	rule 	isNonTrivialBreakCase(St1:BreakCode, St2:BreakCode) => St1 =/=K St2
+	
+	rule 	isNonTrivialBreakCase(_:NonBreakCode, _:BreakCode) => true
+	
+	rule 	isNonTrivialBreakCase(_:NonBreakCode, _:NonBreakCode) => false
+	
+	rule 	isNonTrivialBreakCase(_:BreakCode, _:NonBreakCode) => true
+	
+	
+	
     syntax K ::= "mergeConfigsBase" "(" BoxedConfig "," BoxedConfig ")"     [strict(1,2)]
     rule    mergeConfigsBase(
                 config( 
@@ -620,15 +652,8 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	
 	rule	mergeStatus(BREAK(N1), BREAK(N2)) => BREAK(N1)
 	when N1 ==Int N2
-	
-	
-	// ? TODO
-	rule	mergeStatus(BREAK(N1), BREAK(N2)) => BREAK(N1)
-	when N1 <Int N2
-	
-	rule	mergeStatus(BREAK(N1), BREAK(N2)) => BREAK(N2)
-	when N1 >Int N2
-    // ...
+
+
 
 
     ///////////////////////////////////////////////////////////////////////////

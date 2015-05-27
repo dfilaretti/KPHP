@@ -214,7 +214,7 @@ rule
 		<k> #whileStep(B,S) => 
  		mergeConfigs(
 			runAndGetConfig(runInConf(AbexpConf(B, config(Cfg)), S)),
-            runAndGetConfig(runInConf(AbexpConf('Not(B), config(Cfg)), .K))) ... 
+            runAndGetConfig(runInConf(AbexpConf('Not(B), config(Cfg)), 'Break(1)))) ... 
 		</k>
 		_
 		</script>
