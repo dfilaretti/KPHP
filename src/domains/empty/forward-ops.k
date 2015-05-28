@@ -1,7 +1,11 @@
 require "lattice.k"
+require "../../lang/type-conversions.k"
+
 module FORWARD-OPS
 	imports LATTICE
-
+	imports TYPE-CONVERSIONS
+	imports INIT
+	
 //@ \section{Arithmetic operations}
 
 	// Plus
@@ -161,7 +165,7 @@ rule [toFloat-float]:
 	[internal]
 
 rule [toFloat-string]:
-	<k> *toFloat(S:String) => *toFloat(string2Number(S)) ... </k>
+	<k> *toFloat(S:String) => *toFloat( string2Number(S) ) ... </k>
 	[internal]
 	
 rule [toFloat-compound]:	
@@ -212,6 +216,71 @@ rule    [internal-print]:
 	    <out> ... . => ListItem(V) </out>  
 	    [internal, output]
 
+//string2Number
+
+syntax K ::= "string2Number" "(" AString ")"
+
+rule [string2Number-empty]:
+	<k> string2Number("") => 0 ... </k>
+	<trace> Trace:List => Trace ListItem("string2Number-empty") </trace>
+	[internal]
+
+// one character string
+
+rule [string2Number-char-non-digit]:    
+	<k> string2Number(S:String) => 0 ... </k>
+	<trace> Trace:List => Trace ListItem("string2Number-char-non-digit") </trace>
+	when (lengthString(S) ==Int 1 orBool lengthString(S) ==Int 2) andBool (notBool #isDigit(substrString(S, 0, 1)))
+	[internal]
+
+rule [string2Number-char-digit]:    
+	<k> string2Number(S:String) => String2Int(S) ... </k>
+	<trace> Trace:List => Trace ListItem("string2Number-char-digit") </trace>
+	when (lengthString(S) ==Int 1) andBool (#isDigit(substrString(S, 0, 1)))
+	[internal]
+
+// non numeric 
+
+rule [string2Number-non-numeric]:    
+	<k> string2Number(S:String) => 0 ... </k>
+	<trace> Trace:List => Trace ListItem("string2Number-non-numeric") </trace>
+	when notBool (
+		((lengthString(S) >Int 1) andBool #isDigit(substrString(S, 0, 1))) orBool	
+		((substrString(S, 0, 1) ==String "-" orBool substrString(S, 0, 1) ==String ".") andBool (#isDigit(substrString(S, 1, 2)))) orBool
+		((substrString(S, 0, 2) ==String "-.") andBool (#isDigit(substrString(S, 2, 3)))))
+	[internal]
+	
+// integer 
+
+rule [string2Number-int]:    
+	<k> string2Number(S:String) => extractIntSubstring(S, substrString(S, 0, 1), 1, int) ... </k>
+	<trace> Trace:List => Trace ListItem("string2Number-int") </trace>
+	when ((lengthString(S) >Int 1) andBool
+	#isDigit(substrString(S, 0, 1))) orBool
+	((substrString(S, 0, 1) ==String "-") andBool (#isDigit(substrString(S, 1, 2))))
+	[internal]
+
+// string starting with ".N" 
+
+rule [string2Number-float-dot]:    
+	<k> string2Number(S:String) => extractIntSubstring(S, substrString(S, 0, 1), 1, float) ... </k>
+	<trace> Trace:List => Trace ListItem("string2Number-float-dot") </trace>
+	when ((lengthString(S) >Int 1) andBool
+	#isDigit(substrString(S, 0, 1))) orBool
+	((substrString(S, 0, 1) ==String ".") andBool (#isDigit(substrString(S, 1, 2))))
+	[internal]
+
+// string starting with "-." 
+
+rule [string2Number-float-minus-dot]:    
+	<k> string2Number(S:String) => extractIntSubstring(S, substrString(S, 0, 2), 2, float) ... </k>
+	<trace> Trace:List => Trace ListItem("string2Number-float-minus-dot") </trace>
+	when ((lengthString(S) >Int 2) andBool
+	#isDigit(substrString(S, 0, 1))) orBool
+	((substrString(S, 0, 2) ==String "-.") andBool (#isDigit(substrString(S, 2, 3))))
+	[internal]
+		
+		
 
 // input 
 syntax K ::= "user_input"
@@ -221,7 +290,14 @@ rule    [input]:
 	    <in> ListItem(V:K) => . ...</in>
 
 
+rule [init-domain]:
+		<k> initDomain => . ... </k>
+		<domain> .K => Concrete </domain>
 
+syntax Bool ::= "isNumericString" "(" AString ")" [function]
+
+rule isNumericString(S:String) => S isNumeric
+		
 
 
 

@@ -1,7 +1,11 @@
 require "lattice.k"
+require "../../lang/arith-ops.k"
+
 module FORWARD-OPS
 	imports LATTICE
-
+	imports ARITH-OPS
+	
+	
 //@ \section{Arithmetic operations}
 
 	// Plus
@@ -355,13 +359,41 @@ rule [toString-null]:
     syntax  ABool ::= AString "==AString" AString
     // TODO
 
+	
+	
+	// String concatenation operation
+	rule [concat-string-concrete]:
+	<k> 'Concat(S1:String,, S2:String) => S1 +String S2 ... </k>
+	<trace> Trace:List => Trace ListItem("concat-string-concrete") </trace>
+	[step]
+	
+	rule [concat-string-top-1]:
+	<k> 'Concat(AStringTop,, S:AString) => AStringTop ... </k>
+	<trace> Trace:List => Trace ListItem("concat-string-top-1") </trace>
+	[step]
+	
+	rule [concat-string-top-2]:
+	<k> 'Concat(S:AString,, AStringTop) => AStringTop ... </k>
+	<trace> Trace:List => Trace ListItem("concat-string-top-2") </trace>
+	[step]
+	
+	rule [concat-string-bot-1]:
+	<k> 'Concat(AStringBot,, S:AString) => AStringBot ... </k>
+	<trace> Trace:List => Trace ListItem("concat-string-bot-1") </trace>
+	[step]
+	
+	rule [concat-string-bot-2]:
+	<k> 'Concat(S:AString,, AStringBot) => AStringBot ... </k>
+	<trace> Trace:List => Trace ListItem("concat-string-bot-2") </trace>
+	[step]
+	
 //@ \section{Input and output}
 
     // output
     syntax  K ::= "print" "(" K ")"
     
 rule    [internal-print]:
-            <k> print (V:String)  => . ... </k>
+            <k> print (V:AString)  => . ... </k>
             <out> ... . => ListItem(V) </out>
             [internal, output]   
 
@@ -370,5 +402,18 @@ rule    [internal-print]:
 	
     rule [input]:
     	<k>  user_input => AStringTop ...</k>
+	
+	rule [init-domain]:
+		<k> initDomain => . ... </k>
+		<domain> .K => Signs </domain>
+		
+	rule strlen(AStringTop) => AIntPos
+	
+	rule strlen(S:String) => AIntPos
+		when S =/=String ""
+		
+	rule strlen("") => AIntZero
+	
+	rule strlen(AStringBot) => AIntBot
 
 endmodule

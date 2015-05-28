@@ -500,12 +500,13 @@ rule	<k> runInMem(none, _) => .  ... </k>
     /*@ This is misleading. It doesn't mean DONE. This is the case when 
     one branch is not executed at all. Should find better naming. */
 
-    rule    <k> mergeConfigs(config(A),config(B)) => updateConfig(config(A)) </k>
+    rule    <k> mergeConfigs(config(A),config(B)) => updateConfig(config(A)) ... </k>
 			<trace> Trace:List => Trace ListItem("merge-configs-B-done") </trace>
             when (configGetStatus(B) ==K DONE)
             [transition]
 
-    rule    mergeConfigs(config(A),config(B)) => updateConfig(config(B)) 
+    rule    <k> mergeConfigs(config(A),config(B)) => updateConfig(config(B)) ... </k>
+			<trace> Trace:List => Trace ListItem("merge-configs-A-done") </trace>
             when (configGetStatus(A) ==K DONE)
             [transition]
 

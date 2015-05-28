@@ -269,8 +269,8 @@ def run_test(filename):
     # load a phpt file and parse and return a dictionary containing its fields (TEST, EXPECT, etc.)
     crnt_test = parse_phpt_file(filename)
     print ("Running: " + filename + "...")
-    errorcode = 0;
-    residual = ".K";
+    errorcode = 0
+    residual = ".K"
 
     # check if the current test uses GET or POST, that are not currently supported.
     # If that's the case we directly return without even running the test.
@@ -292,9 +292,9 @@ def run_test(filename):
         # name of auxiliary files to be given to K tool (one for writing config to, other is php source to run).
         temp_file = filename + ".tmp"     
         # calling KPHP here, and getting the result
-		# ,"--output-file " + temp_file
+        # ,"--output-file " + temp_file
         subprocess.check_call(["krun", "--parser", "java -jar parser/parser.jar" ,  ">", temp_file, input_file_for_k], shell=True)
-		# BMK: with non-determinisitic input we need -c option on command line
+        # BMK: with non-determinisitic input we need -c option on command line
         # -c MyDb='db(\"a\",\"b\",\"c\",\"d\")'
         #result = result.strip()
         #result_new_line = result.replace(" ", "").replace('\n', "").replace("\t ", "")
@@ -303,7 +303,7 @@ def run_test(filename):
     except subprocess.CalledProcessError as e:
         outcome = "parsing issue"
         print ("krun error => " + outcome)
-        print e.output
+        print(e.output)
         return [outcome, "Parsing problem. Probably due to outdated parser.", "-", "-",{}]
 
     # and finally we parse the output from KPHP...
@@ -311,14 +311,15 @@ def run_test(filename):
         konfig = parseString(get_file_content(temp_file))
         kcell = str(konfig.getElementsByTagName("k")[0].toxml()).strip("\n\t ")
         trace = str(konfig.getElementsByTagName("trace")[0].toxml())
-        domain = str(konfig.getElementsByTagName("domain")[0].toxml()).replace("<domain>", "").replace("</domain>", "").translate(None, string.whitespace)
+        domain = str(konfig.getElementsByTagName("domain")[0].toxml()).replace("<domain>", "").replace("</domain>", "")
+        domain = "".join(domain.split())
         outcell = str(konfig.getElementsByTagName("out")[0].toxml())
         residual = kcell.replace("<k>", "").replace("</k>", "").strip("\n\t ")
         result = outcell.replace("<out>", "").replace("</out>", "").replace("\t", "").replace(" ", "").replace("&quot;", "").replace("\\r\\n", "")
         #result=re.sub(r'.out.(.*)..out.', r'\1', outcell)
         result2=re.sub(r'ListItem\((.*?)\)\n', r'\1\n', result)
         result3=re.sub(r'#(ostream|buffer|\r)(.*?)\n', "", result2)
-        result_new_line = result3.translate( None, string.whitespace)
+        result_new_line = "".join(result3.split())
         #print result3
         errorcode = int(str(konfig.getElementsByTagName("errorManagement")[0].toxml()).replace("<errorManagement>", "").replace("</errorManagement>", "").strip("\n"))
     except ExpatError :
@@ -336,8 +337,8 @@ def run_test(filename):
         expected_result = crnt_test['EXPECTSIGNS'].strip();
     if ('EXPECTREGEX' in crnt_test):
         expected_result = crnt_test['EXPECTREGEX'].strip()	
-	# create version of expected result without newlines
-    expected_result_new_line = expected_result.translate( None, string.whitespace )
+    # create version of expected result without newlines
+    expected_result_new_line = "".join(expected_result.split())
     expected_result_pattern = expected_result_new_line
     if ('EXPECTF' in crnt_test or 'EXPECTREGEX' in crnt_test):
         expected_result_pattern = fromScanfStyleToRegexp(expected_result_new_line)
@@ -355,7 +356,7 @@ def run_test(filename):
     
     elif (errorcode == 4):
         outcome = "parsing_issue"
-        print "ExpatError"
+        print("ExpatError")
         rule_coverage = {}
     elif (errorcode == 3):
         outcome = "not_supported"

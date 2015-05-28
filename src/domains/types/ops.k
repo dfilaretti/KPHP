@@ -173,7 +173,7 @@ module OPS
 	        [internal]
 
     rule    [toFloat-int]:
-	        <k> *toFloat(I:AInt) => AFloat ... </k> // TODO: fix!
+	        <k> *toFloat(I:ANum) => AFloat ... </k> // TODO: fix!
 	        [internal]
 
     rule    [toFloat-float]:
