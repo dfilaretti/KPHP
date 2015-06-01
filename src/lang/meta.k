@@ -223,7 +223,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	
 	rule	runInConf(config(C), K) => updateConfig(config(C)) ~> K 
 	
-	rule 	<k> runInConf(None, K) => . ... </k>
+	rule 	<k> runInConf(none, K) => . ... </k>
 		<status> _ => DONE </status>
 		[transition]
     
@@ -525,7 +525,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
                 #else
                     mergeConfigsBase(config(A), config(B))       
                 #fi)
-            when isNonTrivialBreakCase(configGetStatus(A), configGetStatus(B))
+            when isNonTrivialBreakCase(configGetStatus(A), configGetStatus(B)) andBool (configGetStatus(A) =/=K DONE) andBool (configGetStatus(B) =/=K DONE)
             [transition]
 			
 			

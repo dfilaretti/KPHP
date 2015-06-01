@@ -107,6 +107,7 @@ rule [break-some]:
 rule [break]:
 	<k> 'Break(N:Int) => . ... </k>
 	<status> NEXT => BREAK(N) </status>
+	<trace> Trace:List => Trace ListItem("break") </trace>
 	[step]
 
 /*
@@ -136,11 +137,13 @@ syntax K ::= "decreaseBreak"
 
 rule <k> decreaseBreak => . ... </k>
 	<status> BREAK(N:Int) => BREAK(N -Int 1) </status>
+	<trace> Trace:List => Trace ListItem("decreaseBreak") </trace>
 	when N >Int 1
 
 rule <k> decreaseBreak => . ... </k>
 	<status> BREAK(1) => NEXT </status>
-
+	<trace> Trace:List => Trace ListItem("decreaseBreak") </trace>
+	
 rule <k> decreaseBreak => . ... </k>
 	<status> RET </status>
 
@@ -360,7 +363,7 @@ rule [switch-spec-default]:
 		'ListWrap(
 			'DefaultCase(":" ,,Stmt:K),, 
 			Cases:KList)) 
-		=> Stmt ~> runRemainingSwitchClauses('ListWrap(Cases)) ... </k>
+		=> 'ListWrap(Stmt,, runRemainingSwitchClauses('ListWrap(Cases))) ... </k>
 	<trace> Trace:List => Trace ListItem("switch-spec-default") </trace>
 	[internal]
 
@@ -373,7 +376,7 @@ rule [switch-spec-no-default]:
 		=>
 		'If(
 			'IsEqual(VIn,, VCase),, 
-			Stmt ~> runRemainingSwitchClauses('ListWrap(Cases)),,
+			'ListWrap(Stmt,, runRemainingSwitchClauses('ListWrap(Cases))),,
 			'ListWrap(.KList),,
 			switch(VIn, 'ListWrap(Cases))) ... </k>
 	<trace> Trace:List => Trace ListItem("switch-spec-no-default") </trace>
@@ -393,7 +396,7 @@ rule [switch-spec-run-remaining-clauses]:
 			Cases:KList
 		)
 	) =>
-	Stmt ~> runRemainingSwitchClauses('ListWrap(Cases)) ... </k>
+	'ListWrap(Stmt,, runRemainingSwitchClauses('ListWrap(Cases))) ... </k>
 	<trace> Trace:List => Trace ListItem("switch-spec-run-remaining-clauses") </trace>
 	[internal]
 
