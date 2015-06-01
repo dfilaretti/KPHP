@@ -1,45 +1,54 @@
 <?php 
 
-// An example involving objects 
-
 	// Define a class with a few fields of different visibility
+
+
+$x = 0;
+if (2 == 2) {
+	$y =& $x;	
+}
+else {
+	$y =& $x;
+}
+
+
+
+
+
+
+/*	
 	class A {
 		public $a = 12;
 		protected $b = -1;
 		private $c = "hello";
 	}
-
-	// let us "build" a "top" string key
-	if (2 == 3) 
-		$k = "hello";
-	
-	else 
-		$k = "world";
 	
 
-	// Create an instance of A
-	$o = new A();
-
-	// Attempt to access the "Top" field
-	$v =  ($o -> $k);
-
-	// OUTCOME: same as for arrays.
-	// All fields of $o are "collapsed" (read, aliased)
-	// into a single one, and a "StringTop" key is inserted
-	// in $o, also pointing to this "merge set". 
-	// The value contained is the LUB of all previously existing 
-	// values... 
-	
+	//$o = new A;
+	if (2 == 3) {
+		$x = array("foo" => 1);
+	}
+	else {
+		$z = -1;
+		//$x = array("foo" => -1, "bar" => 0);
+	}
+*/
 
 
 
+/*
 
-
-
-
-
-
-
-
-
+	if (2 == 3) {
+		class A {
+			protected $x = -3;
+		}
+		$p = new A;
+	}
+	else {
+		class A {
+			public $x = -1;
+		}
+		$p = new A;
+	}
+*/
 ?>

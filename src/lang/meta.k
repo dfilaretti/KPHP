@@ -94,6 +94,37 @@ rule Abexp1(V:KResult, M:OptionBag) =>
         #fi
         [transition]
 
+
+
+
+// A version of Abexp that takes a Configuration
+
+syntax K ::= "AbexpConf" "(" K "," BoxedConfig ")"
+syntax K ::= "AbexpConf1" "(" K ")" [strict]
+
+rule AbexpConf(K,C) => AbexpConf1(runInConf(C,K))
+
+rule <k> AbexpConf1(V:KResult) => getCurrentConfig ... </k>
+    when valid(V) orBool (notBool(unsatisfiable(V)))
+    [transition]
+
+rule <k> AbexpConf1(V:KResult) => none    ... </k>
+    when unsatisfiable(V) andBool (notBool(valid(V)))
+    [transition]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 /*@ \subsection{Return codes} */
 ///////////////////////////////////////////////////////////////////////////////
@@ -198,8 +229,14 @@ rule	<k> runInMem(none, _) => .  ... </k>
 
     syntax K ::= "runInConf" "(" BoxedConfig "," K ")"     [strict(1)] 
 	
-	rule	runInConf(C, K) => updateConfig(C) ~> K 
-    
+	//rule	runInConf(C, K) => updateConfig(C) ~> K 
+   
+    rule    runInConf(config(C), K) => updateConfig(config(C)) ~> K
+ 
+    rule   <k> runInConf(None, K) => . ... </k>
+           <status> _ => DONE </status>
+           [transition]
+ 
     ///////////////////////////////////////////////////////////////////////////
     //@ Return current configuration
     ///////////////////////////////////////////////////////////////////////////
@@ -799,10 +836,24 @@ rule	<k> runInMem(none, _) => .  ... </k>
     rule getRC(zval(_,_,RC,_)) => RC
 
 
+
+
+
     // makeH
+
+
+    syntax Map ::= "makeH" "(" Map "," Loc "," Set ")" [function]
+    rule makeH(H,J,Zvals) => makeH1(H,J,mergeZvals(Zvals))
+
+
+//  OLD - REMOVE
+/*
     syntax Map ::= "makeH" "(" Map "," Loc "," Zval "," Zval ")" [function]
     rule makeH(H,J,ZV1,ZV2) => makeH1(H,J,mergeZval(ZV1,ZV2))
+*/
 
+
+    // TODO: fix refcount issue
     syntax Map ::= "makeH1" "(" Map "," Loc "," Zval ")" [function]
 
     // NOTE: could optimize by 
@@ -813,6 +864,12 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	when notBool(J in keys(H))
 
     rule makeH1((J |-> ZV') H,J,ZV) => (J |-> setZvalRC(ZV,1 +Int getRC(ZV'))) H 
+
+
+
+
+
+
 
    // similar to map union, but if an element is present in both maps, 
    // the element on the RHS "wins"... 
@@ -836,6 +893,46 @@ rule	<k> runInMem(none, _) => .  ... </k>
     // increment reference counter
     syntax Map ::= "incRCf" "(" Map "," Loc ")" [function]
     rule incRCf(L |-> zval(V,T,R,I) H,L) => (L |-> zval(V,T,R +Int 1,I)) H 
+
+
+
+    syntax ArrayItemVisibility ::= "combineVisibility" "("
+					OptionArrayItemVisibility ","
+					OptionArrayItemVisibility ")" [function]
+
+    // only one visibility 
+    rule combineVisibility(none,V:ArrayItemVisibility) => V
+    rule combineVisibility(V:ArrayItemVisibility,none) => V
+    // same visibility
+    rule combineVisibility(V:ArrayItemVisibility,V)    => V
+    // different visibilities
+    // TODO: add more cases here! 
+    rule combineVisibility(V1:ArrayItemVisibility,V2:ArrayItemVisibility) => public
+    when V1 =/=K V2
+
+
+
+    syntax Bool ::= "needErrorMerge" "("
+			OptionArrayItemVisibility ","
+			OptionArrayItemVisibility ")" [function]
+
+    // only one visibility
+    rule needErrorMerge(none,V:ArrayItemVisibility) => false
+    rule needErrorMerge(V:ArrayItemVisibility,none) => false
+    // same visibility
+    rule needErrorMerge(V1:ArrayItemVisibility,V2:ArrayItemVisibility) => false
+    when V1 ==K V2
+
+    rule needErrorMerge(V1:ArrayItemVisibility,V2:ArrayItemVisibility) => true
+    when V1 =/=K V2
+
+
+
+
+
+
+
+
 
     // ------------------------------------------------- merging
 
@@ -871,28 +968,37 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	    L',L,
 	    A1,H1',H1,
 	    A2,H2',H2) => 
-	mergeArray(L',L,A1,H1',H1,A2,H2',H2,.List,H',H,Alpha)
+	mergeArray(none,false,false,L',L,A1,H1',H1,A2,H2',H2,.List,H',H,Alpha)
 
 
     // ----- step 0: init
-    syntax  Pair ::= "mergeArray" "(" 
-	OptionLoc "," Loc ","				    // destination
+    syntax  Pair ::= "mergeArray" "("
+	OptionId  ","			    // optional class name
+	Bool "," 			    // need to merge with "ERROR"?
+	Bool ","			    // need to merge with NULL?
+	OptionLoc "," Loc ","		    // destination
 	Zval "," Map "," Map ","	    // memory 1
 	Zval "," Map "," Map ","	    // memory 2
 	List "," Map "," Map "," Map ")"    // intermediate memory/result
 	[function]
  
     rule    mergeArray(
+		ClassName,
+		PossibleErr,
+		NullMerge,
 		L',L,
                 zval(Array(_,E1),_,Rc1,_),H1',H1,
                 zval(Array(_,E2),_,Rc2,_),H2',H2,                
                 E,H',H,Alpha) => 
-		mergeArray1(L',L,1/*max(Rc1,Rc2)*/,E1,H1',H1,E2,H2',H2,E,H',H,Alpha)
+		mergeArray1(ClassName,PossibleErr,NullMerge,L',L,1,E1,H1',H1,E2,H2',H2,E,H',H,Alpha)
  
 
     // ----- step 1: choose variable to merge. Identify locs in the heap.
 
-    syntax  Pair ::= "mergeArray1" "(" 
+    syntax  Pair ::= "mergeArray1" "("
+	OptionId  "," 
+	Bool ","
+	Bool ","
 	OptionLoc "," Loc "," Int "," 
 	List "," Map "," Map "," 
 	List "," Map "," Map "," 
@@ -900,30 +1006,68 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	Map ")"
 	[function]
 
-    // base case - none 
-    rule    mergeArray1(none,L,Rc,.List,_,_,.List,_,_,E,H',H,Alpha) => 
+    // base case - array/none 
+    rule    mergeArray1(none,PossibleErr,_,none,L,Rc,.List,_,_,.List,_,_,E,H',H,Alpha) => 
 		pair(
 		    bagWrap(
-			<heap> (L |-> zval(Array(head(E),E),array,Rc,#if (Rc >Int 1) #then true #else false #fi)) H </heap>
+			<heap> 
+				(L |-> zval(Array(head(E),E),array,Rc,
+				#if (Rc >Int 1) #then true #else false #fi)) H 
+			</heap>
 			<thematrix> H' </thematrix>),
 		    mapWrap(Alpha))
- 
-    // base case - Loc
-    rule    mergeArray1(L':Loc,L,Rc,.List,_,_,.List,_,_,E,H',H,Alpha) => 
+
+    // base case - object/none 
+    rule    mergeArray1(ClassName:Id,PossibleErr,_,none,L,Rc,.List,_,_,.List,_,_,E,H',H,Alpha) => 
 		pair(
 		    bagWrap(
-			<heap> (L |-> zval(Array(head(E),E),array,Rc,#if (Rc >Int 1) #then true #else false #fi)) H </heap>
+			<heap>
+				// TODO: fix refcounters!  
+				(L  |-> zval(OID(L1',ClassName,1),object,1,true))
+
+				(L1 |-> zval(Array(head(E),E),array,Rc,
+				#if (Rc >Int 1) #then true #else false #fi)) H 
+			</heap>
+			<thematrix> (L1' |-> L1) H' </thematrix>),
+		    mapWrap(Alpha))
+		when fresh(L1:Loc) andBool fresh(L1':Loc)
+ 
+    // base case - array/Loc
+    rule    mergeArray1(none,PossibleErr,_,L':Loc,L,Rc,.List,_,_,.List,_,_,E,H',H,Alpha) => 
+		pair(
+		    bagWrap(
+			<heap> 
+				(L |-> zval(Array(head(E),E),array,Rc,
+				#if (Rc >Int 1) #then true #else false #fi)) H 
+			</heap>
 			<thematrix> (L' |-> L) H' </thematrix>),
 		    mapWrap(Alpha))
- 
-    // left
+
+    // base case - object/Loc
+    rule    mergeArray1(ClassName:Id,PossibleErr,_,L':Loc,L,Rc,.List,_,_,.List,_,_,E,H',H,Alpha) => 
+		pair(
+		    bagWrap(
+			<heap>
+				// TODO: fix refcounters!  
+				(L  |-> zval(OID(L1',ClassName,1),object,1,true))
+	 
+				(L1 |-> zval(Array(head(E),E),array,Rc,
+				#if (Rc >Int 1) #then true #else false #fi)) H 
+			</heap>
+			<thematrix> (L1' |-> L1) (L' |-> L) H' </thematrix>),
+		    mapWrap(Alpha))
+		when fresh(L1:Loc) andBool fresh(L1':Loc)
+
+    /* OLD, REMOVE
     rule    mergeArray1(
+		ClassName,
 		L',L,Rc,
 		(ListItem([X,Vis,L1']) E1),H1',H1,
                 E2,H2',H2,                
                 E,H',H,
 		Alpha) =>
 	    mergeArray2(
+		ClassName,
 		L',L,Rc,
 		E1,H1',H1,
 		arrayRemove(E2,X),H2',H2,
@@ -933,15 +1077,20 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		pair(
 		    vheap_read(H1',L1'), 
 		    vheap_read(H2',array_read_v(E2,X)))) 
-	
+    */	
+
+
     // right
+    /*
     rule    mergeArray1(
+		ClassName,
 		L',L,Rc,
 		E1,H1',H1,
                 (ListItem([X,Vis,L2']) E2),H2',H2,                
                 E,H',H,
 		Alpha) =>
 	    mergeArray2(
+		ClassName,
 		L',L,Rc,
 		arrayRemove(E1,X),H1',H1,
 		E2,H2',H2,
@@ -951,11 +1100,64 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		pair(
 		    vheap_read(H1',(array_read_v(E1,X))), 
 		    vheap_read(H2',L2')))
+    */
+ 
 
+    // left
+
+    rule    mergeArray1(
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		L',L,Rc,
+		(ListItem([X,Vis,L1']) E1),H1',H1,
+                E2,H2',H2,                
+                E,H',H,
+		Alpha) =>
+	    mergeArray2(
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		L',L,Rc,
+		E1,H1',H1,
+		arrayRemove(E2,X),H2',H2,
+		E,H',H,
+		Alpha,
+		pair(X,pair(Vis,getVisibility(array_read(E2,X)))),
+		pair(
+		    vheap_read(H1',L1'), 
+		    vheap_read(H2',array_read_v(E2,X)))) 
+
+
+    rule    mergeArray1(
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		L',L,Rc,
+		E1,H1',H1,
+                (ListItem([X,Vis,L2']) E2),H2',H2,                
+                E,H',H,
+		Alpha) =>
+	    mergeArray2(
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		L',L,Rc,
+		arrayRemove(E1,X),H1',H1,
+		E2,H2',H2,
+		E,H',H, 
+		Alpha,
+		pair(X,pair(getVisibility(array_read(E1,X)),Vis)),
+		pair(
+		    vheap_read(H1',(array_read_v(E1,X))), 
+		    vheap_read(H2',L2')))
 
 
     // ----- step 2: retrieve heap locs
     syntax  Pair ::= "mergeArray2" "(" 
+	OptionId  ","
+	Bool ","
+	Bool ","
 	OptionLoc "," Loc "," Int ","
 	List "," Map "," Map "," 
 	List "," Map "," Map "," 
@@ -967,6 +1169,9 @@ rule	<k> runInMem(none, _) => .  ... </k>
 
 
     rule    mergeArray2(
+		ClassName,
+		PossibleErr,
+		NullMerge,
 		L',L,Rc,
 		E1,H1',H1,
                 E2,H2',H2,                
@@ -975,6 +1180,9 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		Var,
 		pair(J1,J2)) =>
 	    mergeArray3(
+		ClassName,
+		PossibleErr,
+		NullMerge,
 		L',L,Rc,
 		E1,H1',H1,
 		E2,H2',H2, 
@@ -989,6 +1197,9 @@ rule	<k> runInMem(none, _) => .  ... </k>
 
 
     syntax  Pair ::= "mergeArray3" "(" 
+	OptionId  ","
+	Bool ","
+	Bool ","
 	OptionLoc "," Loc "," Int ","
 	List "," Map "," Map "," 
 	List "," Map "," Map "," 
@@ -1002,36 +1213,49 @@ rule	<k> runInMem(none, _) => .  ... </k>
 
 
     rule    mergeArray3(
+		ClassName,
+		PossibleErr,
+		NullMerge,
 		L',L,Rc,
 		E1,H1',H1,
                 E2,H2',H2,                
                 E,H',H,
 		(setWrap(C) |-> L1' Alpha),
-		pair(X,Vis),
+		pair(X,pair(Vis1,Vis2)),
 		_,
 		C:Set) =>
 	    mergeArray1(
+		ClassName,
+		PossibleErr,
+		NullMerge,
 		L',L,Rc,
 		E1,H1',H1,
 		E2,H2',H2,
-		E ListItem([X,Vis,L1']),H',incRCf(H,optionLoc2Loc(vheap_read(H',L1'))), 
+		E ListItem([X,combineVisibility(Vis1,Vis2),L1']),H',incRCf(H,optionLoc2Loc(vheap_read(H',L1'))), 
 		(setWrap(C) |-> L1' Alpha))
 
 
     rule    mergeArray3(
+		ClassName,
+		PossibleErr,
+		NullMerge,
 		L',L,Rc,
 		E1,H1',H1,
                 E2,H2',H2,                
                 E,H',H,
 		Alpha,
-		pair(X,Vis),
+		pair(X,pair(Vis1,Vis2)),
 		LocPair,
 		C) =>
 	    mergeArray4(
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		pair(Vis1,Vis2),
 		L',L,Rc,
 		E1,H1',H1,
 		E2,H2',H2,
-		E ListItem([X,Vis,L1']),H',H,
+		E ListItem([X,combineVisibility(Vis1,Vis2),L1']),H',H,
 		(setWrap(C) |-> L1') Alpha,
 		LocPair,
 		C SetItem(L1'),
@@ -1051,20 +1275,28 @@ rule	<k> runInMem(none, _) => .  ... </k>
     // ----- step 3: 
 
     syntax  Pair ::= "mergeArray4" "(" 
+	OptionId  ","
+	Bool ","			// need merge with ERROR?
+	Bool ","
+	Pair ","
 	OptionLoc "," Loc "," Int ","
 	List "," Map "," Map "," 
 	List "," Map "," Map "," 
 	List "," Map "," Map ","
 	Map ","
-	Pair ","		    // the pair of heap locations 
+	Pair ","		    	// the pair of heap locations 
 	Set ","
 	Loc ")"
 	[function]
 
     // TODO: all the following should incfement ref counter of J 
 
-    // variable only in left branch - scalar
+    // variable only in left branch - scalar - noError
     rule    mergeArray4(
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		pair(Vis1,Vis2),
 		L',L,Rc,
 		E1,H1',(J1 |-> ZV1) H1,
                 E2,H2',H2,                
@@ -1074,17 +1306,56 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		C,
 		J) =>
 	    mergeArray1(
+		ClassName,
+		PossibleErr,
+		NullMerge,
 		L',L,Rc,
 		E1,H1',(J1 |-> ZV1) H1,
 		E2,H2', H2,
 		E, 
 		H' makeH'(H',C,J),	    
-		makeH(H,J,ZV1,ZV1),  
+		makeH(H,J,SetItem(ZV1) SetItem(nullZval)), 
+		//makeH(H,J,ZV1,ZV1),  
 		Alpha)
-    when isScalar_zval(ZV1)   
+    when isScalar_zval(ZV1) andBool (notBool (needErrorMerge(Vis1,Vis2)))  
 
-    // variable only in right branch - scalar
+    // variable only in left branch - scalar - Error
     rule    mergeArray4(
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		pair(Vis1,Vis2),
+		L',L,Rc,
+		E1,H1',(J1 |-> ZV1) H1,
+                E2,H2',H2,                
+                E,H',H,
+		Alpha,
+		pair(J1,none),
+		C,
+		J) =>
+	    mergeArray1(
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		L',L,Rc,
+		E1,H1',(J1 |-> ZV1) H1,
+		E2,H2', H2,
+		E, 
+		H' makeH'(H',C,J),	    
+		makeH(H,J,SetItem(ZV1) SetItem(nullZval) SetItem(nullZval)), //TODO: error 
+		//makeH(H,J,ZV1,ZV1),  
+		Alpha)
+    when isScalar_zval(ZV1) andBool (needErrorMerge(Vis1,Vis2))  
+
+
+
+
+    // variable only in right branch - scalar - no error
+    rule    mergeArray4(
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		pair(Vis1,Vis2),
 		L',L,Rc,
 		E1,H1',H1,
                 E2,H2',(J2 |-> ZV2) H2,                
@@ -1094,17 +1365,55 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		C,
 		J) =>
 	    mergeArray1(
+		ClassName,
+		PossibleErr,
+		NullMerge,
 		L',L,Rc,
 		E1,H1',H1,
 		E2,H2', (J2 |-> ZV2) H2,
 		E, 
 		H' makeH'(H',C,J),	    
-		makeH(H,J,ZV2,ZV2),  
+		makeH(H,J,SetItem(ZV2) SetItem(nullZval)), 
+		//makeH(H,J,ZV2,ZV2), 	 
 		Alpha)
-    when isScalar_zval(ZV2)  
+    when isScalar_zval(ZV2)  andBool (notBool (needErrorMerge(Vis1,Vis2)))
 
-    // variable in both branches - scalar OR (scalar + array)
+
+
+    // variable only in right branch - scalar - error
     rule    mergeArray4(
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		pair(Vis1,Vis2),
+		L',L,Rc,
+		E1,H1',H1,
+                E2,H2',(J2 |-> ZV2) H2,                
+                E,H',H,
+		Alpha,
+		pair(none,J2),
+		C,
+		J) =>
+	    mergeArray1(
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		L',L,Rc,
+		E1,H1',H1,
+		E2,H2', (J2 |-> ZV2) H2,
+		E, 
+		H' makeH'(H',C,J),	    
+		makeH(H,J,SetItem(ZV2) SetItem(nullZval) SetItem(nullZval)), //TODO: error
+		//makeH(H,J,ZV2,ZV2), 	 
+		Alpha)
+    when isScalar_zval(ZV2)  andBool (needErrorMerge(Vis1,Vis2))
+
+    // variable in both branches - scalar OR (scalar + array) - no error
+    rule    mergeArray4(
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		pair(Vis1,Vis2),
 		L',L,Rc,
 		E1,H1',(J1 |-> ZV1) H1,
                 E2,H2',(J2 |-> ZV2) H2,                
@@ -1114,17 +1423,67 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		C,
 		J) =>
 	    mergeArray1(
+		ClassName,	
+		PossibleErr,
+		NullMerge,
 		L',L,Rc,
 		E1,H1',(J1 |-> ZV1) H1,
 		E2,H2',(J2 |-> ZV2) H2,
 		E, 
 		H' makeH'(H',C,J),	    
-		makeH(H,J,ZV1,ZV2),  
+		makeH(H,J,SetItem(ZV1) SetItem(ZV2)),  
+		//makeH(H,J,ZV1,ZV2), 	
 		Alpha)
-	when isScalar_zval(ZV1) orBool isScalar_zval(ZV2) 
+	when (isScalar_zval(ZV1) orBool isScalar_zval(ZV2)) andBool
+		(notBool (needErrorMerge(Vis1,Vis2)))
+
+
+
+    // variable in both branches - scalar OR (scalar + array) - error
+    rule    mergeArray4(
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		pair(Vis1,Vis2),
+		L',L,Rc,
+		E1,H1',(J1 |-> ZV1) H1,
+                E2,H2',(J2 |-> ZV2) H2,                
+                E,H',H,
+		Alpha,
+		pair(J1,J2),
+		C,
+		J) =>
+	    mergeArray1(
+		ClassName,	
+		PossibleErr,
+		NullMerge,
+		L',L,Rc,
+		E1,H1',(J1 |-> ZV1) H1,
+		E2,H2',(J2 |-> ZV2) H2,
+		E, 
+		H' makeH'(H',C,J),	    
+		makeH(H,J,SetItem(ZV1) SetItem(ZV2) SetItem(nullZval)), //TODO: error 
+		//makeH(H,J,ZV1,ZV2), 	
+		Alpha)
+	when (isScalar_zval(ZV1) orBool isScalar_zval(ZV2)) andBool
+		(needErrorMerge(Vis1,Vis2))
+
+
+
+
+
+
+
+
+
+
 
     // variable only in left branch - array
     rule    mergeArray4(
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		pair(Vis1,Vis2),
 		L',L,Rc,
 		E1,H1',(J1 |-> ZV1) H1,
                 E2,H2',H2,                
@@ -1134,6 +1493,9 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		C,
 		J) =>
 	  mergeArray5(
+		ClassName,
+		PossibleErr,
+		NullMerge,
 		L',L,Rc,
 		E1,H1',(J1 |-> ZV1) H1,
 		E2,H2',H2,
@@ -1141,12 +1503,35 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		H' makeH'(H',C,J),
 		H, 
 		Alpha,
-		bagUnwrap(leftElem(mergeArray(none,J,ZV1,H1',H1,emptyArrayZval,.Map,.Map,.List,.Map,.Map,Alpha))))
+		bagUnwrap(leftElem(mergeArray(none,needErrorMerge(Vis1,Vis2),true,none,J,ZV1,H1',H1,emptyArrayZval,.Map,.Map,.List,.Map,.Map,Alpha))))
     when isArray_zval(ZV1) 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     // variable only in right branch - array
     rule    mergeArray4(
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		pair(Vis1,Vis2),
 		L',L,Rc,
 		E1,H1',H1,
                 E2,H2',(J2 |-> ZV2) H2,                
@@ -1156,6 +1541,9 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		C,
 		J) =>
 	    mergeArray5(
+		ClassName,
+		PossibleErr,
+		NullMerge,
 		L',L,Rc,
 		E1,H1',H1,
 		E2,H2',(J2 |-> ZV2) H2,
@@ -1163,11 +1551,15 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		H' makeH'(H',C,J),
 		H, 
 		Alpha,
-		bagUnwrap(leftElem(mergeArray(none,J,emptyArrayZval,.Map,.Map,ZV2,H2',H2,.List,.Map,.Map,Alpha))))
+		bagUnwrap(leftElem(mergeArray(none,needErrorMerge(Vis1,Vis2),true,none,J,emptyArrayZval,.Map,.Map,ZV2,H2',H2,.List,.Map,.Map,Alpha))))
     when isArray_zval(ZV2)
 
     // variable in both branches - array 
     rule    mergeArray4(
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		pair(Vis1,Vis2),
 		L',L,Rc,
 		E1,H1',
 		(J1 |-> ZV1) H1,
@@ -1179,6 +1571,9 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		C,
 		J) =>
 	    mergeArray5(
+		ClassName,
+		PossibleErr,
+		NullMerge,
 		L',L,Rc,
 		E1,H1',(J1 |-> ZV1) H1,
 		E2,H2',(J2 |-> ZV2) H2,
@@ -1186,13 +1581,27 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		H' makeH'(H',C,J),
 		H, 
 		Alpha,
-		bagUnwrap(leftElem(mergeArray(none,J,ZV1,H1',H1,ZV2,H2',H2,.List,.Map,.Map,Alpha))))
+		bagUnwrap(leftElem(mergeArray(none,needErrorMerge(Vis1,Vis2),false,none,J,ZV1,H1',H1,ZV2,H2',H2,.List,.Map,.Map,Alpha))))
     when isArray_zval(ZV1) andBool isArray_zval(ZV2)
-    /*
-    // variable only in left branch - array
+
+
+
+
+
+// OBJECT CASES HERE! :)
+
+
+
+    // variable only in left branch - object
     rule    mergeArray4(
-		L',L,
-		E1,H1',(J1 |-> zval(Array(_,E1'),_,_,_)) H1,
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		pair(Vis1,Vis2),
+		L',L,Rc,
+		E1,
+		(L1' |-> J3) H1',
+		(J1 |-> zval(OID(L1',Cl:Id,Cnt1),T1,Rc1,Ir1)) (J3 |-> ZV1) H1,
                 E2,H2',H2,                
                 E,H',H,
 		Alpha,
@@ -1200,58 +1609,99 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		C,
 		J) =>
 	  mergeArray5(
-		L',L,
-		E1,H1',H1,
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		L',L,Rc,
+		E1,H1',(J1 |-> zval(OID(L1',Cl,Cnt1),T1,Rc1,Ir1)) (J3 |-> ZV1) H1,
 		E2,H2',H2,
 		E,
 		H' makeH'(H',C,J),
 		H, 
 		Alpha,
-		bagUnwrap(leftElem(mergeArray1(none,J,E1',H1',H1,.List,.Map,.Map,.List,.Map,.Map,Alpha))))
- 
-    // variable only in right branch - array
+		bagUnwrap(leftElem(mergeArray(Cl,needErrorMerge(Vis1,Vis2),true,none,J,ZV1,H1',H1,emptyArrayZval,.Map,.Map,.List,.Map,.Map,Alpha))))
+
+
+
+
+    // variable only in right branch - object
     rule    mergeArray4(
-		L',L,
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		pair(Vis1,Vis2),
+		L',L,Rc,
 		E1,H1',H1,
-                E2,H2',(J2 |-> zval(Array(_,E2'),_,_,_)) H2,                
+                E2,
+		(L2' |-> J4) H2',
+		(J2 |-> zval(OID(L2',Cl:Id,Cnt2),T2,Rc2,Ir2)) (J4 |-> ZV2) H2,                
                 E,H',H,
 		Alpha,
 		pair(none,J2),
 		C,
 		J) =>
 	    mergeArray5(
-		L',L,
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		L',L,Rc,
 		E1,H1',H1,
-		E2,H2',H2,
+		E2,H2',(J2 |-> zval(OID(L2',Cl,Cnt2),T2,Rc2,Ir2)) (J4 |-> ZV2) H2,
 		E,
 		H' makeH'(H',C,J),
 		H, 
 		Alpha,
-		bagUnwrap(leftElem(mergeArray1(none,J,.List,.Map,.Map,E2',H2',H2,.List,.Map,.Map,Alpha))))
- 
+		bagUnwrap(leftElem(mergeArray(Cl,needErrorMerge(Vis1,Vis2),true,none,J,emptyArrayZval,.Map,.Map,ZV2,H2',H2,.List,.Map,.Map,Alpha))))
 
-    // variable in both branches - array 
+
+
+    // variable in both branches - objects 
     rule    mergeArray4(
-		L',L,
-		E1,H1',
-		(J1 |-> zval(Array(_,E1'),_,_,_)) H1,
-                E2,H2',
-		(J2 |-> zval(Array(_,E2'),_,_,_)) H2,                
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		pair(Vis1,Vis2), 
+		L',L,Rc,
+		E1,
+		(L1' |-> J3) H1',
+		(J1 |-> zval(OID(L1',Cl:Id,Cnt1),T1,Rc1,Ir1)) (J3 |-> ZV1) H1,
+                E2,
+		(L2' |-> J4) H2',
+		(J2 |-> zval(OID(L2',Cl:Id,Cnt2),T2,Rc2,Ir2)) (J4 |-> ZV2) H2,                
                 E,H',H,
 		Alpha,
 		pair(J1,J2),
 		C,
 		J) =>
-	    mergeArray5(
-		L',L,
-		E1,H1',H1,
-		E2,H2',H2,
+	    mergeArray5(	
+		ClassName,
+		PossibleErr,
+		NullMerge,
+		L',L,Rc,
+		E1,H1',(J1 |-> zval(OID(L1',Cl,Cnt1),T1,Rc1,Ir1)) (J3 |-> ZV1) H1,
+		E2,H2',(J2 |-> zval(OID(L2',Cl,Cnt2),T2,Rc2,Ir2)) (J4 |-> ZV2) H2,
 		E,
 		H' makeH'(H',C,J),
 		H, 
 		Alpha,
-		bagUnwrap(leftElem(mergeArray1(none,J,E1',H1',H1,E2',H2',H2,.List,.Map,.Map,Alpha))))
-    */
+		bagUnwrap(leftElem(mergeArray(Cl,needErrorMerge(Vis1,Vis2),false,none,J,ZV1,H1',H1,ZV2,H2',H2,.List,.Map,.Map,Alpha))))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     // ----- step 3: 
@@ -1261,6 +1711,9 @@ rule	<k> runInMem(none, _) => .  ... </k>
 
     // TODO: should increment ref count of J 
     syntax  Pair ::= "mergeArray5" "(" 
+	OptionId  ","
+	Bool ","
+	Bool ","
 	OptionLoc "," Loc "," Int ","
 	List "," Map "," Map "," 
 	List "," Map "," Map "," 
@@ -1270,6 +1723,9 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	[function]
     
     rule    mergeArray5(
+		ClassName,
+		PossibleErr,
+		NullMerge,
 		L',L,Rc,
 		E1,H1',H1,
                 E2,H2',H2,                
@@ -1277,6 +1733,9 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		Alpha,
 		<heap> H3 </heap> <thematrix> H3' </thematrix>) =>
 	    mergeArray1(
+		ClassName,
+		PossibleErr,
+		NullMerge,
 		L',L,Rc,
 		E1,H1',H1,
 		E2,H2',H2,
@@ -1306,6 +1765,28 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	        lub_type(T,T'),
 	        0, // TODO: can remove max(R,R'), if not used
 	        I orBool I')  
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*@ \subsection{merge a set of zvals. */
+    ///////////////////////////////////////////////////////////////////////////
+
+    syntax Zval ::= "mergeZvals" "(" Set ")" [function]
+
+    rule mergeZvals(SetItem(Z)) => Z
+
+    rule mergeZvals(SetItem(Z1) SetItem(Z2)) => mergeZval(Z1,Z2)
+
+    rule mergeZvals(SetItem(Z1) SetItem(Z2) S:Set) => mergeZval(mergeZval(Z1,Z2),mergeZvals(S)) 
+    when S =/=Set .Set
+
+
+
+
+
+
+
+
 
     ///////////////////////////////////////////////////////////////////////////
     /*@ \subsection{merge the function's static vars part of the heap} */

@@ -94,7 +94,7 @@ syntax OptionInt ::= Int | None
 syntax OptionString ::= String | None
 syntax OptionArrayItem ::= ArrayItem | None
 syntax OptionArrayCrntElem ::= ArrayCrntElem | None
-
+syntax OptionArrayItemVisibility ::= ArrayItemVisibility | None
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Lub} */
@@ -469,7 +469,15 @@ rule	emptyArray => Array(none,.List)
 
 
 syntax  Zval ::= "emptyArrayZval" [function]
- rule    emptyArrayZval => zval(emptyArray,array,0,false)
+rule    emptyArrayZval => zval(emptyArray,array,0,false)
+
+
+syntax Zval ::= "nullZval" [function]
+rule nullZval => zval(NULL,unset,0,false)
+
+
+syntax Zval ::= "errorZval" [function]
+
 
 
 /* Creating an empty array at a given location */
@@ -625,6 +633,14 @@ rule array_read((ListItem([K',_,_]) A:List),K) => array_read(A,K)
 
 syntax  OptionLoc ::= "array_read_v" "(" List "," Key ")" [function]
 rule    array_read_v(A,K) => arrayItem2Loc(array_read(A,K))
+
+
+syntax OptionArrayItemVisibility ::= "getVisibility" 
+					"(" OptionArrayItem ")" [function]
+
+rule   getVisibility(none) => none
+rule   getVisibility([_,V,_]) => V
+
 
 syntax  Loc ::= "optionLoc2Loc" "(" OptionLoc ")" [function]
 rule optionLoc2Loc(L:Loc) => L
