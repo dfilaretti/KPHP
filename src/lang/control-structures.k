@@ -271,14 +271,14 @@ rule
 syntax  K ::= "moveOnFromLoop" "(" K ")" [strict]
 
 rule	<k> moveOnFromLoop(V:KResult) => . ... </k>
-	//<status> _ => NEXT </status>
+	<status> St </status>
  	//<niter> _ => 0 </niter> 
- 	when notBool (valid(V)) 
+ 	when notBool (valid(V)) orBool isStatusBreaking(St)
 
 rule    <k> moveOnFromLoop(V:KResult) => print("Loop detected !") ... </k>      
-	<status> _ => LOOP </status>
+	<status> St => LOOP </status>
  	//<niter> _ => 0 </niter>  
- 	when valid(V)  
+ 	when valid(V) andBool (notBool (isStatusBreaking(St)))
 
 
 

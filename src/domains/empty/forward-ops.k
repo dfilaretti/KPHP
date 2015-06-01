@@ -298,7 +298,7 @@ syntax Bool ::= "isNumericString" "(" AString ")" [function]
 
 rule isNumericString(S:String) => S isNumeric
 		
-
+rule S1:String ==AString S2:String => S1 ==String S2
 
 
 
