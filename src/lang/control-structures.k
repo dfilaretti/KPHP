@@ -51,17 +51,29 @@ rule [if-guard2Bool]:
 	[intermediate]
 
 // Abstract semantics
+/* TODO: remove once the "config" version works
 rule [if]:	
     <kphp>
          <script>
         <k> 'If(C,,B1,,'ListWrap(.KList),,B2) => 
 	mergeConfigs(
-		runAndGetConfig(runInConf(AbexpConf(C, config(Cfg)), B1)),
-		runAndGetConfig(runInConf(AbexpConf('Not(C), config(Cfg)), B2))) ... </k>
-         _
-        </script>
-	Cfg:Bag
-    </kphp> 
+		runAndGetConfig(runInMem(Abexp(C, some(E)), B1)),
+		runAndGetConfig(runInMem(Abexp('Not(C), some(E)), B2))) ... </k>
+        <mem> E </mem>
+*/
+
+rule [if]:	
+	<kphp>
+	<script>
+        <k> 'If(C,,B1,,'ListWrap(.KList),,B2) => 
+	mergeConfigs(
+		runAndGetConfig(runInConf(AbexpConf(C, config(Conf)), B1)),
+		runAndGetConfig(runInConf(AbexpConf('Not(C), config(Conf)), B2))) ... </k>
+        _
+	</script>
+	Conf:Bag
+	</kphp>
+
 	
 ///////////////////////////////////////////////////////////////////////////////
 /*@ \subsection{Conditional expression (ternary)} 

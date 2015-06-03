@@ -210,7 +210,7 @@ rule [built-obj-prop-list-non-private-skip]:
 
 rule [built-obj-prop-list-private]: 	
 	<k> buildObjElemList(L', ClassName, ListItem(prop(X,private(ClassName),V:Value)) Items:List) => 
-		ArrayCreateElem(L,X,private(ClassName),allocValue(V)) ~>
+		ArrayCreateElem(L',X,private(ClassName),allocValue(V)) ~>
 		buildObjElemList(L', ClassName, Items) ... </k>
 	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(Array(_,ObjItems),_,_,_)  ... </heap>
@@ -241,6 +241,32 @@ rule [obj-access-RHS2Loc-ThisOrLiteral]:
 	<k> 'ObjectAccess((V:ThisOrLiteral => convertToLoc(V,r)),,_) ... </k>
 	<trace> Trace:List => Trace ListItem("obj-access-RHS2Loc-ThisOrLiteral") </trace>
 	[intermediate]
+
+rule [ref-assign-fresh-array-elem]:
+	<k> 
+		'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  
+            	ArrayUpdateElem(L', X, L1') ~>
+		rebuildArray(
+			L',X,
+			getMaxKey(X,getLTKeys(Elems,X) getGEQKeys(Elems,X)),
+			L1',L1,Elems) ~>
+		ref(L', X) 
+	... </k>
+	<thematrix> 
+	... 
+		L'  |-> L 
+		L1' |-> L1
+	... 
+	</thematrix>	
+        <heap> 
+	... 
+		L  |-> zval(Array(_,Elems),_,_,_) 
+		L1 |-> _ 
+	... 
+	</heap>
+	<trace> Trace:List => Trace ListItem("ref-assign-fresh-array-elem") </trace>
+	//when notBool (Elems hasProperty X)
+	[step]
 
 rule [obj-access-nested]:
 	<k> 'ObjectAccess(R:Ref,, K:Key) => lref(R, K, obj) ... </k>

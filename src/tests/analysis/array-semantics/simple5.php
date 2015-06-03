@@ -12,8 +12,8 @@
 
 	$x[2] =& $y;
 
-	// BUG! The reference assignment causes the "intersecting keys"
-	// to be aliased as well, that is {Pos, Top}. 
-	// But unfortunately, Neg doesn't get updated, while it should! 
+	// The reference assign causes ALL array fields to be aliased
+	// as well....
+
 	
 ?>

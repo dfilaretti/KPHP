@@ -593,7 +593,7 @@ rule [ref-assign-RHS2Loc]:
 	<trace> Trace:List => Trace ListItem("ref-assign-RHS2Loc") </trace>
 	[intermediate]
 
-rule [ref-assign-fresh-obj-prop]:
+rule [ref-assign-obj-prop]:
 	<k> 'ReferenceAssign(ref((L':Loc => L2'), X:Key),, L1':Loc) ... </k>
 	<thematrix> 
 	... 
@@ -610,19 +610,19 @@ rule [ref-assign-fresh-obj-prop]:
 	...
 	</heap>
 	<trace> Trace:List => Trace ListItem("ref-assign-fresh-obj-prop") </trace>
-	when notBool (Elems hasProperty X)
+	//when notBool (Elems hasProperty X)
 	[intermediate]
 
-
-
-
-
-
-
-/* OLD, remove when new stuff works
-rule [ref-assign-fresh-array-elem]:
-	<k> 'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  
-            	ArrayUpdateElem(L', X, L1') ~> ref(L', X) ... </k>
+rule [ref-assign-array-elem]:
+	<k> 
+		'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  
+            	ArrayUpdateElem(L', X, L1') ~>
+		rebuildArray(
+			L',X,
+			getMaxKey(X,getLTKeys(Elems,X) getGEQKeys(Elems,X)),
+			L1',L1,Elems) ~>
+		ref(L', X) 
+	... </k>
 	<thematrix> 
 	... 
 		L'  |-> L 
@@ -638,10 +638,12 @@ rule [ref-assign-fresh-array-elem]:
 	<trace> Trace:List => Trace ListItem("ref-assign-fresh-array-elem") </trace>
 	//when notBool (Elems hasProperty X)
 	[step]
-*/
 
 
-// TODO: move
+
+// --------------- AUXILIARY OPS FOR REFERENCE ASSIGN --------------------
+// .................... TODO: MOVE? --------------------------------------
+
 syntax Set ::= "removeFromSet" "(" Set "," K ")" [function]
 
 rule 	removeFromSet(.Set,_) => .Set
@@ -651,6 +653,67 @@ rule 	removeFromSet(SetItem(Y) S, X) => SetItem(Y) removeFromSet(S,X)
 	when X =/=K Y
 
 
+// Auxiliary operation used by the reference assignment. 
+// It takes care of aliasing the required keys (in case there is more
+// then one)....
+
+syntax K ::= "rebuildArray" "(" Loc "," Key "," Key "," 
+				Loc "," Loc "," 
+				List ")"
+
+rule rebuildArray(L',X,MaxKey,L1',L1,Elems) =>
+	// write the lub 
+	write(
+		mergeValuesAtLocs(
+			bot,
+			SetItem(L1')
+			// NOTE: in the old rule, I used to REMOVE X from the set below... 
+			KeySet2LocSet(getLTKeys(Elems,MaxKey) getGEQKeys(Elems,MaxKey),Elems)),
+		L1',
+		true) ~>
+	// alias the affected key to the target
+	aliasAllKeys2Loc(L',getLTKeys(Elems,MaxKey) getGEQKeys(Elems,MaxKey) ,L1)				
+
+
+// given a set of keys, returns the maximum
+// (according to lattice ordering)
+
+syntax 	K ::= "getMaxKey" "(" Key "," Set ")" [function]
+
+rule 	getMaxKey(DefaultKey,.Set) => DefaultKey
+rule 	getMaxKey(DefaultKey,KeySet) => getMaxKey1(DefaultKey,KeySet)
+	when KeySet =/=Set .Set
+
+syntax 	K ::= "getMaxKey1" "(" Key "," Set ")" [function]
+
+rule	getMaxKey1(K,.Set) => K
+
+rule 	getMaxKey1(K1,SetItem(K2) KeySet) => 
+		#if (K1 <Lattice K2) #then
+			getMaxKey1(K2,KeySet)
+		#else
+			getMaxKey1(K1,KeySet) 
+		#fi
+ 
+
+// --------------- AUXILIARY OPS FOR REFERENCE ASSIGN --------------------
+// .................... END ------- --------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* OLD: remove when fixed
 rule [ref-assign-fresh-array-elem]:
 	<k> 
 		'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  
@@ -687,54 +750,23 @@ rule [ref-assign-fresh-array-elem]:
 	<trace> Trace:List => Trace ListItem("ref-assign-fresh-array-elem") </trace>
 	//when notBool (Elems hasProperty X)
 	[step]
-
-
-
-
-
-
-
-
-
-
-/* TODO: this looks redundant to me, REMOVE
-rule [ref-assign-existent-array-elem]:
-	<k> 'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  
-            	ArrayUpdateElem(L', X, L1') ~> ref(L', X) ... </k>
-	<thematrix> 
-	... 
-		L'  |-> L 
-		L1' |-> L1
-	... 
-	</thematrix>
-        <heap> 
-	... 
-		L  |-> zval(Array(_,_ ListItem([X,_,L2]) _),_,_,_) 
-		L1 |-> _ 
-	... 
-	</heap>
-	<trace> Trace:List => Trace ListItem("ref-assign-existent-array-elem") </trace>
-	when L1 =/=K L2
-        [step]
-
-      	
-rule [ref-assign-existent-array-elem-same]:
-	<k> 'ReferenceAssign(ref(L':Loc, X:Key),, L1':Loc) =>  ref(L',X) ... </k>
-	<thematrix> 
-	... 
-		L'  |-> L 
-		L1' |-> L1
-	... 
-	</thematrix>	
-        <heap> 
-	... 
-		L  |-> zval(Array(_,_ ListItem([X,_,L1]) _),_,_,_) 
-		L1 |-> _ 
-	... 
-	</heap>
-	<trace> Trace:List => Trace ListItem("ref-assign-existent-array-elem-same") </trace>
-	[step]
 */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 rule [ref-assign-language-value]:
