@@ -1124,10 +1124,14 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		E,H',H,
 		Alpha,
 		pair(X,pair(Vis,getVisibility(array_read(E2,X)))),
+		/*
 		pair(
 		    vheap_read(H1',L1'), 
 		    vheap_read(H2',array_read_v(E2,X)))) 
-
+		*/
+		pair(
+		    L1', 
+		    array_read_v(E2,X))) 
 
     rule    mergeArray1(
 		ClassName,
@@ -1148,10 +1152,14 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		E,H',H, 
 		Alpha,
 		pair(X,pair(getVisibility(array_read(E1,X)),Vis)),
+		/*
 		pair(
 		    vheap_read(H1',(array_read_v(E1,X))), 
 		    vheap_read(H2',L2')))
-
+		*/
+		pair(
+		    array_read_v(E1,X), 
+		    L2'))
 
     // ----- step 2: retrieve heap locs
     syntax  Pair ::= "mergeArray2" "(" 
@@ -1178,7 +1186,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
                 E,H',H,
 		Alpha,
 		Var,
-		pair(J1,J2)) =>
+		pair(L1',L2')) =>
 	    mergeArray3(
 		ClassName,
 		PossibleErr,
@@ -1189,8 +1197,9 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		E,H',H,
 		Alpha,
 		Var,
-		pair(J1, J2),
-		preimage(H1',J1) preimage(H2',J2))
+		pair(L1', L2'),
+		SetItem(L1') SetItem(L2'),
+		preimage(H1',vheap_read(H1',L1')) preimage(H2',vheap_read(H2',L2')))
 
 
     // ----- step 2: make env entry
@@ -1207,6 +1216,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	Map ","
 	Pair ","		    // the variable being merged
 	Pair ","		    // the pair of heap locations 
+	Set "," // FIXME
 	Set ")"			    // codomain
 	[function]
 
@@ -1220,9 +1230,11 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		E1,H1',H1,
                 E2,H2',H2,                
                 E,H',H,
-		(setWrap(C) |-> L1' Alpha),
+		//(setWrap(makeSet(SetItem(L1') SetItem(L2'))) |-> L3') Alpha,
+		(setWrap(D) |-> L3') Alpha,
 		pair(X,pair(Vis1,Vis2)),
-		_,
+		pair(L1',L2'),
+		D,
 		C:Set) =>
 	    mergeArray1(
 		ClassName,
@@ -1231,8 +1243,9 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		L',L,Rc,
 		E1,H1',H1,
 		E2,H2',H2,
-		E ListItem([X,combineVisibility(Vis1,Vis2),L1']),H',incRCf(H,optionLoc2Loc(vheap_read(H',L1'))), 
-		(setWrap(C) |-> L1' Alpha))
+		E ListItem([X,combineVisibility(Vis1,Vis2),L3']),H',incRCf(H,optionLoc2Loc(vheap_read(H',L1'))), 
+		//(setWrap((makeSet(SetItem(L1') SetItem(L2')))) |-> L3' Alpha))
+		(setWrap(D) |-> L3' Alpha))
 
 
     rule    mergeArray3(
@@ -1245,7 +1258,8 @@ rule	<k> runInMem(none, _) => .  ... </k>
                 E,H',H,
 		Alpha,
 		pair(X,pair(Vis1,Vis2)),
-		LocPair,
+		pair(L1',L2'),
+		D,
 		C) =>
 	    mergeArray4(
 		ClassName,
@@ -1255,14 +1269,24 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		L',L,Rc,
 		E1,H1',H1,
 		E2,H2',H2,
-		E ListItem([X,combineVisibility(Vis1,Vis2),L1']),H',H,
-		(setWrap(C) |-> L1') Alpha,
-		LocPair,
-		C SetItem(L1'),
+		E ListItem([X,combineVisibility(Vis1,Vis2),L3']),H',H,
+		(setWrap(makeSet(SetItem(L1') SetItem(L2'))) |-> L3') Alpha,
+		pair(vheap_read(H1',L1'),vheap_read(H2',L2')),
+		C SetItem(L3'),
 		unify(H',C))
-    when (notBool(setWrap(C) in keys(Alpha))) andBool (fresh(L1':Loc))  
+    when (notBool(setWrap(/*makeSet(SetItem(L1') SetItem(L2'))*/D) in keys(Alpha))) andBool (fresh(L3':Loc))  
 
 
+
+
+syntax Set ::= "makeSet" "(" Set ")" [function]
+
+
+rule makeSet(.Set) => .Set
+rule makeSet(SetItem(I) S:Set) => SetItem(I) makeSet(S) 
+	when notBool (I in S) 
+rule makeSet(SetItem(I) S:Set) => makeSet(S) 
+	when I in S
 
 
 
@@ -1503,7 +1527,8 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		H' makeH'(H',C,J),
 		H, 
 		Alpha,
-		bagUnwrap(leftElem(mergeArray(none,needErrorMerge(Vis1,Vis2),true,none,J,ZV1,H1',H1,emptyArrayZval,.Map,.Map,.List,.Map,.Map,Alpha))))
+		//bagUnwrap(leftElem(mergeArray(none,needErrorMerge(Vis1,Vis2),true,none,J,ZV1,H1',H1,emptyArrayZval,.Map,.Map,.List,.Map,.Map,Alpha))))
+		mergeArray(none,needErrorMerge(Vis1,Vis2),true,none,J,ZV1,H1',H1,emptyArrayZval,.Map,.Map,.List,.Map,.Map,Alpha))
     when isArray_zval(ZV1) 
 
 
@@ -1551,7 +1576,8 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		H' makeH'(H',C,J),
 		H, 
 		Alpha,
-		bagUnwrap(leftElem(mergeArray(none,needErrorMerge(Vis1,Vis2),true,none,J,emptyArrayZval,.Map,.Map,ZV2,H2',H2,.List,.Map,.Map,Alpha))))
+		//bagUnwrap(leftElem(mergeArray(none,needErrorMerge(Vis1,Vis2),true,none,J,emptyArrayZval,.Map,.Map,ZV2,H2',H2,.List,.Map,.Map,Alpha))))
+		mergeArray(none,needErrorMerge(Vis1,Vis2),true,none,J,emptyArrayZval,.Map,.Map,ZV2,H2',H2,.List,.Map,.Map,Alpha))
     when isArray_zval(ZV2)
 
     // variable in both branches - array 
@@ -1581,7 +1607,8 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		H' makeH'(H',C,J),
 		H, 
 		Alpha,
-		bagUnwrap(leftElem(mergeArray(none,needErrorMerge(Vis1,Vis2),false,none,J,ZV1,H1',H1,ZV2,H2',H2,.List,.Map,.Map,Alpha))))
+		//bagUnwrap(leftElem(mergeArray(none,needErrorMerge(Vis1,Vis2),false,none,J,ZV1,H1',H1,ZV2,H2',H2,.List,.Map,.Map,Alpha))))
+		mergeArray(none,needErrorMerge(Vis1,Vis2),false,none,J,ZV1,H1',H1,ZV2,H2',H2,.List,.Map,.Map,Alpha))
     when isArray_zval(ZV1) andBool isArray_zval(ZV2)
 
 
@@ -1619,7 +1646,8 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		H' makeH'(H',C,J),
 		H, 
 		Alpha,
-		bagUnwrap(leftElem(mergeArray(Cl,needErrorMerge(Vis1,Vis2),true,none,J,ZV1,H1',H1,emptyArrayZval,.Map,.Map,.List,.Map,.Map,Alpha))))
+		//bagUnwrap(leftElem(mergeArray(Cl,needErrorMerge(Vis1,Vis2),true,none,J,ZV1,H1',H1,emptyArrayZval,.Map,.Map,.List,.Map,.Map,Alpha))))
+		mergeArray(Cl,needErrorMerge(Vis1,Vis2),true,none,J,ZV1,H1',H1,emptyArrayZval,.Map,.Map,.List,.Map,.Map,Alpha))
 
 
 
@@ -1651,7 +1679,8 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		H' makeH'(H',C,J),
 		H, 
 		Alpha,
-		bagUnwrap(leftElem(mergeArray(Cl,needErrorMerge(Vis1,Vis2),true,none,J,emptyArrayZval,.Map,.Map,ZV2,H2',H2,.List,.Map,.Map,Alpha))))
+		//bagUnwrap(leftElem(mergeArray(Cl,needErrorMerge(Vis1,Vis2),true,none,J,emptyArrayZval,.Map,.Map,ZV2,H2',H2,.List,.Map,.Map,Alpha))))
+		mergeArray(Cl,needErrorMerge(Vis1,Vis2),true,none,J,emptyArrayZval,.Map,.Map,ZV2,H2',H2,.List,.Map,.Map,Alpha))
 
 
 
@@ -1684,7 +1713,8 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		H' makeH'(H',C,J),
 		H, 
 		Alpha,
-		bagUnwrap(leftElem(mergeArray(Cl,needErrorMerge(Vis1,Vis2),false,none,J,ZV1,H1',H1,ZV2,H2',H2,.List,.Map,.Map,Alpha))))
+		//bagUnwrap(leftElem(mergeArray(Cl,needErrorMerge(Vis1,Vis2),false,none,J,ZV1,H1',H1,ZV2,H2',H2,.List,.Map,.Map,Alpha))))
+		mergeArray(Cl,needErrorMerge(Vis1,Vis2),false,none,J,ZV1,H1',H1,ZV2,H2',H2,.List,.Map,.Map,Alpha))
 
 
 
@@ -1719,7 +1749,8 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	List "," Map "," Map "," 
 	List "," Map "," Map ","
 	Map ","
-	Bag ")"
+	//Bag ")"
+	Pair ")"
 	[function]
     
     rule    mergeArray5(
@@ -1731,7 +1762,10 @@ rule	<k> runInMem(none, _) => .  ... </k>
                 E2,H2',H2,                
                 E,H',H,
 		Alpha,
-		<heap> H3 </heap> <thematrix> H3' </thematrix>) =>
+		//<heap> H3 </heap> <thematrix> H3' </thematrix>) =>
+		pair(
+			bagWrap(<heap> H3 </heap> <thematrix> H3' </thematrix>),
+			mapWrap(Alpha1))) =>
 	    mergeArray1(
 		ClassName,
 		PossibleErr,
@@ -1740,7 +1774,8 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		E1,H1',H1,
 		E2,H2',H2,
 		E, (H' H3'), (H <- H3),  
-		Alpha)
+		//Alpha)
+		Alpha1) // FIXME FIXME FIXME
 
 
 
