@@ -92,21 +92,6 @@ rule <k> Abexp1(V:KResult) => some(M) ... </k>
 rule <k> Abexp1(V:KResult) => none	... </k>
 	when unsatisfiable(V) andBool (notBool(valid(V)))
     [transition]
-	
-	
-syntax K ::= "AbexpConf" "(" K "," BoxedConfig ")"
-syntax K ::= "AbexpConf1" "(" K ")" [strict]
-
-rule AbexpConf(K,C) => AbexpConf1(runInConf(C,K))
-
-rule <k> AbexpConf1(V:KResult) => getCurrentConfig ... </k>
-	when valid(V) orBool (notBool(unsatisfiable(V)))
-    [transition]
-	
-rule <k> AbexpConf1(V:KResult) => none	... </k>
-	when unsatisfiable(V) andBool (notBool(valid(V)))
-    [transition]
-
 
 
 
