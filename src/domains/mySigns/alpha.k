@@ -39,6 +39,24 @@ module ALPHA
     	rule    alpha(true) => ABoolTrue
     	rule    alpha(false) => ABoolFalse
 
+	// abstraction of reference counters
+	syntax K ::= "alphaRC" "(" K ")" [function]
+	
+	rule	alphaRC(N:Int) => 
+			#if (N ==Int 0) #then
+				ARC0
+			#else
+				#if (N ==Int 1) #then
+					ARC1
+				#else
+					#if (N ==Int 2) #then
+						ARC2
+					#else
+						ARC>2
+					#fi
+				#fi
+			#fi
+
 
 	// is_gamma_singleton
 	// returns TRUE if |gamma(arg)| = 1, or FALSE otherwise

@@ -19,10 +19,21 @@ module LATTICE
  
     syntax  AString ::= "AStringTop" | String | "AStringBot"
 
+    // backward compatibility
+    //syntax  ARefCount ::= Int
+
+    syntax  ARefCount ::= "ARC0" | "ARC1" | "ARC2" | "ARC>2"
+
+
+
 /*@ \subsection{Lattice ordering} */
 
 // NOTE: theoretically, this should be defined for everything. 
 //       In practice, I only need it for Keys (int and string)
+
+
+
+
 
 syntax 	Bool ::= K "<Lattice" K		[function]
 
@@ -93,6 +104,9 @@ syntax 	Bool ::= AString ">Lattice" AString [function]
 
 
 /*@ \subsection{Lattice Operations} */
+
+syntax  ARefCount ::= "lub_ARefCount" "(" ARefCount "," ARefCount ")" [function]
+// TODO
 
 // LUB
    

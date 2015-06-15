@@ -829,10 +829,10 @@ rule	<k> runInMem(none, _) => .  ... </k>
 
 
     // update zval ref counter
-    syntax Zval ::= "setZvalRC" "(" Zval "," Int ")" [function]
+    syntax Zval ::= "setZvalRC" "(" Zval "," ARefCount ")" [function]
     rule setZvalRC(zval(V,T,R',I),R) => zval(V,T,R,I)
 
-    syntax Int ::= "getRC" "(" Zval ")" [function]
+    syntax ARefCount ::= "getRC" "(" Zval ")" [function]
     rule getRC(zval(_,_,RC,_)) => RC
 
 
@@ -860,10 +860,10 @@ rule	<k> runInMem(none, _) => .  ... </k>
     //     (i) making mergeZval init the RC with 1
     //    (ii) avoid the increment in the rule below 
 
-    rule    makeH1(H,J,ZV) => (J |-> setZvalRC(ZV,1 +Int getRC(ZV))) H 
+    rule    makeH1(H,J,ZV) => (J |-> setZvalRC(ZV,alphaRC(1) +ARefCount getRC(ZV))) H 
 	when notBool(J in keys(H))
 
-    rule makeH1((J |-> ZV') H,J,ZV) => (J |-> setZvalRC(ZV,1 +Int getRC(ZV'))) H 
+    rule makeH1((J |-> ZV') H,J,ZV) => (J |-> setZvalRC(ZV,alphaRC(1) +ARefCount getRC(ZV'))) H 
 
 
 
@@ -892,7 +892,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
 
     // increment reference counter
     syntax Map ::= "incRCf" "(" Map "," Loc ")" [function]
-    rule incRCf(L |-> zval(V,T,R,I) H,L) => (L |-> zval(V,T,R +Int 1,I)) H 
+    rule incRCf(L |-> zval(V,T,R,I) H,L) => (L |-> zval(V,T,R +ARefCount alphaRC(1),I)) H 
 
 
 
@@ -990,7 +990,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
                 zval(Array(_,E1),_,Rc1,_),H1',H1,
                 zval(Array(_,E2),_,Rc2,_),H2',H2,                
                 E,H',H,Alpha) => 
-		mergeArray1(ClassName,PossibleErr,NullMerge,L',L,1,E1,H1',H1,E2,H2',H2,E,H',H,Alpha)
+		mergeArray1(ClassName,PossibleErr,NullMerge,L',L,alphaRC(1),E1,H1',H1,E2,H2',H2,E,H',H,Alpha)
  
 
     // ----- step 1: choose variable to merge. Identify locs in the heap.
@@ -999,7 +999,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	OptionId  "," 
 	Bool ","
 	Bool ","
-	OptionLoc "," Loc "," Int "," 
+	OptionLoc "," Loc "," ARefCount "," 
 	List "," Map "," Map "," 
 	List "," Map "," Map "," 
 	List "," Map "," Map ","
@@ -1011,8 +1011,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		pair(
 		    bagWrap(
 			<heap> 
-				(L |-> zval(Array(head(E),E),array,Rc,
-				#if (Rc >Int 1) #then true #else false #fi)) H 
+				(L |-> zval(Array(head(E),E),array,Rc,false)) H 
 			</heap>
 			<thematrix> H' </thematrix>),
 		    mapWrap(Alpha))
@@ -1023,10 +1022,9 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		    bagWrap(
 			<heap>
 				// TODO: fix refcounters!  
-				(L  |-> zval(OID(L1',ClassName,1),object,1,true))
+				(L  |-> zval(OID(L1',ClassName,1),object,alphaRC(1),true))
 
-				(L1 |-> zval(Array(head(E),E),array,Rc,
-				#if (Rc >Int 1) #then true #else false #fi)) H 
+				(L1 |-> zval(Array(head(E),E),array,Rc,false)) H 
 			</heap>
 			<thematrix> (L1' |-> L1) H' </thematrix>),
 		    mapWrap(Alpha))
@@ -1037,8 +1035,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		pair(
 		    bagWrap(
 			<heap> 
-				(L |-> zval(Array(head(E),E),array,Rc,
-				#if (Rc >Int 1) #then true #else false #fi)) H 
+				(L |-> zval(Array(head(E),E),array,Rc,false)) H 
 			</heap>
 			<thematrix> (L' |-> L) H' </thematrix>),
 		    mapWrap(Alpha))
@@ -1049,10 +1046,9 @@ rule	<k> runInMem(none, _) => .  ... </k>
 		    bagWrap(
 			<heap>
 				// TODO: fix refcounters!  
-				(L  |-> zval(OID(L1',ClassName,1),object,1,true))
+				(L  |-> zval(OID(L1',ClassName,1),object,alphaRC(1),true))
 	 
-				(L1 |-> zval(Array(head(E),E),array,Rc,
-				#if (Rc >Int 1) #then true #else false #fi)) H 
+				(L1 |-> zval(Array(head(E),E),array,Rc,false)) H 
 			</heap>
 			<thematrix> (L1' |-> L1) (L' |-> L) H' </thematrix>),
 		    mapWrap(Alpha))
@@ -1166,7 +1162,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	OptionId  ","
 	Bool ","
 	Bool ","
-	OptionLoc "," Loc "," Int ","
+	OptionLoc "," Loc "," ARefCount ","
 	List "," Map "," Map "," 
 	List "," Map "," Map "," 
 	List "," Map "," Map ","
@@ -1209,7 +1205,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	OptionId  ","
 	Bool ","
 	Bool ","
-	OptionLoc "," Loc "," Int ","
+	OptionLoc "," Loc "," ARefCount ","
 	List "," Map "," Map "," 
 	List "," Map "," Map "," 
 	List "," Map "," Map ","
@@ -1303,7 +1299,7 @@ rule makeSet(SetItem(I) S:Set) => makeSet(S)
 	Bool ","			// need merge with ERROR?
 	Bool ","
 	Pair ","
-	OptionLoc "," Loc "," Int ","
+	OptionLoc "," Loc "," ARefCount ","
 	List "," Map "," Map "," 
 	List "," Map "," Map "," 
 	List "," Map "," Map ","
@@ -1744,7 +1740,7 @@ rule makeSet(SetItem(I) S:Set) => makeSet(S)
 	OptionId  ","
 	Bool ","
 	Bool ","
-	OptionLoc "," Loc "," Int ","
+	OptionLoc "," Loc "," ARefCount ","
 	List "," Map "," Map "," 
 	List "," Map "," Map "," 
 	List "," Map "," Map ","
@@ -1792,13 +1788,13 @@ rule makeSet(SetItem(I) S:Set) => makeSet(S)
                        
     // notice that only zvals containing scalars arrive here...
 
-    // TODO: should NOT update refcount
+    // FIXME: refcount
     syntax  Zval ::= "mergeZval" "(" Zval "," Zval ")" [function]
     rule    mergeZval(zval(V,T,R,I),zval(V',T',R',I')) => 
 	    zval(
 	        lub(V,V'),
 	        lub_type(T,T'),
-	        0, // TODO: can remove max(R,R'), if not used
+	        alphaRC(0),
 	        I orBool I')  
 
 
