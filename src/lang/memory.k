@@ -98,6 +98,7 @@ syntax OptionString ::= String | None
 syntax OptionArrayItem ::= ArrayItem | None
 syntax OptionArrayCrntElem ::= ArrayCrntElem | None
 syntax OptionArrayItemVisibility ::= ArrayItemVisibility | None
+syntax OptionARefCount ::= ARefCount | None
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Lub} */

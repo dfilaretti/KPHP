@@ -1,20 +1,58 @@
 <?php
 
-$a1 = array ("foo" => 1 ,"bar" => 2); $a2 = array ("foo" => 3 ,"bar" => 4);
-$ref = &$a1; // aliasing on $a1
-foreach ($a1 as $v){ echo "$v,"; if ($v === $a["foo"]) $a1=$a2; };
+
+$x = array("foo" => 1);
+$y =& $x;
+$z =& $y;
+
+
+unset($y);
+
 
 /*
-$x = array("foo" => 1, "bar" => 2);
-$z =& $x["foo"];
-$q =& $z;
+class A{
+	public $foo = 1;
+}
 
-unset($q);
-unset($q);
-unset($q);
-unset($q);
+$o = new A;
 
 
-$y = $x;
+if (2 == 2) {
+	$x =& $o;
+	//$o -> foo = -1;
+}
+else {
+	$x =& $o;
+	//$o -> bar = 0;
+}
 */
+
+/*
+
+if (2 == 2) {
+	$x -> foo = 1;
+	//$y =& $x;
+}
+else {
+	$x -> foo = 2;
+	//$y =& $x;
+}
+
+*/
+
+
+/*
+$y = 1;
+
+if (2 == 2) {
+	$x =& $y;	
+}
+else {
+	$x =& $y;
+	$z =& $x;
+}
+*/
+
+
+
 ?>

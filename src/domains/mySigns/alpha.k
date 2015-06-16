@@ -79,8 +79,11 @@ module ALPHA
 	rule	isGammaSingleton(B:ABool) => true
 		when B =/=K ABoolTop
 	
-
-
+	// reference counters
+	rule 	isGammaSingleton(ARC0)  => true
+	rule 	isGammaSingleton(ARC1)  => true
+	rule 	isGammaSingleton(ARC2)  => true
+	rule 	isGammaSingleton(ARC>2) => false
 
 
 
