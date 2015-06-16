@@ -4,10 +4,12 @@
 $x = array("foo" => 1);
 $y =& $x;
 $z =& $y;
-
+$p =& $z;
 
 unset($y);
-
+unset($z);
+unset($p);
+unset($x);
 
 /*
 class A{

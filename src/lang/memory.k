@@ -403,32 +403,6 @@ rule [inc-refCount-3]:
 	when (alphaRC(1) <ARefCount Refs)
 	[internal, mem]
 
-/* TODO: remove when done with new ones
-rule [inc-refCount-1]:
-	<k> incRefCount(L':Loc) => zvalWrite(L', @RefCount, Refs +Int 1) ... </k>
-	<thematrix> ... L' |-> L ... </thematrix> 
-	<heap> ... L |-> zval(_,_,Refs:Int,false) ... </heap>
-	<trace> Trace:List => Trace ListItem("inc-refCount-1") </trace>
-	when (Refs ==Int 0)
-	[internal, mem]
-
-rule [inc-refCount-2]:
-	<k> incRefCount(L':Loc) => zvalWrite(L', @RefCount, Refs +Int 1) ... </k>
-	<thematrix> ... L' |-> L ... </thematrix> 	
-	<heap> ... L |-> zval(_,_,Refs:Int,false => true) ... </heap>
-	<trace> Trace:List => Trace ListItem("inc-refCount-2") </trace>
-	when (Refs ==Int 1)
-	[internal, mem]		
-		
-rule [inc-refCount-3]:
-	<k> incRefCount(L':Loc) => zvalWrite(L', @RefCount, Refs +Int 1) ... </k>
-	<thematrix> ... L' |-> L ... </thematrix> 	
-	<heap> ... L |-> zval(_,_,Refs:Int,true) ... </heap>
-	<trace> Trace:List => Trace ListItem("inc-refCount-3") </trace>
-	when (Refs >Int 1)
-	[internal, mem]
-*/
-
 syntax K ::= "decRefCount" "(" Loc ")"            
 
 

@@ -2,6 +2,19 @@ require "lattice.k"
 module FORWARD-OPS
 	imports LATTICE
 
+
+//@ \section{Reference counter operations}
+
+syntax  ARefCount ::= ARefCount "+ARefCount" ARefCount [function]
+rule    R1 +ARefCount R2 => R1 +Int R2 
+
+syntax  ARefCount ::= ARefCount "-ARefCount" ARefCount [function]
+rule    R1 -ARefCount R2 => R1 -Int R2 
+
+syntax  Bool ::= ARefCount "<ARefCount" ARefCount [function]
+rule    R1 <ARefCount R2 => R1 <Int R2 
+
+
 //@ \section{Arithmetic operations}
 
 	// Plus
