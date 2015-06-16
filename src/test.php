@@ -4,11 +4,11 @@
 $x = array("foo" => 1);
 $y =& $x;
 $z =& $y;
-$p =& $z;
+//$p =& $z;
 
 unset($y);
-unset($z);
-unset($p);
+//unset($z);
+//unset($p);
 unset($x);
 
 /*

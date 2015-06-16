@@ -405,7 +405,7 @@ rule [inc-refCount-3]:
 
 syntax K ::= "decRefCount" "(" Loc ")"            
 
-
+/* TODO: remove! Factorised into the following two
 rule [dec-refCount-1]:
 	<k> decRefCount(L':Loc) => 
 		zvalWrite(L',@RefCount,Refs -ARefCount alphaRC(1)) 
@@ -427,6 +427,20 @@ rule [dec-refCount-2]:
 	<trace> Trace:List => Trace ListItem("dec-refCount-2") </trace>
 	when (Refs ==K alphaRC(2))
 	[internal, mem]
+*/
+
+rule [dec-refCount-1]:
+	<k> decRefCount(L':Loc) => 
+		zvalWrite(L',@RefCount,Refs -ARefCount alphaRC(1)) ~>
+		makeIsRef(L') 
+	... 
+	</k>
+	<thematrix> ... L' |-> L ... </thematrix> 	
+	<heap> ... L |-> zval(_,_,Refs:ARefCount,_) ... </heap>
+	<trace> Trace:List => Trace ListItem("dec-refCount-1") </trace>
+	when (alphaRC(1) <ARefCount Refs)
+	[internal, mem]
+
 			
 rule [dec-refCount-3]:
 	<k> decRefCount(L':Loc) => 
@@ -438,6 +452,20 @@ rule [dec-refCount-3]:
 	when (Refs ==K alphaRC(1)) orBool (Refs ==K alphaRC(0) )
 	[internal, mem]
 
+syntax K ::= "makeIsRef" "(" Loc ")"
+
+rule[makeIsRef]: 
+	<k> makeIsRef(L') => . ... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 
+	<heap> 
+		... 
+		L |-> zval(
+			_,
+			_,
+			RC,
+			(_ => #if (RC <ARefCount alphaRC(2)) #then false #else true #fi)) 
+	... 
+	</heap> 
 
 
 /* TODO: remove when new rules are ok	
