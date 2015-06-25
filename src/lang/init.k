@@ -307,10 +307,10 @@ rule [init-scopes]:
 
 rule [init-superglobals]:    
 	<k> initSuperGlobals => 
-			'Expr('Assign(ref(Lsg, "_GET"),, 'Array('ListWrap(.KList)))) ~>
-			'Expr('Assign(ref(Lsg, "_COOKIE"),, 'Array('ListWrap(.KList)))) ~>
-			'Expr('Assign(ref(Lsg, "_POST"),, 'Array('ListWrap(.KList)))) ~>
-			'Expr('ReferenceAssign(ref(Lsg, "GLOBALS"),, Lg))
+			'Expr('Assign(ref(Lsg, alpha("_GET")),, 'Array('ListWrap(.KList)))) ~>
+			'Expr('Assign(ref(Lsg, alpha("_COOKIE")),, 'Array('ListWrap(.KList)))) ~>
+			'Expr('Assign(ref(Lsg, alpha("_POST")),, 'Array('ListWrap(.KList)))) ~>
+			'Expr('ReferenceAssign(ref(Lsg, alpha("GLOBALS")),, Lg))
 	... </k>    
 	<superGlobalScope> Lsg:Loc </superGlobalScope>
 	<globalScope> Lg:Loc  </globalScope>

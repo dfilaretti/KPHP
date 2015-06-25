@@ -24,7 +24,10 @@ syntax LanguageValue ::= PlainLanguageValue | LiteralValue
 syntax PlainLanguageValue ::= ScalarValue 
 			    | CompoundValue 
 			    | SpecialValue
-			    | "Top" | "Bot"
+			    | Top | Bot
+
+syntax Top::= "Top"
+syntax Bot ::= "Bot"
 
 syntax ScalarValue ::= AInt | AFloat | ABool | AString     
 syntax CompoundValue ::= Object | Array
@@ -102,12 +105,12 @@ syntax OptionArrayItemVisibility ::= ArrayItemVisibility | None
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Lub} */
 
-syntax PlainLanguageValue ::= "lub" "(" PlainLanguageValue "," PlainLanguageValue ")" [function]
+syntax PlainLanguageValue ::= "lub" "(" K "," K ")" [strict]
 
-rule lub(V1:AInt,V2:AInt) => lub_AInt(V1,V2)
+//rule lub(V1:AInt,V2:AInt) => lub_AInt(V1,V2)
 //rule lub(V1:AFloat,V2:AFloat) => lub_AFloat(V1,V2) TODO
 //rule lub(V1:ABool,V2:ABool) => lub_ABool(V1,V2) TODO
-rule lub(V1:AString,V2:AString) => lub_AString(V1,V2)
+//rule lub(V1:AString,V2:AString) => lub_AString(V1,V2)
 
 rule lub(Top,_) => Top
 rule lub(_,Top) => Top
@@ -117,10 +120,11 @@ rule lub(X,Bot) => X
 
 // NOTE: doesn't wotk for booleans! 
  
+ /*
 rule lub(V1,V2) => Top
 	when (V1 =/=K Bot andBool V2 =/=K Bot) andBool
 		(getKLabel(V1) =/=KLabel getKLabel(V2))
-
+*/
 
 
 

@@ -1,52 +1,164 @@
 module LATTICE
        
-       syntax AString ::= "AStringTop" | String
+	   syntax ErrFlag ::= "MayBeNull" | "VisibilityErr" | "ImplicitTypeConversion"
+	   
+	   syntax ErrFlags ::= ErrListItem(ErrFlag) [function, hook(List:ListItem)] 
+	   syntax ErrFlags ::= ErrFlags "/" ErrFlags [left, function, hook(List:__), klabel('_List_)]
+	   syntax ErrFlags ::= ".ErrFlags" [function, hook(List:.List)]
+	   
+       syntax AStringValue ::= "AStringTop" | String
        
-       syntax AInt ::= "AInt"
-
-       syntax ABool ::= "ABool"
-
-       syntax AFloat ::= "AFloat"
+	   syntax AString ::= "(" AStringValue "," ErrFlags ")"
 	   
-	   syntax ANum ::= "ANum" | AFloat | AInt
-
-       syntax  AInt ::= "lub_AInt" "(" AInt "," AInt ")" [function]
-       
-       rule lub_AInt(AInt, AInt) => AInt
-
-       syntax  AFloat ::= "lub_AFloat" "(" AFloat "," AFloat ")" [function]
-
-       rule lub_AFloat (AFloat, AFloat) => AFloat
-
-       syntax  ABool ::= "lub_ABool" "(" ABool "," ABool ")" [function]
-
-       rule lub_ABool(ABool, ABool)=>ABool
-
-       syntax  AString ::= "lub_AString" "(" AString "," AString ")" [function]
+       syntax AIntValue ::= "AInt" 
 	   
-	   rule lub_AString(S1:String, S2:String)=>AStringTop
+	   syntax AInt ::= "(" AIntValue "," ErrFlags ")"
+	
+       syntax ABoolValue ::= "ABool" 
 
-       rule lub_AString(AStringTop, X)=>AStringTop
+	   syntax ABool ::= "(" ABoolValue "," ErrFlags ")"	   
+	   
+       syntax AFloatValue ::= "AFloat"
+	   
+	   syntax AFloat ::= "(" AFloatValue "," ErrFlags ")"
+	   
+	   syntax ANumValue ::= AFloatValue | AIntValue | "ANum"
+	   
+	   syntax ANum ::= AInt| AFloat| "(" "ANum" "," ErrFlags ")"
+	   
+	   syntax Value ::= ANumValue | AStringValue | ABoolValue | Null
+	
+	   syntax Value ::= "getValue" "(" DomainValue ")" [function]
+	   
+	   syntax DomainValue ::= ANum | AString | ABool | Null
+	   
+	   syntax VEPair ::= "VE" "(" Value "," ErrFlags ")"
+	   
+	   syntax VEPair ::= "lub_Domain" "(" DomainValue "," DomainValue ")" [function]
+	   
+	   syntax PlainLanguageValue ::= "specify" "(" VEPair ")" [strict]
 
-       rule lub_AString(X, AStringTop)=>AStringTop
+	   syntax AInt ::= "specify_AInt" "(" VEPair ")" [strict]
 	   
-	   syntax ANum ::= "lub_ANum" "(" ANum "," ANum ")" [function]
+	   syntax AFloat ::= "specify_AFloat" "(" VEPair ")" [strict]
+	   
+	   syntax AString ::= "specify_AString" "(" VEPair ")" [strict]
+	   
+	   syntax ABool ::= "specify_ABool" "(" VEPair ")" [strict]
+	  
+	   syntax VEPair ::= "generalize" "(" DomainValue ")"
+	   
+	   rule generalize( (V,E):AInt) => VE(V,E)
+	   rule generalize( (V,E):AFloat) => VE(V,E)
+	   rule generalize( (V,E):AString) => VE(V,E)
+	   rule generalize( (V,E):ABool) => VE(V,E)
+	  
+	  
+	   rule specify(VE(V:AIntValue, E)) => specify_AInt(VE(V,E))	
+	   rule specify(VE(V:AFloatValue, E)) => specify_AFloat(VE(V,E))
+	   rule specify(VE(V:AStringValue, E)) => specify_AString(VE(V,E))
+	   rule specify(VE(V:ABoolValue, E)) => specify_ABool(VE(V,E))
+	   rule specify(VE(NULL, _) ) => NULL
+	  
+	   rule specify_AInt ( VE(I:AIntValue, E) ) => (I,E)
+	   rule specify_AFloat ( VE(F:AFloatValue, E) ) => (F,E)
+	   rule specify_AString ( VE(S:AStringValue, E) ) => (S,E)
+	   rule specify_ABool ( VE(B:ABoolValue, E) ) => (B,E)
+	  
+	  
+	   rule getValue( (V:AIntValue, E:ErrFlags) ) => V
+	   rule getValue( (V:AFloatValue, E:ErrFlags) ) => V
+	   rule getValue( (V:AStringValue, E:ErrFlags) ) => V
+	   rule getValue( (V:ABoolValue, E:ErrFlags) ) => V
+	   
+	   
+	   rule lub(V1:DomainValue, V2:DomainValue) => specify(lub_Domain(V1, V2))
+	   
+	   syntax ErrFlags ::= "getErrFlags" "(" K ")" [function]
+	   
+	   rule getErrFlags ( (V:AIntValue, E:ErrFlags) ) => E
+	   rule getErrFlags ( (V:AFloatValue, E:ErrFlags) ) => E
+	   rule getErrFlags ( (V:AStringValue, E:ErrFlags) ) => E
+	   rule getErrFlags ( (V:ABoolValue, E:ErrFlags) ) => E
+	   rule getErrFlags( NULL ) => .ErrFlags
+	   
+	   rule lub_Domain(D1,D2) =>  VE ( lub_Value(getValue(D1), getValue(D2)), mergeList(getErrFlags(D1), getErrFlags(D2)) )
+	   when D1 =/=K NULL andBool D2 =/=K NULL
+	   
+	   rule lub_Domain( D1, NULL) => VE (getValue(D1), mergeList (ErrListItem(MayBeNull), getErrFlags(D1)))
+	   when D1 =/=K NULL
+	   
+	   rule lub_Domain(NULL, NULL) => VE(NULL, .ErrFlags)
+	   
+	   rule lub_Domain( NULL, D1) => VE(getValue(D1), mergeList (ErrListItem(MayBeNull), getErrFlags(D1)))
+	   
+       syntax Value ::= "lub_Value" "(" Value "," Value ")" [function]
+       rule lub_Value(ABool, ABool)=>ABool	   
+	   rule lub_Value(S1:String, S2:String)=>AStringTop
+	   when S1 =/=String S2
+	   
+	   rule lub_Value(S1:String, S2:String)=>S1
+	   when S1 ==String S2
 
-	   rule lub_ANum(ANum, N:ANum)=>ANum
-	   
-	   rule lub_ANum(N:ANum, ANum)=>ANum
-	   
-	   rule lub_ANum(AInt, AFloat)=>ANum
-	   
-	   rule lub_ANum(AFloat, AInt)=> ANum
-	   
-	   rule lub_ANum(AInt, AInt) => AInt
+       rule lub_Value(AStringTop, X)=>AStringTop
 
-	   rule lub_ANum(AFloat, AFloat) => AFloat
+       rule lub_Value(X, AStringTop)=>AStringTop
+
+	   rule lub_Value("ANum", N:ANumValue)=>ANum
+	   
+	   rule lub_Value(N:ANumValue, "ANum")=>ANum
+	   
+	   rule lub_Value(AIntValue, AFloatValue)=>ANum
+	   
+	   rule lub_Value(AFloatValue, AIntValue)=> ANum
+	   
+	   rule lub_Value(AIntValue, AIntValue) => AInt
+
+	   rule lub_Value(AFloatValue, AFloatValue) => AFloat
+	   
+	   rule lub_Value(Bot, V) => V
+	   
+	   rule lub_Value(V, Bot) => V
+	   
+	   syntax Value ::= "valueOfErr"  "(" ErrFlag ")" [function]
+	   
+	   rule valueOfErr( MayBeNull) => NULL
+	   
+	   rule valueOfErr( VisibilityErr) => Bot
+	   
+	   rule valueOfErr( ImplicitTypeConversion) => Bot
+
+	   syntax Value ::= "valueOfErrs" "(" ErrFlags ")" [function]
+	   
+	   rule valueOfErrs(.ErrFlags) => Bot
+	  
+	   rule valueOfErrs(ErrListItem(E) / L) => lub_Value(valueOfErr(E), valueOfErrs(L))
 	   
 	   
+	   syntax Bool ::= "keepErrFlag" "(" ErrFlag ")" [predicate] 		//true if valueOfErr = Bot ?
+	   
+	   rule keepErrFlag(MayBeNull) => false
+	   
+	   rule keepErrFlag(VisibilityErr) => true
+	   
+	   rule keepErrFlag(ImplicitTypeConversion) => true
+	   
+	   syntax ErrFlags ::= "FilterErrFlags" "(" ErrFlags ")" [function]
+	   
+	   rule FilterErrFlags(.ErrFlags) => .ErrFlags
+	   
+	   rule FilterErrFlags(ErrListItem(E) / L) => FilterErrFlags(L)
+	   when notBool(keepErrFlag(E))
+	   
+	   rule FilterErrFlags(ErrListItem(E) / L) => ErrListItem(E) / FilterErrFlags(L)
+	   when keepErrFlag(E)
 	   
 	   syntax 	Bool ::= K "<Lattice" K		[function]
+	   
+	   
+	   rule D1:DomainValue <Lattice D2:DomainValue => generalize(D1) <Lattice generalize(D2)
+	   
+	   rule VE(V1, E1:ErrFlags) <Lattice VE(V2, E2:ErrFlags) => (V1 <Lattice V2) andBool (E1 incList E2) 
 	   
 	   rule Top <Lattice X:K => false
 	   rule X:K <Lattice Bot => false
@@ -77,12 +189,36 @@ module LATTICE
 	   syntax  Bool ::= "valid" "(" ABool ")"	                [predicate]
 	   syntax  Bool ::= "unsatisfiable" "(" ABool ")"    		[predicate]
 	   
-	   rule valid(ABool) => false
-	   rule unsatisfiable(ABool) => false
+	   rule valid(_) => false
+	   rule unsatisfiable(_) => false
+	   
+	   //list manipulation //TODO move
+	   
+	   syntax Bool ::= ErrFlag "inList" ErrFlags   [function]
+	   rule K1:ErrFlag inList ErrListItem(K2:ErrFlag) / L2:ErrFlags => K1 ==K K2 orBool  K1 inList L2
+	   
+	   rule _ inList .ErrFlags => false
 	   
 	   
+	   syntax ErrFlags ::= "mergeList" "(" ErrFlags "," ErrFlags ")" [function]
 	   
+	   rule mergeList(.ErrFlags, L) => L
 	   
+	   rule mergeList(ErrListItem(E1) / L1:ErrFlags, L2:ErrFlags) => mergeList(L1, L2)
+	   when E1 inList L2
+	   
+	   rule mergeList (ErrListItem(E1) / L1:ErrFlags, L2:ErrFlags) => mergeList(L1, ErrListItem(E1) / L2)
+	   when notBool(E1 inList L2)
+	   
+	   syntax Bool ::= ErrFlags "incList" ErrFlags [function]
+	   
+	   rule .ErrFlags incList _ => true
+	   
+	   rule ErrListItem(E1:ErrFlag) / L1:ErrFlags incList L2:ErrFlags => false
+	   when notBool(E1 inList L2)
+	   
+	   rule ErrListItem(E1:ErrFlag) / L1:ErrFlags incList L2:ErrFlags => L1 incList L2
+	   when E1 inList L2
 	   
 
 endmodule

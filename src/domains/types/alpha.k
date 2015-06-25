@@ -5,13 +5,13 @@ module ALPHA
 
 	syntax K ::= "alpha" "(" K ")" [function]
 
-	rule alpha(N:Int) => AInt [structural]
+	rule alpha(N:Int) => ("AInt", .ErrFlags) [structural]
 
-	rule alpha(F:Float) => AFloat [structural]	
+	rule alpha(F:Float) => ("AFloat", .ErrFlags) [structural]	
 
-	rule alpha(B:Bool) => ABool	 [structural]
+	rule alpha(B:Bool) => ("ABool", .ErrFlags)	 [structural]
 
-	rule alpha(S:String) => S [structural]
+	rule alpha(S:String) => (S, .ErrFlags) [structural]
 
 	rule alpha(NULL) => NULL [structural]
 	
@@ -19,17 +19,16 @@ syntax Bool ::= "isGammaSingleton" "(" K ")" [function]
 
 rule isGammaSingleton(NULL) => true
 
-rule isGammaSingleton(AInt) => false
+rule isGammaSingleton(N:ANum)=> false
 
-rule isGammaSingleton(AFloat) => false
+rule isGammaSingleton(B:ABool) => false
 
-rule isGammaSingleton(ANum)=> false
+rule isGammaSingleton( (S:String, .ErrFlags) ) => true
 
-rule isGammaSingleton(ABool) => false
+rule isGammaSingleton ( (AStringTop, _) ) => false
 
-rule isGammaSingleton(S:String) => true
-
-rule isGammaSingleton(AStringTop) => false
+rule isGammaSingleton( (S:String, E) ) => false
+when E =/=K .ErrFlags
 
 rule isGammaSingleton(Top) => false
 

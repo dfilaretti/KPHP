@@ -594,6 +594,7 @@ rule [dump-content-1]:
 	[internal]
 
 /* var_dumps protected object property */
+/*
 rule [dump-content-2]:   
 	 <k> dump_content(ListItem([K:String,protected,L:Loc]) Elems:List) =>
                 var_dump_indent(Depth) ~>
@@ -608,8 +609,9 @@ rule [dump-content-2]:
 	<varDumpLevel> Depth:Int </varDumpLevel>
 	<trace> Trace:List => Trace ListItem("dump-content-2") </trace>
 	[internal]	
-
+*/
 /* var_dumps private object property */
+/*
 rule [dump-content-3]:   
 	 <k> dump_content(ListItem([K:String,private(ClassName:Id),L:Loc]) Elems:List) =>
                 var_dump_indent(Depth) ~>
@@ -626,7 +628,7 @@ rule [dump-content-3]:
 	<varDumpLevel> Depth:Int </varDumpLevel>
 	<trace> Trace:List => Trace ListItem("dump-content-3") </trace>
 		[internal]
-
+*/
 rule [dump-content-nil]: 	
 	<k> dump_content(.List) => indentDec ~> print("}\n") ... </k>
 	<trace> Trace:List => Trace ListItem("dump-content-nil") </trace>
@@ -790,6 +792,7 @@ rule [printr-content-1]:
 	[internal]
 
 /* var_dumps protected object property */
+/*
 rule [printr-content-2]:        
 	<k> print_r_content(ListItem([K:String,protected,L:Loc]) Elems:List) =>
                 print_r_indent(((Depth *Int 2) -Int 1)) ~>
@@ -803,8 +806,9 @@ rule [printr-content-2]:
 	<varDumpLevel> Depth:Int </varDumpLevel>
 	<trace> Trace:List => Trace ListItem("printr-content-2") </trace>
 	[internal]
-
+*/
 /* var_dumps private object property */
+/*
 rule [printr-content-3]:            
 	<k> print_r_content(ListItem([K:String,private(ClassName:Id),L:Loc]) Elems:List) =>
                 print_r_indent(((Depth *Int 2) -Int 1)) ~>
@@ -820,7 +824,7 @@ rule [printr-content-3]:
 	<varDumpLevel> Depth:Int </varDumpLevel>
 	<trace> Trace:List => Trace ListItem("printr-content-3") </trace>
 	[internal]
-
+*/
 
 rule [printr-content-nil]:         	
 	<k> print_r_content(.List) => indentDec ... </k>

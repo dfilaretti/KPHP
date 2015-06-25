@@ -73,7 +73,7 @@ rule [make-static-decl-cons-1]:
 				)
 			)
 		) => 
-			'Expr('Assign(ref(L, X),, V)) ~>
+			'Expr('Assign(ref(L, alpha(X)),, V)) ~>
 			MakeStaticDecl(
 			'DeclareStatic(
 			'ListWrap(G))) ... </k>		
@@ -106,7 +106,7 @@ rule [make-static-decl-cons-2]:
 syntax K ::= "makeStaticDecl" "(" String "," Loc ")"
 
 rule [make-static-decl]:	
-	<k> makeStaticDecl(X:String, Ls:Loc) => 'Expr('ReferenceAssign(ref(L, X),, ref(Ls, X))) ... </k>
+	<k> makeStaticDecl(X:String, Ls:Loc) => 'Expr('ReferenceAssign(ref(L, alpha(X)),, ref(Ls, alpha(X)))) ... </k>
 	<currentScope> L:Loc </currentScope> 
 	<trace> Trace:List => Trace ListItem("make-static-decl") </trace>
 	[internal]

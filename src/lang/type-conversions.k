@@ -427,7 +427,7 @@ syntax K ::= "*toObject" "(" LanguageValue ")" [strict]
 // cast to object for scalar values
 
 rule [toObject-scalar]:    
-	<k> *toObject(S:ScalarValue) =>  makeObjectFromArray(makeArrayFromScalar(S, "scalar")) ... </k>
+	<k> *toObject(S:ScalarValue) =>  makeObjectFromArray(makeArrayFromScalar(S, alpha("scalar"))) ... </k>
 	<trace> Trace:List => Trace ListItem("toObject-scalar") </trace>
 	[internal]
 
@@ -458,7 +458,7 @@ rule [make-object-from-array]:
 
 // takes a scalar V and a key K as input and returns an array {K => V}. 
 
-syntax K ::= "makeArrayFromScalar" "(" ScalarValue "," Key ")"
+syntax Array ::= "makeArrayFromScalar" "(" ScalarValue "," Key ")" [function]
 
 rule [make-array-from-scalar]:
 	<k> makeArrayFromScalar(V, K) => Literal('Array('ListWrap('Pair('Some('Key(K)),,'Value(V))))) ... </k>

@@ -87,7 +87,7 @@ rule [class-constant]:
 			) ... </k>
 	<classes> ... ClassName |-> class(_,_,_,L')  ...  </classes>
 	<thematrix> ... L' |-> L ... </thematrix>
-	<heap> ... L |-> zval(Array(_,_ ListItem([X,V,L1]) _),_,_,_)  ... </heap>
+	<heap> ... L |-> zval(Array(_,_ ListItem([alpha(X),V,L1]) _),_,_,_)  ... </heap>	//TODO check
 	<class> Context:K  </class>
 	<trace> Trace:List => Trace ListItem("class-constant") </trace>
 	[step]

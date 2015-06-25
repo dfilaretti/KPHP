@@ -13,7 +13,7 @@ module CORE
 	//imports EMPTY-DOMAIN
 	//imports MYSIGNS-DOMAIN
 	imports TYPES-DOMAIN
-
+	imports ID-HOOKS
 
 syntax Domain ::= "Concrete"
 				| "Signs"
@@ -264,8 +264,8 @@ rule [var2Id]:
 
 rule [var] :   
 	<k> var(X:Id)  => *Cond(isSuperGlobal(X), 
-			ref(Lsg, Id2String(X)), 
-			ref(Lg, Id2String(X))) ... </k>
+			ref(Lsg, alpha(Id2String(X))), 
+			ref(Lg, alpha(Id2String(X)))) ... </k>
 	<currentScope> Lg:Loc </currentScope>
 	<superGlobalScope> Lsg:Loc </superGlobalScope>
 	when notBool(isSpecialVar(X))
