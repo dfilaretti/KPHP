@@ -26,27 +26,27 @@ module LATTICE
 	   
 	   syntax ANum ::= AInt| AFloat| "(" "ANum" "," ErrFlags ")"
 	   
-	   syntax Value ::= ANumValue | AStringValue | ABoolValue | Null
+	   syntax Scalar ::= ANumValue | AStringValue | ABoolValue | Null | Bot
 	
-	   syntax Value ::= "getValue" "(" DomainValue ")" [function]
+	   syntax Scalar ::= "getValue" "(" DomainValue ")" [function]
 	   
 	   syntax DomainValue ::= ANum | AString | ABool | Null
 	   
-	   syntax VEPair ::= "VE" "(" Value "," ErrFlags ")"
+	   syntax VEPair ::= "VE" "(" Scalar "," ErrFlags ")"
 	   
 	   syntax VEPair ::= "lub_Domain" "(" DomainValue "," DomainValue ")" [function]
 	   
-	   syntax PlainLanguageValue ::= "specify" "(" VEPair ")" [strict]
+	   syntax PlainLanguageValue ::= "specify" "(" VEPair ")" [function]
 
-	   syntax AInt ::= "specify_AInt" "(" VEPair ")" [strict]
+	   syntax AInt ::= "specify_AInt" "(" VEPair ")" [function]
 	   
-	   syntax AFloat ::= "specify_AFloat" "(" VEPair ")" [strict]
+	   syntax AFloat ::= "specify_AFloat" "(" VEPair ")" [function]
 	   
-	   syntax AString ::= "specify_AString" "(" VEPair ")" [strict]
+	   syntax AString ::= "specify_AString" "(" VEPair ")" [function]
 	   
-	   syntax ABool ::= "specify_ABool" "(" VEPair ")" [strict]
+	   syntax ABool ::= "specify_ABool" "(" VEPair ")" [function]
 	  
-	   syntax VEPair ::= "generalize" "(" DomainValue ")"
+	   syntax VEPair ::= "generalize" "(" DomainValue ")" [function]
 	   
 	   rule generalize( (V,E):AInt) => VE(V,E)
 	   rule generalize( (V,E):AFloat) => VE(V,E)
@@ -73,6 +73,11 @@ module LATTICE
 	   
 	   
 	   rule lub(V1:DomainValue, V2:DomainValue) => specify(lub_Domain(V1, V2))
+	   when V1 =/=K Bot andBool V2 =/=K Bot
+	   
+	   //TODO : lub (Array(), NULL)
+	   //rule lub(A:Array, B:K) => Top
+	  // when A =/=K B
 	   
 	   syntax ErrFlags ::= "getErrFlags" "(" K ")" [function]
 	   
@@ -92,7 +97,7 @@ module LATTICE
 	   
 	   rule lub_Domain( NULL, D1) => VE(getValue(D1), mergeList (ErrListItem(MayBeNull), getErrFlags(D1)))
 	   
-       syntax Value ::= "lub_Value" "(" Value "," Value ")" [function]
+       syntax Scalar ::= "lub_Value" "(" Scalar "," Scalar ")" [function]
        rule lub_Value(ABool, ABool)=>ABool	   
 	   rule lub_Value(S1:String, S2:String)=>AStringTop
 	   when S1 =/=String S2
@@ -100,27 +105,27 @@ module LATTICE
 	   rule lub_Value(S1:String, S2:String)=>S1
 	   when S1 ==String S2
 
-       rule lub_Value(AStringTop, X)=>AStringTop
+       rule lub_Value(AStringTop, X:AStringValue)=>AStringTop
 
-       rule lub_Value(X, AStringTop)=>AStringTop
+       rule lub_Value(X:AStringValue, AStringTop)=>AStringTop
 
-	   rule lub_Value("ANum", N:ANumValue)=>ANum
+	   rule lub_Value(ANum, N:ANumValue)=>ANum
 	   
-	   rule lub_Value(N:ANumValue, "ANum")=>ANum
+	   rule lub_Value(N:ANumValue, ANum)=>ANum
 	   
-	   rule lub_Value(AIntValue, AFloatValue)=>ANum
+	   rule lub_Value(I:AIntValue, F:AFloatValue)=>ANum
 	   
-	   rule lub_Value(AFloatValue, AIntValue)=> ANum
+	   rule lub_Value(F:AFloatValue, I:AIntValue)=> ANum
 	   
-	   rule lub_Value(AIntValue, AIntValue) => AInt
+	   rule lub_Value(I1:AIntValue, I2:AIntValue) => AInt
 
-	   rule lub_Value(AFloatValue, AFloatValue) => AFloat
+	   rule lub_Value(F1:AFloatValue, F2:AFloatValue) => AFloat
 	   
 	   rule lub_Value(Bot, V) => V
 	   
 	   rule lub_Value(V, Bot) => V
 	   
-	   syntax Value ::= "valueOfErr"  "(" ErrFlag ")" [function]
+	   syntax Scalar ::= "valueOfErr"  "(" ErrFlag ")" [function]
 	   
 	   rule valueOfErr( MayBeNull) => NULL
 	   
@@ -128,7 +133,7 @@ module LATTICE
 	   
 	   rule valueOfErr( ImplicitTypeConversion) => Bot
 
-	   syntax Value ::= "valueOfErrs" "(" ErrFlags ")" [function]
+	   syntax Scalar ::= "valueOfErrs" "(" ErrFlags ")" [function]
 	   
 	   rule valueOfErrs(.ErrFlags) => Bot
 	  
@@ -154,11 +159,11 @@ module LATTICE
 	   when keepErrFlag(E)
 	   
 	   syntax 	Bool ::= K "<Lattice" K		[function]
+	   syntax Bool ::= Scalar "<ScalarLattice" Scalar [function]
 	   
+	   rule D1:DomainValue <Lattice D2:DomainValue => generalize(D1) <Lattice generalize(D2)  //TODO : this looks like it's not working
 	   
-	   rule D1:DomainValue <Lattice D2:DomainValue => generalize(D1) <Lattice generalize(D2)
-	   
-	   rule VE(V1, E1:ErrFlags) <Lattice VE(V2, E2:ErrFlags) => (V1 <Lattice V2) andBool (E1 incList E2) 
+	   rule VE(V1, E1):VEPair <Lattice VE(V2, E2):VEPair => (V1 <ScalarLattice V2) andBool (E1 incList E2) 
 	   
 	   rule Top <Lattice X:K => false
 	   rule X:K <Lattice Bot => false
@@ -169,17 +174,18 @@ module LATTICE
 	   rule Bot <Lattice X:K => true
 	   when X =/=K Bot
 	   
-	   rule AInt <Lattice AInt => false
-	   rule AFloat <Lattice AFloat => false
-	   rule ANum <Lattice X:ANum => false
-	   rule AInt <Lattice AFloat => false
-	   rule AFloat <Lattice AInt => false
-	   rule AInt <Lattice ANum => true
-	   rule AFloat <Lattice ANum => true
+	   rule AInt <ScalarLattice AInt => false
+	   rule (AFloat <ScalarLattice AFloat) => false
+//TODO	   rule "ANum" <ScalarLattice X:ANum => false
+	   rule (AInt <ScalarLattice AFloat) => false
+	   rule (AFloat <ScalarLattice AInt) => false
+	   rule (AInt <ScalarLattice ANum) => true
+	   rule (AFloat <ScalarLattice ANum) => true
 	   
-	   rule AStringTop <Lattice X:AString => false
-	   rule S:String <Lattice S2:String => false
-	   rule S:String <Lattice AStringTop => true
+	   rule  AStringTop <ScalarLattice AStringTop => false
+	   rule AStringTop <ScalarLattice X:Scalar => false
+	   rule S:String <ScalarLattice S2:String => false
+	   rule S:String <ScalarLattice AStringTop => true
 	   
 	   syntax 	Bool ::= K ">Lattice" K		[function]
 	   

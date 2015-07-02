@@ -6,6 +6,8 @@ module FORWARD-OPS
 	imports TYPE-CONVERSIONS
 	imports INIT
 	
+syntax K ::= "stopDebug"
+
 //@ \section{Arithmetic operations}
 
 	// Plus

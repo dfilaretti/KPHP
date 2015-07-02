@@ -20,7 +20,7 @@ module OPS
 	   
 	   rule AIntOfErrs( ErrListItem(E) / L) =>  lub_Value(AIntOfErr(E), AIntOfErrs(L))
 	   
-	   syntax AIntValue ::= "AIntOfTuple" "(" DomainValue ")" [strict]
+	   syntax AIntValue ::= "AIntOfTuple" "(" DomainValue ")" [function]
 	   
 	   rule AIntOfTuple(NULL) => AInt
 	   rule AIntOfTuple( (V, E):AInt ) => lub_Value(*valueToInteger(V), AIntOfErrs(E)) 
@@ -38,7 +38,7 @@ module OPS
 	   
 	   rule AFloatOfErrs( ErrListItem(E) / L) =>  lub_Value(AFloatOfErr(E), AFloatOfErrs(L))
 	   
-	   syntax AFloatValue ::= "AFloatOfTuple" "(" DomainValue ")" [strict]
+	   syntax AFloatValue ::= "AFloatOfTuple" "(" DomainValue ")" [function]
 	   
 	   rule AFloatOfTuple(NULL) => AFloat
 	   rule AFloatOfTuple( (V, E):AInt ) => lub_Value(*valueToFloat(V), AFloatOfErrs(E)) 
@@ -56,14 +56,13 @@ module OPS
 	   
 	   rule AStringOfErrs( ErrListItem(E) / L) =>  lub_Value(AStringOfErr(E), AStringOfErrs(L))
 	   
-	   syntax AStringValue ::= "AStringOfTuple" "(" DomainValue ")" [strict]
-	   
+	   syntax AStringValue ::= "AStringOfTuple" "(" K ")" [function]
+	 
 	   rule AStringOfTuple(NULL) => AStringTop
 	   rule AStringOfTuple( (V, E):AInt ) => lub_Value(*valueToString(V), AStringOfErrs(E)) 
 	   rule AStringOfTuple( (V, E):AFloat ) => lub_Value(*valueToString(V), AStringOfErrs(E)) 
 	   rule AStringOfTuple( (V, E):AString ) => lub_Value(*valueToString(V), AStringOfErrs(E)) 
 	   rule AStringOfTuple( (V, E):ABool ) => lub_Value(*valueToString(V), AStringOfErrs(E)) 
-	   
 	   
 	   syntax ABoolValue ::= "ABoolOfErr" "(" ErrFlag ")" [function]
 	   
@@ -75,7 +74,7 @@ module OPS
 	   
 	   rule ABoolOfErrs( ErrListItem(E) / L) =>  lub_Value(ABoolOfErr(E), ABoolOfErrs(L))
 	   
-	   syntax ABoolValue ::= "ABoolOfTuple" "(" DomainValue ")" [strict]
+	   syntax ABoolValue ::= "ABoolOfTuple" "(" DomainValue ")" [function]
 	   
 	   rule ABoolOfTuple(NULL) => ABool
 	   rule ABoolOfTuple( (V, E):AInt ) => lub_Value(*valueToBool(V), ABoolOfErrs(E)) 
@@ -304,28 +303,28 @@ module OPS
 
 	//to string		
 			
-	syntax AIntValue ::= "*valueToInteger" "(" Value ")" [function]
+	syntax AIntValue ::= "*valueToInteger" "(" Scalar ")" [function]
 	
 	rule *valueToInteger(Bot) => Bot
 	
 	rule *valueToInteger(V) => AInt
 	when V =/=K Bot
 	
-	syntax AFloatValue ::= "*valueToFloat" "(" Value ")" [function]
+	syntax AFloatValue ::= "*valueToFloat" "(" Scalar ")" [function]
 	
 	rule *valueToFloat(Bot) => Bot
 	
 	rule *valueToFloat(V) => AFloat
 	when V =/=K Bot
 	
-	syntax ABoolValue ::= "*valueToBool" "(" Value ")" [function]
+	syntax ABoolValue ::= "*valueToBool" "(" Scalar ")" [function]
 	
 	rule *valueToBool(Bot) => Bot
 	
 	rule *valueToBool(V) => ABool
 	when V =/=K Bot
 	
-	syntax AStringValue ::= "*valueToString" "(" Value ")" [function]
+	syntax AStringValue ::= "*valueToString" "(" Scalar ")" [function]
 	
 	rule *valueToString(Bot) => Bot
 	
@@ -343,51 +342,28 @@ module OPS
 	syntax AString ::= "*toString" "(" LanguageValue ")" [function]
 
 	//TODO : change this when numeric strings get added
+	//TODO : find a way to add traces ?
 	
-	
-	rule [toString-int]:
-			<k> *toString(I:AInt) => (AStringOfTuple(I), getErrFlags(I)) ... </k>
-			<trace> Trace:List => Trace ListItem("toString-int") </trace>
-			[internal]
-	
-	rule [toString-bool]:
-			<k> *toString(B:ABool) => (AStringOfTuple(B), getErrFlags(B)) ... </k>
-			<trace> Trace:List => Trace ListItem("toString-bool") </trace>
-			[internal]
-			
-	rule [toString-float]:   
-			<k> *toString(F:AFloat) => (AStringOfTuple(F), getErrFlags(F))... </k>
-			<trace> Trace:List => Trace ListItem("toString-float") </trace>
-			[internal]
-	rule [toString-string]:   
-			<k> *toString(S:AString) => S ... </k>
-			<trace> Trace:List => Trace ListItem("toString-string") </trace>
-			[internal]
+	rule  *toString(I:AInt) => (*valueToString(lub_Value(*valueToString(AInt), Bot)), getErrFlags(I)) [internal]
 
-	rule [toString-array]:   
-			<k> *toString(Arr:Array) => (AStringTop, .ErrFlags) ... </k> //concrete string is "Array" ?
-			<trace> Trace:List => Trace ListItem("toString-array") </trace>
-			[internal]
+	rule *toString(B:ABool) => (AStringOfTuple(B), getErrFlags(B))	[internal]
+			
+	rule  *toString(F:AFloat) => (AStringOfTuple(F), getErrFlags(F)) [internal]
 	
-	rule [toString-top]:
-			<k> *toString(Top) => (AStringTop, .ErrFlags) ... </k>
-			<trace> Trace:List => Trace ListItem("toString-top") </trace>
-			[internal]
+	rule *toString(S:AString) => S [internal]
+
+	rule *toString(Arr:Array) => (AStringTop, .ErrFlags)	[internal] // concrete string is "Array" ?
+	
+	rule *toString(Top) => (AStringTop, .ErrFlags) [internal]
 	
 	// TODO: put correct error msg
 	// TODO: use magic method __toString()
 
-	rule [toString-object]:   
-			<k> *toString(Obj:Object) => ERROR("Object of class %s could not be converted to string in %s on line %d") ... </k>
-			<trace> Trace:List => Trace ListItem("toString-array") </trace>
-			[internal, error]
+	rule *toString(Obj:Object) => ERROR("Object of class %s could not be converted to string in %s on line %d") [internal, error]
 
-	rule [toString-null]:   
-			<k> *toString(NULL) => ("", .ErrFlags) ... </k>
-			<trace> Trace:List => Trace ListItem("toString-null") </trace>
-			[internal]
-	
-	syntax K ::= "string2Number" "(" AString ")"
+	rule *toString(NULL) => ("", .ErrFlags) [internal]
+
+	syntax K ::= "string2Number" "(" AString ")" [strict]
 	
 	rule [string2Number]:
 			<k> string2Number(S:AString) => (ANum, getErrFlags(S)) ... </k>
@@ -397,23 +373,14 @@ module OPS
 	// String concatenation operation
 	
 	syntax AStringValue ::= "AStringValueConcat" "(" AStringValue "," AStringValue ")" [function]
+
 	
-	rule [concat-string-concrete]:
-	<k> AStringValueConcat(S1:String, S2:String) => S1 +String S2 ... </k>
-	<trace> Trace:List => Trace ListItem("concat-string-concrete") </trace>
-	[step]
+	rule AStringValueConcat(S1:String, S2:String) => S1 +String S2 [step]
 	
-	rule [concat-string-top-1]:
-	<k> AStringValueConcat(AStringTop, S:AStringValue) => AStringTop ... </k>
-	<trace> Trace:List => Trace ListItem("concat-string-top-1") </trace>
-	when S =/=K Bot
-	[step]
+	rule AStringValueConcat(AStringTop,_) => AStringTop [step]
 	
-	rule [concat-string-top-2]:
-	<k> AStringValueConcat(S:AStringValue, AStringTop) => AStringTop ... </k>
-	<trace> Trace:List => Trace ListItem("concat-string-top-2") </trace>
-	when S =/=K Bot
-	[step]
+	rule AStringValueConcat(_, AStringTop) => AStringTop [step]
+	
 	
 	/*
 	rule [concat-string-bot-1]:
@@ -427,7 +394,7 @@ module OPS
 	[step]
 	*/
 	
-	rule 'Concat(S1,, S2) => (AStringValueConcat(AStringOfTuple(S1), AStringOfTuple(S2)), mergeList(FilterErrFlags(getErrFlags(S1)), FilterErrFlags(getErrFlags(S2))))
+	rule 'Concat(S1:AString,, S2:AString) => (AStringValueConcat(AStringOfTuple(S1), AStringOfTuple(S2)), mergeList(FilterErrFlags(getErrFlags(S1)), FilterErrFlags(getErrFlags(S2))))
 	
     syntax  ABool ::= "notABool" ABool [function]
 

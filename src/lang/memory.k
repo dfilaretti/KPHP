@@ -105,7 +105,7 @@ syntax OptionArrayItemVisibility ::= ArrayItemVisibility | None
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Lub} */
 
-syntax PlainLanguageValue ::= "lub" "(" K "," K ")" [strict]
+syntax PlainLanguageValue ::= "lub" "(" K "," K ")" [function]
 
 //rule lub(V1:AInt,V2:AInt) => lub_AInt(V1,V2)
 //rule lub(V1:AFloat,V2:AFloat) => lub_AFloat(V1,V2) TODO
@@ -949,8 +949,7 @@ rule 	getLTKeys(ListItem([K1,_,_]) Elems ,K) => SetItem(K1) getLTKeys(Elems,K)
 	when K1 <Lattice K
 
 rule 	getLTKeys(ListItem([K1,_,_]) Elems ,K) => getLTKeys(Elems,K) 
-	when (notBool (K1 <Lattice K)) orBool (K1 ==K K)
-
+	when (K1 ==K K) orBool (notBool (K1 <Lattice K))
 
 syntax 	Set ::= "getGEQKeys" "(" List "," Key ")" 	[function]
 
@@ -1188,7 +1187,7 @@ rule [rget-obj-prop]:
 // It is used to distinguish among cases when the actual RgetRef operation 
 // has fully evaluated the reference to be resolved 
 
-syntax K ::= "RgetRef1" "(" Loc "," Key "," Set "," Set "," RefType ")"
+syntax K ::= "RgetRef1" "(" Loc "," Key "," Set "," Set "," RefType ")"	
 
 // Case 1: the key X is "not present" at all in the array i.e. there are no other keys 
 // which are =, < or >= to X. 
@@ -1443,7 +1442,7 @@ rule [rget-null]:
 rule [rget-string-undef]:	
 	<k> RgetRef(ref(L':Loc, Index:AString),_) => locNull ... </k>
 	<thematrix> ... L' |-> L ... </thematrix>	
-	<heap> ... L |-> zval(Str:String,_,_,_) ... </heap>
+	<heap> ... L |-> zval(Str:AString,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("rget-string-undef") </trace>
 	[internal]
 

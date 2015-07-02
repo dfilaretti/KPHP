@@ -5,11 +5,11 @@ module ALPHA
 
 	syntax K ::= "alpha" "(" K ")" [function]
 
-	rule alpha(N:Int) => ("AInt", .ErrFlags) [structural]
+	rule alpha(N:Int) => (AInt, .ErrFlags) [structural]
 
-	rule alpha(F:Float) => ("AFloat", .ErrFlags) [structural]	
+	rule alpha(F:Float) => (AFloat, .ErrFlags) [structural]	
 
-	rule alpha(B:Bool) => ("ABool", .ErrFlags)	 [structural]
+	rule alpha(B:Bool) => (ABool, .ErrFlags)	 [structural]
 
 	rule alpha(S:String) => (S, .ErrFlags) [structural]
 
