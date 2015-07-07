@@ -2,29 +2,25 @@ module LATTICE
        
 	   syntax ErrFlag ::= "MayBeNull" | "VisibilityErr" | "ImplicitTypeConversion"
 	   
-	   syntax ErrFlags ::= ErrListItem(ErrFlag) [function, hook(List:ListItem)] 
-	   syntax ErrFlags ::= ErrFlags "/" ErrFlags [left, function, hook(List:__), klabel('_List_)]
-	   syntax ErrFlags ::= ".ErrFlags" [function, hook(List:.List)]
-	   
        syntax AStringValue ::= "AStringTop" | String
        
-	   syntax AString ::= "(" AStringValue "," ErrFlags ")"
+	   syntax AString ::= "(" AStringValue "," List ")"
 	   
        syntax AIntValue ::= "AInt" 
 	   
-	   syntax AInt ::= "(" AIntValue "," ErrFlags ")"
+	   syntax AInt ::= "(" AIntValue "," List ")"
 	
        syntax ABoolValue ::= "ABool" 
 
-	   syntax ABool ::= "(" ABoolValue "," ErrFlags ")"	   
+	   syntax ABool ::= "(" ABoolValue "," List ")"	   
 	   
        syntax AFloatValue ::= "AFloat"
 	   
-	   syntax AFloat ::= "(" AFloatValue "," ErrFlags ")"
+	   syntax AFloat ::= "(" AFloatValue "," List ")"
 	   
 	   syntax ANumValue ::= AFloatValue | AIntValue | "ANum"
 	   
-	   syntax ANum ::= AInt| AFloat| "(" "ANum" "," ErrFlags ")"
+	   syntax ANum ::= AInt| AFloat| "(" "ANum" "," List ")"
 	   
 	   syntax Scalar ::= ANumValue | AStringValue | ABoolValue | Null | Bot
 	
@@ -32,7 +28,7 @@ module LATTICE
 	   
 	   syntax DomainValue ::= ANum | AString | ABool | Null
 	   
-	   syntax VEPair ::= "VE" "(" Scalar "," ErrFlags ")"
+	   syntax VEPair ::= "VE" "(" Scalar "," List ")"
 	   
 	   syntax VEPair ::= "lub_Domain" "(" DomainValue "," DomainValue ")" [function]
 	   
@@ -66,10 +62,10 @@ module LATTICE
 	   rule specify_ABool ( VE(B:ABoolValue, E) ) => (B,E)
 	  
 	  
-	   rule getValue( (V:AIntValue, E:ErrFlags) ) => V
-	   rule getValue( (V:AFloatValue, E:ErrFlags) ) => V
-	   rule getValue( (V:AStringValue, E:ErrFlags) ) => V
-	   rule getValue( (V:ABoolValue, E:ErrFlags) ) => V
+	   rule getValue( (V:AIntValue, E:List) ) => V
+	   rule getValue( (V:AFloatValue, E:List) ) => V
+	   rule getValue( (V:AStringValue, E:List) ) => V
+	   rule getValue( (V:ABoolValue, E:List) ) => V
 	   
 	   
 	   rule lub(V1:DomainValue, V2:DomainValue) => specify(lub_Domain(V1, V2))
@@ -79,23 +75,23 @@ module LATTICE
 	   //rule lub(A:Array, B:K) => Top
 	  // when A =/=K B
 	   
-	   syntax ErrFlags ::= "getErrFlags" "(" K ")" [function]
+	   syntax List ::= "getErrFlags" "(" K ")" [function]
 	   
-	   rule getErrFlags ( (V:AIntValue, E:ErrFlags) ) => E
-	   rule getErrFlags ( (V:AFloatValue, E:ErrFlags) ) => E
-	   rule getErrFlags ( (V:AStringValue, E:ErrFlags) ) => E
-	   rule getErrFlags ( (V:ABoolValue, E:ErrFlags) ) => E
-	   rule getErrFlags( NULL ) => .ErrFlags
+	   rule getErrFlags ( (V:AIntValue, E:List) ) => E
+	   rule getErrFlags ( (V:AFloatValue, E:List) ) => E
+	   rule getErrFlags ( (V:AStringValue, E:List) ) => E
+	   rule getErrFlags ( (V:ABoolValue, E:List) ) => E
+	   rule getErrFlags( NULL ) => .List
 	   
 	   rule lub_Domain(D1,D2) =>  VE ( lub_Value(getValue(D1), getValue(D2)), mergeList(getErrFlags(D1), getErrFlags(D2)) )
 	   when D1 =/=K NULL andBool D2 =/=K NULL
 	   
-	   rule lub_Domain( D1, NULL) => VE (getValue(D1), mergeList (ErrListItem(MayBeNull), getErrFlags(D1)))
+	   rule lub_Domain( D1, NULL) => VE (getValue(D1), mergeList (ListItem(MayBeNull), getErrFlags(D1)))
 	   when D1 =/=K NULL
 	   
-	   rule lub_Domain(NULL, NULL) => VE(NULL, .ErrFlags)
+	   rule lub_Domain(NULL, NULL) => VE(NULL, .List)
 	   
-	   rule lub_Domain( NULL, D1) => VE(getValue(D1), mergeList (ErrListItem(MayBeNull), getErrFlags(D1)))
+	   rule lub_Domain( NULL, D1) => VE(getValue(D1), mergeList (ListItem(MayBeNull), getErrFlags(D1)))
 	   
        syntax Scalar ::= "lub_Value" "(" Scalar "," Scalar ")" [function]
        rule lub_Value(ABool, ABool)=>ABool	   
@@ -133,11 +129,11 @@ module LATTICE
 	   
 	   rule valueOfErr( ImplicitTypeConversion) => Bot
 
-	   syntax Scalar ::= "valueOfErrs" "(" ErrFlags ")" [function]
+	   syntax Scalar ::= "valueOfErrs" "(" List ")" [function]
 	   
-	   rule valueOfErrs(.ErrFlags) => Bot
+	   rule valueOfErrs(.List) => Bot
 	  
-	   rule valueOfErrs(ErrListItem(E) / L) => lub_Value(valueOfErr(E), valueOfErrs(L))
+	   rule valueOfErrs(ListItem(E)  L) => lub_Value(valueOfErr(E), valueOfErrs(L))
 	   
 	   
 	   syntax Bool ::= "keepErrFlag" "(" ErrFlag ")" [predicate] 		//true if valueOfErr = Bot ?
@@ -148,20 +144,20 @@ module LATTICE
 	   
 	   rule keepErrFlag(ImplicitTypeConversion) => true
 	   
-	   syntax ErrFlags ::= "FilterErrFlags" "(" ErrFlags ")" [function]
+	   syntax List ::= "FilterErrFlags" "(" List ")" [function]
 	   
-	   rule FilterErrFlags(.ErrFlags) => .ErrFlags
+	   rule FilterErrFlags(.List) => .List
 	   
-	   rule FilterErrFlags(ErrListItem(E) / L) => FilterErrFlags(L)
+	   rule FilterErrFlags(ListItem(E:ErrFlag) L) => FilterErrFlags(L)
 	   when notBool(keepErrFlag(E))
 	   
-	   rule FilterErrFlags(ErrListItem(E) / L) => ErrListItem(E) / FilterErrFlags(L)
+	   rule FilterErrFlags(ListItem(E:ErrFlag) L) =>ListItem(E) FilterErrFlags(L)
 	   when keepErrFlag(E)
 	   
 	   syntax 	Bool ::= K "<Lattice" K		[function]
 	   syntax Bool ::= Scalar "<ScalarLattice" Scalar [function]
 	   
-	   rule D1:DomainValue <Lattice D2:DomainValue => generalize(D1) <Lattice generalize(D2)  //TODO : this looks like it's not working
+	   rule D1:DomainValue <Lattice D2:DomainValue => generalize(D1) <Lattice generalize(D2)
 	   
 	   rule VE(V1, E1):VEPair <Lattice VE(V2, E2):VEPair => (V1 <ScalarLattice V2) andBool (E1 incList E2) 
 	   
@@ -187,6 +183,22 @@ module LATTICE
 	   rule S:String <ScalarLattice S2:String => false
 	   rule S:String <ScalarLattice AStringTop => true
 	   
+	   rule S:AStringValue <ScalarLattice I:AIntValue => false
+	   rule S:AStringValue <ScalarLattice F:AFloatValue => false
+	   rule S:AStringValue <ScalarLattice ANum => false
+	   rule S:AStringValue <ScalarLattice B:ABoolValue => false
+	   
+	   rule I:AIntValue <ScalarLattice S:AStringValue => false
+	   rule I:AIntValue <ScalarLattice B:ABoolValue => false
+	   
+	   rule F:AFloatValue <ScalarLattice S:AStringValue => false
+	   rule F:AFloatValue <ScalarLattice B:ABoolValue => false
+	   
+	   rule ANum <ScalarLattice X => X ==K Top
+	   rule B:ABoolValue <ScalarLattice X => X ==K Top
+	   
+	   
+	   
 	   syntax 	Bool ::= K ">Lattice" K		[function]
 	   
 	   rule A:K >Lattice B:K => B <Lattice A
@@ -198,32 +210,32 @@ module LATTICE
 	   rule valid(_) => false
 	   rule unsatisfiable(_) => false
 	   
-	   //list manipulation //TODO move
+	   //list manipulation TODO move
 	   
-	   syntax Bool ::= ErrFlag "inList" ErrFlags   [function]
-	   rule K1:ErrFlag inList ErrListItem(K2:ErrFlag) / L2:ErrFlags => K1 ==K K2 orBool  K1 inList L2
+	   syntax Bool ::= ErrFlag "inList" List   [function]
+	   rule K1:ErrFlag inList ListItem(K2:ErrFlag) L2:List => K1 ==K K2 orBool  K1 inList L2
 	   
-	   rule _ inList .ErrFlags => false
+	   rule _ inList .List => false
 	   
 	   
-	   syntax ErrFlags ::= "mergeList" "(" ErrFlags "," ErrFlags ")" [function]
+	   syntax List ::= "mergeList" "(" List "," List ")" [function]
 	   
-	   rule mergeList(.ErrFlags, L) => L
+	   rule mergeList(.List, L) => L
 	   
-	   rule mergeList(ErrListItem(E1) / L1:ErrFlags, L2:ErrFlags) => mergeList(L1, L2)
+	   rule mergeList(ListItem(E1)  L1:List, L2:List) => mergeList(L1, L2)
 	   when E1 inList L2
 	   
-	   rule mergeList (ErrListItem(E1) / L1:ErrFlags, L2:ErrFlags) => mergeList(L1, ErrListItem(E1) / L2)
+	   rule mergeList (ListItem(E1)  L1:List, L2:List) => mergeList(L1, ListItem(E1) L2)
 	   when notBool(E1 inList L2)
 	   
-	   syntax Bool ::= ErrFlags "incList" ErrFlags [function]
+	   syntax Bool ::= List "incList" List [function]
 	   
-	   rule .ErrFlags incList _ => true
+	   rule .List incList _ => true
 	   
-	   rule ErrListItem(E1:ErrFlag) / L1:ErrFlags incList L2:ErrFlags => false
+	   rule ListItem(E1:ErrFlag)  L1:List incList L2:List => false
 	   when notBool(E1 inList L2)
 	   
-	   rule ErrListItem(E1:ErrFlag) / L1:ErrFlags incList L2:ErrFlags => L1 incList L2
+	   rule ListItem(E1:ErrFlag)  L1:List incList L2:List => L1 incList L2
 	   when E1 inList L2
 	   
 

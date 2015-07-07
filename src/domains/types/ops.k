@@ -14,11 +14,11 @@ module OPS
 	   
 	   rule AIntOfErr(E) => *valueToInteger(valueOfErr(E)) //Always AInt in this domain, but useful to make a library at some point
 	   
-	   syntax AIntValue ::= "AIntOfErrs" "(" ErrFlags ")" [function]
+	   syntax AIntValue ::= "AIntOfErrs" "(" List ")" [function]
 	   
-	   rule AIntOfErrs(.ErrFlags) => Bot
+	   rule AIntOfErrs(.List) => Bot
 	   
-	   rule AIntOfErrs( ErrListItem(E) / L) =>  lub_Value(AIntOfErr(E), AIntOfErrs(L))
+	   rule AIntOfErrs( ListItem(E)  L) =>  lub_Value(AIntOfErr(E), AIntOfErrs(L))
 	   
 	   syntax AIntValue ::= "AIntOfTuple" "(" DomainValue ")" [function]
 	   
@@ -32,11 +32,11 @@ module OPS
 	   
 	   rule AFloatOfErr(E) => *valueToFloat(valueOfErr(E)) 
 	   
-	   syntax AFloatValue ::= "AFloatOfErrs" "(" ErrFlags ")" [function]
+	   syntax AFloatValue ::= "AFloatOfErrs" "(" List ")" [function]
 	   
-	   rule AFloatOfErrs(.ErrFlags) => Bot
+	   rule AFloatOfErrs(.List) => Bot
 	   
-	   rule AFloatOfErrs( ErrListItem(E) / L) =>  lub_Value(AFloatOfErr(E), AFloatOfErrs(L))
+	   rule AFloatOfErrs( ListItem(E)  L) =>  lub_Value(AFloatOfErr(E), AFloatOfErrs(L))
 	   
 	   syntax AFloatValue ::= "AFloatOfTuple" "(" DomainValue ")" [function]
 	   
@@ -50,11 +50,11 @@ module OPS
 	   
 	   rule AStringOfErr(E) => *valueToString(valueOfErr(E)) 
 	   
-	   syntax AStringValue ::= "AStringOfErrs" "(" ErrFlags ")" [function]
+	   syntax AStringValue ::= "AStringOfErrs" "(" List ")" [function]
 	   
-	   rule AStringOfErrs(.ErrFlags) => Bot
+	   rule AStringOfErrs(.List) => Bot
 	   
-	   rule AStringOfErrs( ErrListItem(E) / L) =>  lub_Value(AStringOfErr(E), AStringOfErrs(L))
+	   rule AStringOfErrs( ListItem(E)  L) =>  lub_Value(AStringOfErr(E), AStringOfErrs(L))
 	   
 	   syntax AStringValue ::= "AStringOfTuple" "(" K ")" [function]
 	 
@@ -68,11 +68,11 @@ module OPS
 	   
 	   rule ABoolOfErr(E) => *valueToBool(valueOfErr(E)) 
 	   
-	   syntax ABoolValue ::= "ABoolOfErrs" "(" ErrFlags ")" [function]
+	   syntax ABoolValue ::= "ABoolOfErrs" "(" List ")" [function]
 	   
-	   rule ABoolOfErrs(.ErrFlags) => Bot
+	   rule ABoolOfErrs(.List) => Bot
 	   
-	   rule ABoolOfErrs( ErrListItem(E) / L) =>  lub_Value(ABoolOfErr(E), ABoolOfErrs(L))
+	   rule ABoolOfErrs( ListItem(E)  L) =>  lub_Value(ABoolOfErr(E), ABoolOfErrs(L))
 	   
 	   syntax ABoolValue ::= "ABoolOfTuple" "(" DomainValue ")" [function]
 	   
@@ -251,15 +251,15 @@ module OPS
 
 
     rule    [toBoolean-array]:    
-	        <k> *toBoolean(Array(_,Elems)) => (ABool, .ErrFlags) ... </k>
+	        <k> *toBoolean(Array(_,Elems)) => (ABool, .List) ... </k>
 	        [internal]
 			
 	rule	[toBoolean-true]:    
-	        <k> *toBoolean(true) => (ABool, .ErrFlags) ... </k>
+	        <k> *toBoolean(true) => (ABool, .List) ... </k>
 	        [internal]
 	
 	rule 	[toBoolean-false]:    
-	        <k> *toBoolean(false) => (ABool, .ErrFlags) ... </k>
+	        <k> *toBoolean(false) => (ABool, .List) ... </k>
 	        [internal]
 
 // Object case: we add it, even if the online docs says this behaviour is "PHP 4 only"
@@ -270,7 +270,7 @@ module OPS
 	        [internal]
 
     rule    [toBoolean-null]:        
-	        <k> *toBoolean(NULL) => (ABool, .ErrFlags) ... </k>
+	        <k> *toBoolean(NULL) => (ABool, .List) ... </k>
 	        [internal]
 
     // to float
@@ -339,6 +339,8 @@ module OPS
 	rule *valueToString(B:ABoolValue) => "ABool"
 	when B =/=K Bot
 	
+	rule *valueToString(NULL) => ""
+	
 	syntax AString ::= "*toString" "(" LanguageValue ")" [function]
 
 	//TODO : change this when numeric strings get added
@@ -352,16 +354,16 @@ module OPS
 	
 	rule *toString(S:AString) => S [internal]
 
-	rule *toString(Arr:Array) => (AStringTop, .ErrFlags)	[internal] // concrete string is "Array" ?
+	rule *toString(Arr:Array) => (AStringTop, .List)	[internal] // concrete string is "Array" ?
 	
-	rule *toString(Top) => (AStringTop, .ErrFlags) [internal]
+	rule *toString(Top) => (AStringTop, .List) [internal]
 	
 	// TODO: put correct error msg
 	// TODO: use magic method __toString()
 
 	rule *toString(Obj:Object) => ERROR("Object of class %s could not be converted to string in %s on line %d") [internal, error]
 
-	rule *toString(NULL) => ("", .ErrFlags) [internal]
+	rule *toString(NULL) => ("", .List) [internal]
 
 	syntax K ::= "string2Number" "(" AString ")" [strict]
 	
@@ -420,13 +422,13 @@ module OPS
             <k> print (V:AString)  => . ... </k>
             <out> ... . => ListItem(V) </out>
             [internal, output]   
-			
+	rule print(S:String) => print(specify(VE(S, .List)))		
 			
     // input
     syntax K ::= "user_input"
 	
     rule [input]:
-    	<k>  user_input => (AStringTop, .ErrFlags) ...</k>
+    	<k>  user_input => (AStringTop, .List) ...</k>
 	
 	
 	//can't be resolved in this domain
@@ -435,7 +437,7 @@ module OPS
 				| "isIntString" "(" AString ")" [function]	
 				| "isFloatString" "(" AString ")" [function]	
 	
-	rule strlen(S:AString) => (AInt, .ErrFlags)
+	rule strlen(S:AString) => (AInt, .List)
 	
 	rule [init-domain]:
 		<k> initDomain => . ... </k>
