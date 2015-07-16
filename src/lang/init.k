@@ -140,8 +140,8 @@ rule [init-builtin-functions]:
 				@byValue, L7')
 			
 			"var_dump" |-> f (
-				'ListWrap('Param('Variable('Simple("x")))), 
-				'ListWrap(var_dump('Variable('Simple("x")))), 
+				'ListWrap('VarLengthParam('Variable('Simple("x")))), 
+				'ListWrap(var_dump_map('Variable('Simple("x")))), 
 				@byValue, L8')
 			
 			"print_r" |-> f (
