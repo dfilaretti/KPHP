@@ -89,7 +89,7 @@ syntax KResult ::= Value
 // NOTE: aven if the particular domain has no concrete integers, we might want them to 
 // be KResults anyway. For example, we might still use them for reference counting... 
 
-syntax KResult ::= Int
+syntax KResult ::= Int | String //TODO : String is temporary !
 
 /* For convenience, we define a set of option types */
 
