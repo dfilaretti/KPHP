@@ -1,5 +1,12 @@
 module LATTICE
        
+	    // backward compatibility
+		//syntax  ARefCount ::= Int
+
+		syntax  ARefCount ::= "ARC0" | "ARC1" | "ARC2" | "ARC>2"
+
+	   
+	   
 	   syntax ErrFlag ::= "MayBeNull" | "VisibilityErr" | "ImplicitTypeConversion" | "NullTypeConversion"
 	   
        syntax AStringValue ::= "AStringTop" | String
@@ -137,7 +144,7 @@ module LATTICE
 	  
 	   rule valueOfErrs(ListItem(E)  L) => lub_Value(valueOfErr(E), valueOfErrs(L))
 	   
-	   
+	   /*
 	   syntax Bool ::= "keepErrFlag" "(" ErrFlag ")" [predicate] 		//true if valueOfErr = Bot ?
 	   
 	   rule keepErrFlag(MayBeNull) => false
@@ -147,16 +154,32 @@ module LATTICE
 	   rule keepErrFlag(ImplicitTypeConversion) => true
 	   
 	   rule keepErrFlag(NullTypeConversion) => true
+	   */
+	   
+	   syntax List ::= "ErrsOfErr" "(" ErrFlag ")" [function]
+	   
+	   rule ErrsOfErr(MayBeNull) => ListItem(NullTypeConversion)
+	   
+	   rule ErrsOfErr(VisibilityErr) => .List
+	   
+	   rule ErrsOfErr(ImplicitTypeConversion) => .List
+	   
+	   rule ErrsOfErr(NullTypeConversion) => .List
 	   
 	   syntax List ::= "FilterErrFlags" "(" List ")" [function]
 	   
 	   rule FilterErrFlags(.List) => .List
 	   
+	   rule FilterErrFlags(ListItem(E:ErrFlag) L) => ErrsOfErr(E) FilterErrFlags(L)
+	   
+	   
+	   /*
 	   rule FilterErrFlags(ListItem(E:ErrFlag) L) => FilterErrFlags(L)
 	   when notBool(keepErrFlag(E))
 	   
 	   rule FilterErrFlags(ListItem(E:ErrFlag) L) =>ListItem(E) FilterErrFlags(L)
 	   when keepErrFlag(E)
+	   */
 	   
 	   syntax 	Bool ::= K "<Lattice" K		[function]
 	   syntax Bool ::= Scalar "<ScalarLattice" Scalar [function]

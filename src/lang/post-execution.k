@@ -66,13 +66,13 @@ rule [gc-disabled]:
 // mark: make a list of all locations whose ref count is zero
 
 rule [mark-collect]:
-	<k> mark((L:Loc |-> zval(_,_,0,_) => .) Mem:Map) ... </k>
+	<k> mark((L:Loc |-> zval(_,_,alphaRC(0),_) => .) Mem:Map) ... </k>
 	<locationsToCollect> Locs2Collect => Locs2Collect ListItem(L) </locationsToCollect>
 	
 rule [mark-leave]:
 	<k> mark((L:Loc |-> zval(_,_,RefCount,_) => .) Mem:Map) ... </k>
 	<trace> Trace:List => Trace ListItem("mark-leave") </trace>
-	when (RefCount >Int 0)
+	when (alphaRC(0) <Lattice RefCount)
 
 rule [mark-done]:
 	<k> mark(.Map) => . ... </k>

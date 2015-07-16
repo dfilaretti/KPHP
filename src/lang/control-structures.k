@@ -450,6 +450,49 @@ rule [foreach-with-local-copy]:
 			popLoopContext
 	</k>
 	<thematrix> ...  L' |-> L  ... </thematrix>		
+	<heap> ... L |-> zval(V:Array,_,_,false) ... </heap>
+	<currentForeachItem> _ => L' </currentForeachItem>
+	<trace> Trace:List => Trace ListItem("foreach-with-local-copy") </trace>
+	when ((V isCompoundValue) /*andBool (N <=Int 1)*/ andBool (fresh(Lx:Loc)))
+	[step]
+	
+rule [foreach-without-local-copy]: 	
+	<k> ('ForEach(L':Loc,,Pattern:K,,Stmt:K) ~> K:K) => 
+			write(V,Lx,true) ~> 
+			pushLoopContext(loopFrame(K, foreachArrayPair(L', none))) ~> 
+			foreach(Lx, Pattern, Stmt) ~>
+			popLoopContext
+	</k>
+	<thematrix> ...  L' |-> L  ... </thematrix>		
+	<heap> ... L |-> zval(V:Object,_,_,false) ... </heap>
+	<currentForeachItem> _ => L' </currentForeachItem>
+	<trace> Trace:List => Trace ListItem("foreach-without-local-copy") </trace>
+	when ((V isCompoundValue) /*andBool (N <=Int 1)*/ andBool (fresh(Lx:Loc)))
+	[step]
+	
+rule [foreach]: 	
+	<k> ('ForEach(L':Loc,,Pattern:K,,Stmt:K) ~> K:K) => 
+			pushLoopContext(loopFrame(K, foreachArrayPair(L', none))) ~> 
+			foreach(L', Pattern, Stmt) ~>
+			popLoopContext
+	</k>
+	<heap> ... L |-> zval(V:Value,_,_,true) ... </heap>
+	<thematrix> ...  L' |-> L  ... </thematrix>		
+	<currentForeachItem> _ => L' </currentForeachItem>
+	<trace> Trace:List => Trace ListItem("foreach") </trace>
+	when ((V isCompoundValue) /*andBool (N >Int 1) */)
+	[step]
+
+
+/* TODO: remove when done 
+rule [foreach-with-local-copy]: 	
+	<k> ('ForEach(L':Loc,,Pattern:K,,Stmt:K) ~> K:K) => 
+			write(V,Lx,true) ~> 
+			pushLoopContext(loopFrame(K, foreachArrayPair(L',Lx))) ~> 
+			foreach(Lx, Pattern, Stmt) ~>
+			popLoopContext
+	</k>
+	<thematrix> ...  L' |-> L  ... </thematrix>		
 	<heap> ... L |-> zval(V:Array,_,N,_) ... </heap>
 	<currentForeachItem> _ => L' </currentForeachItem>
 	<trace> Trace:List => Trace ListItem("foreach-with-local-copy") </trace>
@@ -483,6 +526,8 @@ rule [foreach]:
 	<trace> Trace:List => Trace ListItem("foreach") </trace>
 	when ((V isCompoundValue) andBool (N >Int 1))
 	[step]
+*/
+
 
 // Error cases: invalid argument
 

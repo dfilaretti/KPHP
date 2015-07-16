@@ -341,15 +341,15 @@ module OPS
 	
 	rule *valueToString(Bot) => Bot
 	
-	rule *valueToString(I:AIntValue) => "AInt"
+	rule *valueToString(I:AIntValue) => AStringTop
 	when I =/=K Bot
 	
-	rule *valueToString(F:AFloatValue) => "AFloat"
+	rule *valueToString(F:AFloatValue) => AStringTop
 	when F =/=K Bot
 	
 	rule *valueToString(S:AStringValue) => S
 	
-	rule *valueToString(B:ABoolValue) => "ABool"
+	rule *valueToString(B:ABoolValue) => AStringTop
 	when B =/=K Bot
 	
 	rule *valueToString(NULL) => ""
@@ -455,5 +455,80 @@ module OPS
 	rule [init-domain]:
 		<k> initDomain => . ... </k>
 		<domain> .K => Types </domain>
+	
+	
+	
+	//@ \section{Operations on reference counters}
+
+	//copied from mySigns
+	
+	syntax 	ARefCount ::= ARefCount "+ARefCount" ARefCount [function]
+
+	rule	ARC0 +ARefCount ARC0   => ARC0
+	rule	ARC0 +ARefCount ARC1   => ARC1
+	rule	ARC0 +ARefCount ARC2   => ARC2
+	rule	ARC0 +ARefCount ARC>2  => ARC>2
+
+	rule	ARC1 +ARefCount ARC0   => ARC1
+	rule	ARC1 +ARefCount ARC1   => ARC2
+	rule	ARC1 +ARefCount ARC2   => ARC>2
+	rule	ARC1 +ARefCount ARC>2  => ARC>2
+
+	rule	ARC2 +ARefCount ARC0   => ARC2
+	rule	ARC2 +ARefCount ARC1   => ARC>2
+	rule	ARC2 +ARefCount ARC2   => ARC>2
+	rule	ARC2 +ARefCount ARC>2  => ARC>2
+
+	rule	ARC>2 +ARefCount ARC0  => ARC>2
+	rule	ARC>2 +ARefCount ARC1  => ARC>2
+	rule	ARC>2 +ARefCount ARC2  => ARC>2
+	rule	ARC>2 +ARefCount ARC>2 => ARC>2
+
+	syntax 	ARefCount ::= ARefCount "-ARefCount" ARefCount [function] 
+
+	rule	ARC0 -ARefCount ARC0   => ARC0
+	//rule	ARC0 -ARefCount ARC1   => ARC1
+	//rule	ARC0 -ARefCount ARC2   => ARC2
+	//rule	ARC0 -ARefCount ARC>2  => ARC>2
+
+	rule	ARC1 -ARefCount ARC0   => ARC1
+	rule	ARC1 -ARefCount ARC1   => ARC0
+	//rule	ARC1 -ARefCount ARC2   => ARC>2
+	//rule	ARC1 -ARefCount ARC>2  => ARC>2
+
+	rule	ARC2 -ARefCount ARC0   => ARC2
+	rule	ARC2 -ARefCount ARC1   => ARC1
+	rule	ARC2 -ARefCount ARC2   => ARC0
+	//rule	ARC2 -ARefCount ARC>2  => ARC>2
+
+	rule	ARC>2 -ARefCount ARC0  => ARC>2
+	rule	ARC>2 -ARefCount ARC1  => ARC>2
+	rule	ARC>2 -ARefCount ARC2  => ARC>2
+	rule	ARC>2 -ARefCount ARC>2 => ARC>2
+	
+
+	syntax 	Bool ::= ARefCount "<ARefCount" ARefCount [function] 
+
+	rule	ARC0 <ARefCount ARC0   => false
+	rule	ARC0 <ARefCount ARC1   => true
+	rule	ARC0 <ARefCount ARC2   => true
+	rule	ARC0 <ARefCount ARC>2  => true
+
+	rule	ARC1 <ARefCount ARC0   => false
+	rule	ARC1 <ARefCount ARC1   => false
+	rule	ARC1 <ARefCount ARC2   => true
+	rule	ARC1 <ARefCount ARC>2  => true
+
+	rule	ARC2 <ARefCount ARC0   => false
+	rule	ARC2 <ARefCount ARC1   => false
+	rule	ARC2 <ARefCount ARC2   => false
+	rule	ARC2 <ARefCount ARC>2  => true
+
+	rule	ARC>2 <ARefCount ARC0  => false
+	rule	ARC>2 <ARefCount ARC1  => false
+	rule	ARC>2 <ARefCount ARC2  => false
+	rule	ARC>2 <ARefCount ARC>2 => false // ?!?
+	
+	
 	
 endmodule
