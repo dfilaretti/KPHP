@@ -1,5 +1,12 @@
 module LATTICE
        
+	    // backward compatibility
+		//syntax  ARefCount ::= Int
+
+		syntax  ARefCount ::= "ARC0" | "ARC1" | "ARC2" | "ARC>2"
+
+	   
+	   
 	   syntax ErrFlag ::= "MayBeNull" | "VisibilityErr" | "ImplicitTypeConversion" | "NullTypeConversion"
 	   
        syntax AStringValue ::= "AStringTop" | String
