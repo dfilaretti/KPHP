@@ -1873,7 +1873,7 @@ rule makeSet(SetItem(I) S:Set) => makeSet(S)
     rule    mergeZval(zval(V,T,R,I),zval(V',T',R',I')) => 
 	    zval(
 	        lub(V,V'),
-	        lub_type(T,T'),
+	        typeOf(lub(V,V')),			//allows the domain to give more info than just taking lub_Type(T, T')
 	        0, // TODO: can remove max(R,R'), if not used
 	        I orBool I')  
 

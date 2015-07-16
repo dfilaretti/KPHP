@@ -1,6 +1,6 @@
 module LATTICE
        
-	   syntax ErrFlag ::= "MayBeNull" | "VisibilityErr" | "ImplicitTypeConversion"
+	   syntax ErrFlag ::= "MayBeNull" | "VisibilityErr" | "ImplicitTypeConversion" | "NullTypeConversion"
 	   
        syntax AStringValue ::= "AStringTop" | String
        
@@ -129,6 +129,8 @@ module LATTICE
 	   
 	   rule valueOfErr( ImplicitTypeConversion) => Bot
 
+	   rule valueOfErr(NullTypeConversion) => Bot
+	   
 	   syntax Scalar ::= "valueOfErrs" "(" List ")" [function]
 	   
 	   rule valueOfErrs(.List) => Bot
@@ -143,6 +145,8 @@ module LATTICE
 	   rule keepErrFlag(VisibilityErr) => true
 	   
 	   rule keepErrFlag(ImplicitTypeConversion) => true
+	   
+	   rule keepErrFlag(NullTypeConversion) => true
 	   
 	   syntax List ::= "FilterErrFlags" "(" List ")" [function]
 	   
@@ -237,6 +241,14 @@ module LATTICE
 	   
 	   rule ListItem(E1:ErrFlag)  L1:List incList L2:List => L1 incList L2
 	   when E1 inList L2
+	   
+	   syntax List ::= "addErrFlag" "(" ErrFlag "," List ")" 	[function]
+	   
+	   rule addErrFlag(E, L) => L
+	   when E inList L
+	   
+	   rule addErrFlag(E,L) => ListItem(E) L
+	   when notBool(E inList L)
 	   
 
 endmodule

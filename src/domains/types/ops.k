@@ -58,7 +58,7 @@ module OPS
 	   
 	   syntax AStringValue ::= "AStringOfTuple" "(" K ")" [function]
 	 
-	   rule AStringOfTuple(NULL) => AStringTop
+	   rule AStringOfTuple(NULL) => ""
 	   rule AStringOfTuple( (V, E):AInt ) => lub_Value(*valueToString(V), AStringOfErrs(E)) 
 	   rule AStringOfTuple( (V, E):AFloat ) => lub_Value(*valueToString(V), AStringOfErrs(E)) 
 	   rule AStringOfTuple( (V, E):AString ) => lub_Value(*valueToString(V), AStringOfErrs(E)) 
@@ -227,8 +227,19 @@ module OPS
 	   [internal]
  
 
-	rule *toInteger(_) => AInt
+	rule *toInteger(I:AInt) => I [internal]
+	
+	rule *toInteger(F:AFloat) => (AIntOfTuple(F), addErrFlag(ImplicitTypeConversion, FilterErrFlags(getErrFlags(F))))	[internal]
+	
+	rule *toInteger(B:ABool) => (AIntOfTuple(B), addErrFlag(ImplicitTypeConversion, FilterErrFlags(getErrFlags(B))))	[internal]
  
+	rule *toInteger(S:AString) => (AIntOfTuple(S), addErrFlag(ImplicitTypeConversion, FilterErrFlags(getErrFlags(S))))	[internal]
+	
+	rule *toInteger(NULL) => (AInt, ListItem(NullTypeConversion))	[internal]
+	
+	rule *toInteger(Array(_, Elems)) => (AInt, ListItem(ImplicitTypeConversion))
+	
+	rule *toInteger(O:CompoundValue) => WARNING("conversion of compound types to integer is undefined (http://www.php.net/manual/en/language.types.integer.php)\n") ~> (AInt, ListItem(ImplicitTypeConversion))
  
  // to boolean
     syntax  ABool ::= "*toBoolean" "(" LanguageValue ")" [function]
@@ -238,20 +249,20 @@ module OPS
 	        [internal]
 
     rule    [toBoolean-int]:
-	        <k> *toBoolean(N:AInt) => (ABoolOfTuple(N), FilterErrFlags(getErrFlags(N))) ... </k>
+	        <k> *toBoolean(N:AInt) => (ABoolOfTuple(N), addErrFlag(ImplicitTypeConversion,FilterErrFlags(getErrFlags(N)))) ... </k>
 	        [internal]
 
     rule    [toBoolean-float]:    
-	        <k> *toBoolean(F:AFloat) => (ABoolOfTuple(F), FilterErrFlags(getErrFlags(F)))... </k>
+	        <k> *toBoolean(F:AFloat) => (ABoolOfTuple(F), addErrFlag(ImplicitTypeConversion,FilterErrFlags(getErrFlags(F))))... </k>
 	        [internal]
 
     rule    [toBoolean-string]:    
-	        <k> *toBoolean(S:AString) => (ABoolOfTuple(S), FilterErrFlags(getErrFlags(S))) ... </k>
+	        <k> *toBoolean(S:AString) => (ABoolOfTuple(S), addErrFlag(ImplicitTypeConversion,FilterErrFlags(getErrFlags(S)))) ... </k>
 	        [internal]
 
 
     rule    [toBoolean-array]:    
-	        <k> *toBoolean(Array(_,Elems)) => (ABool, .List) ... </k>
+	        <k> *toBoolean(Array(_,Elems)) => (ABool, ListItem(ImplicitTypeConversion)) ... </k>
 	        [internal]
 			
 	rule	[toBoolean-true]:    
@@ -270,7 +281,7 @@ module OPS
 	        [internal]
 
     rule    [toBoolean-null]:        
-	        <k> *toBoolean(NULL) => (ABool, .List) ... </k>
+	        <k> *toBoolean(NULL) => (ABool, ListItem(NullTypeConversion)) ... </k>
 	        [internal]
 
     // to float
@@ -286,9 +297,11 @@ module OPS
 	        [internal]
 
     rule    [toFloat-int]:
-	        <k> *toFloat(I:ANum) => (AFloatOfTuple(I), FilterErrFlags(getErrFlags(I))) ... </k> // TODO: fix!
+	        <k> *toFloat(I:AInt) => (AFloatOfTuple(I), addErrFlag(ImplicitTypeConversion,FilterErrFlags(getErrFlags(I)))) ... </k>
 	        [internal]
 
+	rule *toFloat("ANum") => (AFloat, ListItem(ImplicitTypeConversion)) [internal]		
+			
     rule    [toFloat-float]:
 	        <k> *toFloat(F:AFloat) => F ... </k>
 	        [internal]
@@ -346,29 +359,29 @@ module OPS
 	//TODO : change this when numeric strings get added
 	//TODO : find a way to add traces ?
 	
-	rule  *toString(I:AInt) => (*valueToString(lub_Value(*valueToString(AInt), Bot)), getErrFlags(I)) [internal]
+	rule  *toString(I:AInt) => (*valueToString(lub_Value(*valueToString(AInt), Bot)), addErrFlag(ImplicitTypeConversion, FilterErrFlags(getErrFlags(I)))) [internal]
 
-	rule *toString(B:ABool) => (AStringOfTuple(B), getErrFlags(B))	[internal]
+	rule *toString(B:ABool) => (AStringOfTuple(B), addErrFlag(ImplicitTypeConversion, FilterErrFlags(getErrFlags(B))))	[internal]
 			
-	rule  *toString(F:AFloat) => (AStringOfTuple(F), getErrFlags(F)) [internal]
+	rule  *toString(F:AFloat) => (AStringOfTuple(F), addErrFlag(ImplicitTypeConversion, FilterErrFlags(getErrFlags(F)))) [internal]
 	
 	rule *toString(S:AString) => S [internal]
 
-	rule *toString(Arr:Array) => (AStringTop, .List)	[internal] // concrete string is "Array" ?
+	rule *toString(Arr:Array) => (AStringTop, ListItem(ImplicitTypeConversion))	[internal] // concrete string is "Array" ?
 	
-	rule *toString(Top) => (AStringTop, .List) [internal]
+	rule *toString(Top) => (AStringTop, ListItem(ImplicitTypeConversion)) [internal]
 	
 	// TODO: put correct error msg
 	// TODO: use magic method __toString()
 
 	rule *toString(Obj:Object) => ERROR("Object of class %s could not be converted to string in %s on line %d") [internal, error]
 
-	rule *toString(NULL) => ("", .List) [internal]
+	rule *toString(NULL) => ("", ListItem(NullTypeConversion)) [internal]
 
 	syntax K ::= "string2Number" "(" AString ")" [strict]
 	
 	rule [string2Number]:
-			<k> string2Number(S:AString) => (ANum, getErrFlags(S)) ... </k>
+			<k> string2Number(S:AString) => (AInt, addErrFlag(ImplicitTypeConversion, FilterErrFlags(getErrFlags(S)))) ... </k> //TODO : should be Anum
 			<trace> Trace:List => Trace ListItem("string2Number") </trace>
 			[internal]
 	
@@ -396,7 +409,7 @@ module OPS
 	[step]
 	*/
 	
-	rule 'Concat(S1:AString,, S2:AString) => (AStringValueConcat(AStringOfTuple(S1), AStringOfTuple(S2)), mergeList(FilterErrFlags(getErrFlags(S1)), FilterErrFlags(getErrFlags(S2))))
+	rule 'Concat(S1:AString,, S2:AString) => specify(VE(AStringValueConcat(AStringOfTuple(S1), AStringOfTuple(S2)), mergeList(FilterErrFlags(getErrFlags(S1)), FilterErrFlags(getErrFlags(S2)))))
 	
     syntax  ABool ::= "notABool" ABool [function]
 
@@ -428,7 +441,7 @@ module OPS
     syntax K ::= "user_input"
 	
     rule [input]:
-    	<k>  user_input => (AStringTop, .List) ...</k>
+    	<k>  user_input => specify(VE(AStringTop, .List)) ...</k>
 	
 	
 	//can't be resolved in this domain
