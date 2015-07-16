@@ -341,15 +341,15 @@ module OPS
 	
 	rule *valueToString(Bot) => Bot
 	
-	rule *valueToString(I:AIntValue) => "AInt"
+	rule *valueToString(I:AIntValue) => AStringTop
 	when I =/=K Bot
 	
-	rule *valueToString(F:AFloatValue) => "AFloat"
+	rule *valueToString(F:AFloatValue) => AStringTop
 	when F =/=K Bot
 	
 	rule *valueToString(S:AStringValue) => S
 	
-	rule *valueToString(B:ABoolValue) => "ABool"
+	rule *valueToString(B:ABoolValue) => AStringTop
 	when B =/=K Bot
 	
 	rule *valueToString(NULL) => ""
