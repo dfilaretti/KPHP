@@ -8,5 +8,5 @@ function fact($n) {
     }
 }
 
-$q = fact(5);
+$q = fact(6);
 ?>

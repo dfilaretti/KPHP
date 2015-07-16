@@ -287,9 +287,9 @@ rule [init-scopes]:
 		L3 |-> L3'
 	</thematrix> 
 	<heap> . => 
-		L'  |-> zval(Array(none,.List), array, 0, false) 
-       		L1' |-> zval(Array(none,.List), array, 1, false) 
-        	L3' |-> zval(Array(none,.List), array, 1, false)	
+		L'  |-> zval(Array(none,.List), array, alphaRC(0), false) 
+       		L1' |-> zval(Array(none,.List), array, alphaRC(1), false) 
+        	L3' |-> zval(Array(none,.List), array, alphaRC(1), false)	
 	</heap> 
 	<currentScope> . => L </currentScope>
 	<globalScope> . => L </globalScope>

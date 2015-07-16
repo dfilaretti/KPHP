@@ -5,7 +5,80 @@ module FORWARD-OPS
 	imports LATTICE
 	imports ARITH-OPS
 	imports INIT
+
+//@ \section{Operations on reference counters}
+
+	syntax 	ARefCount ::= ARefCount "+ARefCount" ARefCount [function]
+
+	rule	ARC0 +ARefCount ARC0   => ARC0
+	rule	ARC0 +ARefCount ARC1   => ARC1
+	rule	ARC0 +ARefCount ARC2   => ARC2
+	rule	ARC0 +ARefCount ARC>2  => ARC>2
+
+	rule	ARC1 +ARefCount ARC0   => ARC1
+	rule	ARC1 +ARefCount ARC1   => ARC2
+	rule	ARC1 +ARefCount ARC2   => ARC>2
+	rule	ARC1 +ARefCount ARC>2  => ARC>2
+
+	rule	ARC2 +ARefCount ARC0   => ARC2
+	rule	ARC2 +ARefCount ARC1   => ARC>2
+	rule	ARC2 +ARefCount ARC2   => ARC>2
+	rule	ARC2 +ARefCount ARC>2  => ARC>2
+
+	rule	ARC>2 +ARefCount ARC0  => ARC>2
+	rule	ARC>2 +ARefCount ARC1  => ARC>2
+	rule	ARC>2 +ARefCount ARC2  => ARC>2
+	rule	ARC>2 +ARefCount ARC>2 => ARC>2
+
+	syntax 	ARefCount ::= ARefCount "-ARefCount" ARefCount [function] 
+
+	rule	ARC0 -ARefCount ARC0   => ARC0
+	//rule	ARC0 -ARefCount ARC1   => ARC1
+	//rule	ARC0 -ARefCount ARC2   => ARC2
+	//rule	ARC0 -ARefCount ARC>2  => ARC>2
+
+	rule	ARC1 -ARefCount ARC0   => ARC1
+	rule	ARC1 -ARefCount ARC1   => ARC0
+	//rule	ARC1 -ARefCount ARC2   => ARC>2
+	//rule	ARC1 -ARefCount ARC>2  => ARC>2
+
+	rule	ARC2 -ARefCount ARC0   => ARC2
+	rule	ARC2 -ARefCount ARC1   => ARC1
+	rule	ARC2 -ARefCount ARC2   => ARC0
+	//rule	ARC2 -ARefCount ARC>2  => ARC>2
+
+	rule	ARC>2 -ARefCount ARC0  => ARC>2
+	rule	ARC>2 -ARefCount ARC1  => ARC>2
+	rule	ARC>2 -ARefCount ARC2  => ARC>2
+	rule	ARC>2 -ARefCount ARC>2 => ARC>2
 	
+
+	syntax 	Bool ::= ARefCount "<ARefCount" ARefCount [function] 
+
+	rule	ARC0 <ARefCount ARC0   => false
+	rule	ARC0 <ARefCount ARC1   => true
+	rule	ARC0 <ARefCount ARC2   => true
+	rule	ARC0 <ARefCount ARC>2  => true
+
+	rule	ARC1 <ARefCount ARC0   => false
+	rule	ARC1 <ARefCount ARC1   => false
+	rule	ARC1 <ARefCount ARC2   => true
+	rule	ARC1 <ARefCount ARC>2  => true
+
+	rule	ARC2 <ARefCount ARC0   => false
+	rule	ARC2 <ARefCount ARC1   => false
+	rule	ARC2 <ARefCount ARC2   => false
+	rule	ARC2 <ARefCount ARC>2  => true
+
+	rule	ARC>2 <ARefCount ARC0  => false
+	rule	ARC>2 <ARefCount ARC1  => false
+	rule	ARC>2 <ARefCount ARC2  => false
+	rule	ARC>2 <ARefCount ARC>2 => false // ?!?
+
+
+
+
+
 //@ \section{Arithmetic operations}
 
 	// Plus
@@ -316,6 +389,9 @@ rule [toString-null]:
     rule    notABool ABoolTop => ABoolTop
 
 //@ \section{Comparisons}
+
+
+
 
     syntax  ABool ::= AInt "==AInt" AInt
 

@@ -10,6 +10,7 @@ module CORE
 	imports SHARED
 	imports PROGRAM-TRANSFORMATIONS
 	imports BUILTIN-FUNCTIONS
+	
 	//imports EMPTY-DOMAIN
 	//imports MYSIGNS-DOMAIN
 	imports TYPES-DOMAIN
@@ -930,7 +931,7 @@ rule [unset-null-ref]:
 	[step]
 
 rule [unset-non-current]:
-	<k> 'Unset(ref(L':Loc, X:Key)) => decRefCount(L1') ... </k>
+	<k> 'Unset(ref(L':Loc, X:Key)) => decRefCount(L1') ~> nullify(L1') ... </k>
 	<thematrix> 
 	... 
 		L' |-> L 
@@ -948,7 +949,7 @@ rule [unset-non-current]:
 	[step]
 
 rule [unset-current-none]:    
-	<k> 'Unset(ref(L':Loc, X:Key)) => decRefCount(L1') ... </k>
+	<k> 'Unset(ref(L':Loc, X:Key)) => decRefCount(L1') ~> nullify(L1')... </k>
 	<thematrix> 
 	... 
 		L' |-> L 
@@ -965,7 +966,7 @@ rule [unset-current-none]:
 	[step]
 	
 rule [unset-current-not-last]:
-	<k> 'Unset(ref(L':Loc, X:Key)) => decRefCount(L1') ... </k>
+	<k> 'Unset(ref(L':Loc, X:Key)) => decRefCount(L1') ~> nullify(L1') ... </k>
 	<thematrix> 
 	... 
 		L' |-> L 
@@ -982,7 +983,7 @@ rule [unset-current-not-last]:
 	[step]
 
 rule [unset-current-last]:   
-	<k> 'Unset(ref(L':Loc, X:Key)) => decRefCount(L1') ... </k>
+	<k> 'Unset(ref(L':Loc, X:Key)) => decRefCount(L1') ~> nullify(L1')... </k>
 	<thematrix> 
 	... 
 		L' |-> L 
@@ -1002,5 +1003,31 @@ rule [unset-refNull]:
 	<k> 'Unset(ref(locNull, _)) => . ... </k>
 	<trace> Trace:List => Trace ListItem("unset-refNull") </trace>
 	[step]
+
+// An internal operation to be used after unsetting a variable. 
+// It checks the reference counter. 
+// When uncertain about its exact value, it merges the affected ZVALUE
+// with NULL
+
+syntax K ::= "nullify" "(" Loc ")"
+
+
+rule [nullify]: 
+	<k> nullify(L') => . ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>
+	<heap> 
+		... 
+		L |-> (zval(V,T,RC,IR) => 
+			#if (isGammaSingleton(RC)) #then    
+				zval(V,T,RC,IR)
+			#else
+				mergeZval(zval(V,T,RC,IR),nullZval)
+			#fi)
+		... 
+	</heap>
+
+
+
+
 
 endmodule 

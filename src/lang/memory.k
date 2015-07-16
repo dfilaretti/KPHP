@@ -86,6 +86,9 @@ syntax LiteralValue ::= "Literal" "(" K ")" [klabel('lit)]
 syntax Value ::= LanguageValue | SemanticValue 
 syntax KResult ::= Value  
 
+// we want abstract refcounters to be KResults too!
+syntax KResult ::= ARefCount
+
 // NOTE: aven if the particular domain has no concrete integers, we might want them to 
 // be KResults anyway. For example, we might still use them for reference counting... 
 
@@ -101,6 +104,7 @@ syntax OptionString ::= String | None
 syntax OptionArrayItem ::= ArrayItem | None
 syntax OptionArrayCrntElem ::= ArrayCrntElem | None
 syntax OptionArrayItemVisibility ::= ArrayItemVisibility | None
+syntax OptionARefCount ::= ARefCount | None
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Lub} */
@@ -290,7 +294,7 @@ rule locsHoldSameCompound(M, V1, V2) =>
 		which is called ZValue, which we define as follows:	 */
 // ---------------------------------------------------------------------------------------------
 
-syntax Zval ::= "zval" "(" Value "," Type "," Int "," Bool ")"
+syntax Zval ::= "zval" "(" Value "," Type "," ARefCount "," Bool ")"
 	                               
 /*@ We also define a number of low-level rules for reading and writing a given field of a 
 	ZValue, as well as for creating or destroying them. Those operations will be used as 
@@ -323,7 +327,7 @@ rule [zval-read-type]:
 rule [zval-read-refCount]:    
 	<k> zvalRead(L':Loc, @RefCount) => RC ... </k>
 	<thematrix> ... L' |-> L ... </thematrix> 	
-	<heap>... L |-> zval(_, _, RC:Int, _) ...</heap>
+	<heap>... L |-> zval(_, _, RC:ARefCount, _) ...</heap>
 	<trace> Trace:List => Trace ListItem("zval-read-refCount") </trace>
 	[internal]
 
@@ -335,7 +339,7 @@ rule [zval-read-isRef]:
 	[internal]
 
 syntax LanguageValueOrType ::= LanguageValue | Type
-                             | Int | Bool // NOTE: I added this stuff!!
+                             | Int | Bool | ARefCount // NOTE: I added this stuff!!
 
 syntax K ::= "zvalWrite" "(" Loc "," ZvalField "," LanguageValueOrType ")" [strict(1,3)]
     
@@ -354,7 +358,7 @@ rule [zval-write-type]:
 	[internal, mem]
 
 rule [zval-write-refCount]:    
-	<k> zvalWrite(L',@RefCount,N:Int) => .K ... </k>
+	<k> zvalWrite(L',@RefCount,N:ARefCount) => .K ... </k>
 	<thematrix> ... L' |-> L ... </thematrix> 
 	<heap> ... L |-> zval(_,_,_ => N,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("zval-write-refCount") </trace>
@@ -367,10 +371,10 @@ rule [zval-write-isRef]:
 	<trace> Trace:List => Trace ListItem("zval-write-isRef") </trace>
 	[internal, mem]
 
-syntax K ::= "zvalCreate" "(" Loc "," Value "," Type "," Int "," Bool ")" 
+syntax K ::= "zvalCreate" "(" Loc "," Value "," Type "," ARefCount "," Bool ")" 
   
 rule [zval-create]:    
-	<k> zvalCreate(L':Loc, V:KResult, T:Type, R:Int, IR:Bool) => .K ... </k>
+	<k> zvalCreate(L':Loc, V:KResult, T:Type, R:ARefCount, IR:Bool) => .K ... </k>
 	<thematrix> ... . =>  L' |-> L ... </thematrix> 	
 	<heap> Rho:Map => Rho[zval(V, T, R, IR) / L] </heap>
 	<trace> Trace:List => Trace ListItem("zval-create") </trace>
@@ -389,31 +393,104 @@ rule [zval-destroy]:
 syntax K ::= "incRefCount" "(" Loc ")"
 
 rule [inc-refCount-1]:
-	<k> incRefCount(L':Loc) => zvalWrite(L', @RefCount, Refs +Int 1) ... </k>
+	<k> incRefCount(L':Loc) => 
+		zvalWrite(L', @RefCount, Refs +ARefCount alphaRC(1)) 
+	... 
+	</k>
 	<thematrix> ... L' |-> L ... </thematrix> 
-	<heap> ... L |-> zval(_,_,Refs:Int,false) ... </heap>
+	<heap> ... L |-> zval(_,_,Refs:ARefCount,false) ... </heap>
 	<trace> Trace:List => Trace ListItem("inc-refCount-1") </trace>
-	when (Refs ==Int 0)
-	[internal, mem]
+	when (Refs ==K alphaRC(0))
+	[internal, mem] 
 
 rule [inc-refCount-2]:
-	<k> incRefCount(L':Loc) => zvalWrite(L', @RefCount, Refs +Int 1) ... </k>
+	<k> incRefCount(L':Loc) => 
+		zvalWrite(L', @RefCount, Refs +ARefCount alphaRC(1)) 
+	... 
+	</k>
 	<thematrix> ... L' |-> L ... </thematrix> 	
-	<heap> ... L |-> zval(_,_,Refs:Int,false => true) ... </heap>
+	<heap> ... L |-> zval(_,_,Refs:ARefCount,false => true) ... </heap>
 	<trace> Trace:List => Trace ListItem("inc-refCount-2") </trace>
-	when (Refs ==Int 1)
+	when (Refs ==K alphaRC(1))
 	[internal, mem]		
 		
 rule [inc-refCount-3]:
-	<k> incRefCount(L':Loc) => zvalWrite(L', @RefCount, Refs +Int 1) ... </k>
+	<k> incRefCount(L':Loc) => 
+		zvalWrite(L', @RefCount, Refs +ARefCount alphaRC(1)) 
+	... 
+	</k>
 	<thematrix> ... L' |-> L ... </thematrix> 	
-	<heap> ... L |-> zval(_,_,Refs:Int,true) ... </heap>
+	<heap> ... L |-> zval(_,_,Refs:ARefCount,true) ... </heap>
 	<trace> Trace:List => Trace ListItem("inc-refCount-3") </trace>
-	when (Refs >Int 1)
+	when (alphaRC(1) <ARefCount Refs)
 	[internal, mem]
 
 syntax K ::= "decRefCount" "(" Loc ")"            
+
+/* TODO: remove! Factorised into the following two
+rule [dec-refCount-1]:
+	<k> decRefCount(L':Loc) => 
+		zvalWrite(L',@RefCount,Refs -ARefCount alphaRC(1)) 
+	... 
+	</k>
+	<thematrix> ... L' |-> L ... </thematrix> 	
+	<heap> ... L |-> zval(_,_,Refs:ARefCount,true) ... </heap>
+	<trace> Trace:List => Trace ListItem("dec-refCount-1") </trace>
+	when (alphaRC(2) <ARefCount Refs)
+	[internal, mem]
+
+rule [dec-refCount-2]:
+	<k> decRefCount(L':Loc) => 
+		zvalWrite(L',@RefCount,Refs -ARefCount alphaRC(1)) 
+	... 
+	</k>
+	<thematrix> ... L' |-> L ... </thematrix> 	
+	<heap> ... L |-> zval(_,_,Refs,true => false) ... </heap>
+	<trace> Trace:List => Trace ListItem("dec-refCount-2") </trace>
+	when (Refs ==K alphaRC(2))
+	[internal, mem]
+*/
+
+rule [dec-refCount-1]:
+	<k> decRefCount(L':Loc) => 
+		zvalWrite(L',@RefCount,Refs -ARefCount alphaRC(1)) ~>
+		makeIsRef(L') 
+	... 
+	</k>
+	<thematrix> ... L' |-> L ... </thematrix> 	
+	<heap> ... L |-> zval(_,_,Refs:ARefCount,_) ... </heap>
+	<trace> Trace:List => Trace ListItem("dec-refCount-1") </trace>
+	when (alphaRC(1) <ARefCount Refs)
+	[internal, mem]
+
 			
+rule [dec-refCount-3]:
+	<k> decRefCount(L':Loc) => 
+		zvalWrite(L',@RefCount,Refs -ARefCount alphaRC(1)) ~>
+		*Cond(V isCompoundValue, decRefCountCompound(L'),.) ... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 	
+	<heap> ... L |-> zval(V,_,Refs,false) ... </heap>
+	<trace> Trace:List => Trace ListItem("dec-refCount-3") </trace>
+	when (Refs ==K alphaRC(1)) orBool (Refs ==K alphaRC(0) )
+	[internal, mem]
+
+syntax K ::= "makeIsRef" "(" Loc ")"
+
+rule[makeIsRef]: 
+	<k> makeIsRef(L') => . ... </k>
+	<thematrix> ... L' |-> L ... </thematrix> 
+	<heap> 
+		... 
+		L |-> zval(
+			_,
+			_,
+			RC,
+			(_ => #if (RC <ARefCount alphaRC(2)) #then false #else true #fi)) 
+	... 
+	</heap> 
+
+
+/* TODO: remove when new rules are ok	
 rule [dec-refCount-1]:
 	<k> decRefCount(L':Loc) => zvalWrite(L',@RefCount,Refs -Int 1) ... </k>
 	<thematrix> ... L' |-> L ... </thematrix> 	
@@ -439,7 +516,7 @@ rule [dec-refCount-3]:
 	<trace> Trace:List => Trace ListItem("dec-refCount-3") </trace>
 	when (Refs <=Int 1)
 	[internal, mem]
-
+*/
 syntax K ::= "decRefCountCompound" "(" Loc ")"
 
 rule [dec-refCount-compound-array]:
@@ -491,11 +568,11 @@ rule	emptyArray => Array(none,.List)
 
 
 syntax  Zval ::= "emptyArrayZval" [function]
-rule    emptyArrayZval => zval(emptyArray,array,0,false)
+rule    emptyArrayZval => zval(emptyArray,array,alphaRC(0),false)
 
 
 syntax Zval ::= "nullZval" [function]
-rule nullZval => zval(NULL,unset,0,false)
+rule nullZval => zval(NULL,unset,alphaRC(0),false)
 
 
 syntax Zval ::= "errorZval" [function]
@@ -811,7 +888,10 @@ rule [write-loc-undef]:
 */
 
 rule [write-loc-undef]:    
-	<k> write(V:KResult,L':Loc,_) => zvalCreate(L', V, typeOf(V), 0, false) ...  </k>
+	<k> write(V:KResult,L':Loc,_) => 
+		zvalCreate(L', V, typeOf(V), alphaRC(0), false) 
+	...  
+	</k>
 	<thematrix> Mem:Map </thematrix>
 	<trace> Trace:List => Trace ListItem("write-loc-undef") </trace>
 	when (notBool (L' in keys(Mem))) andBool (L' =/=K locNull)                                                                                                         	
