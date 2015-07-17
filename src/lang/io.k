@@ -39,7 +39,7 @@ rule [exit]:
 
 
 syntax  K ::= "print" "(" K ")"     [strict]
-/*
+/* SM-FIXME: missing cases due to AFLOAT domain
 
 rule [internal-print]:    
 	<k> print (V:AFloat => Float2Int(V))  ... </k>

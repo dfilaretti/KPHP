@@ -528,10 +528,7 @@ rule [pop-stack-frame]:
 syntax K ::= "processFunArgs" "(" K "," K ")"
 
 
-//SM doing quick and dirty solution. alternative is to create array and pass it down, 
-// but that would mean using foreach in builtin function, risking to lose precision 
-// e.g. in var_dump
-//SM-FIXME: x[] si pianta, va sistemato in generale
+// Process variable length list of arguments by creating an array [PHP >= 5.6]
 
 context [process-fun-args-varlength]:	
 	processFunArgs(
@@ -554,7 +551,7 @@ rule [process-fun-args-param-varlength]:
 	<trace> Trace:List => Trace ListItem("process-fun-args-param") </trace>
 	[intermediate]
 
-//END SM
+// Process fixed number of arguments
 
 context [process-fun-args-strict]:	
 	processFunArgs(

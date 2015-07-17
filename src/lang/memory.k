@@ -806,23 +806,19 @@ rule len(ListItem(_) Tail) => 1 +Int len(Tail)
 
 syntax AInt ::= "biggestIntKey" "(" List ")" [function]
 
-//SM-FIXME hack for now, needs to be defined properly
-rule biggestIntKey(L:List) => alpha(len(L))
-
-/*
 rule biggestIntKey(.List) => alpha(-1)
 rule biggestIntKey(ListItem([Key:AString,_,_]) Tail) => biggestIntKey(Tail)
-rule biggestIntKey(ListItem([Key:AInt,_,_]) Tail) => max(Key, biggestIntKey(Tail))
-*/
+rule biggestIntKey(ListItem([Key:AInt,_,_]) Tail) => maxAInt(Key, biggestIntKey(Tail))
 
 /* Return the biggest of two (abstract) integers  */
 
-syntax AInt ::= "max" "(" AInt "," AInt ")" [function]
+syntax AInt ::= "maxAInt" "(" AInt "," AInt ")" [function]
 
-// TODO: it used to work in concrete. What about 
-//rule max(I1, I2) => I1	when I1 >=AInt I2
-//rule max(I1, I2) => I2	when I1 <AInt I2
+rule maxAInt(I1, I2) => I1	       	when valid(greater(I1,I2))
+rule maxAInt(I1, I2) => I2	   	when valid(lessEqual(I1,I2))
+rule maxAInt(I1, I2) => lub(I1,I2)	when notBool (valid(lessEqual(I1,I2)) orBool valid(greater(I1,I2)))
 
+//SM: if we fix a pattern for these cases, it should be used here
 
 
 // ---------------------------------------------------------------------------------------------
@@ -1256,20 +1252,6 @@ rule [rget-obj-prop]:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // We now define the auxiliary RgetRef1 operation. 
 // It is used to distinguish among cases when the actual RgetRef operation 
 // has fully evaluated the reference to be resolved 
@@ -1284,7 +1266,7 @@ rule [rget1-array-prop-undefined]:
 	<k> 
 		RgetRef1(L',X,KLT,KGEQ,_) => 
 		NOTICE("Undefined variable: %s in %s on line %d\n") ~> 
-		locNull ... 
+		sref(locNull,X) ... 
 	</k>
 	when (KLT ==Set .Set) andBool (KGEQ ==Set .Set) 
 
@@ -1321,7 +1303,7 @@ rule [rget1-obj-prop-undefined]:
 
 // arrays
 rule [rget1-array-prop-literally-found]:
-	<k> RgetRef1(L',X,_,KGEQ,_) =>  L1 ... </k>
+	<k> RgetRef1(L',X,_,KGEQ,_) =>  sref(L1,X) ... </k>
 	<thematrix> ... L' |-> L ... </thematrix>
 	<heap>... L |-> zval(Array(_,_:List ListItem([X,public,L1]) _:List),_,_,_)  ...</heap>
 	when (X in KGEQ) 
@@ -1336,7 +1318,7 @@ rule [rget1-array-prop-literally-found]:
 
 // public (i.e. no restrictions)
 rule [rget-obj-prop-public]:
-	<k> RgetRef1(L':Loc,X:AString,_,_,_) => L2 ... </k>
+	<k> RgetRef1(L':Loc,X:AString,_,_,_) => sref(L2,X) ... </k>
 	<class> Context:K </class>
 	<thematrix> 
 	... 
@@ -1357,7 +1339,7 @@ rule [rget-obj-prop-public]:
 // protected        
 rule [rget-obj-prop-protected]:    
 	<k> RgetRef1(L':Loc,X:AString,_,_,_) => 
-		*Cond(isVisible(ObjClass, Context, protected), L2, ERROR("ERROR-PROTECTED")) ... </k>
+		*Cond(isVisible(ObjClass, Context, protected), sref(L2,X), ERROR("ERROR-PROTECTED")) ... </k>
 	<class> Context:K </class>
 	<thematrix> 
 	... 
@@ -1377,7 +1359,7 @@ rule [rget-obj-prop-protected]:
 	
 // private
 rule [rget-obj-prop-private]:
-	<k> RgetRef1(L':Loc,X:AString,_,_,_) => L2 ... </k>
+	<k> RgetRef1(L':Loc,X:AString,_,_,_) => sref(L2,X) ... </k>
 	<class> Context </class>
 	<thematrix> 
 	... 
@@ -1398,20 +1380,9 @@ rule [rget-obj-prop-private]:
 // 	 the wrong context.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+syntax Loc ::= "sref" "(" Loc "," Key ")"
+//syntax KResult ::= SRef
+rule <k> ref(sref(L,X),Y) => ref(L,Y) ... </k>
 
 
 
@@ -1446,9 +1417,7 @@ rule [rget1-array-prop-bigger]:
 //       it is true for cases which ARE NOT fully fragmented! 
 //       E.g.: Top fullyFragmentedIn {Pos, Neg} => true
 //       but we know it should be false!
-
-
-
+// 	 At the moment case 4 and 5 do the same, if we fix the predicate we can benefit from the 2 variants.
 
 rule [rget1-obj-prop-fully-fragmented]:
 	<k> RgetRef1((L' => L1'),X,KLT,KGEQ,InitValue) ... </k>
@@ -1462,6 +1431,9 @@ rule [rget1-array-prop-fully-fragmented]:
 	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L |-> zval(V:Array,_,_,_) </heap>
 	when (KGEQ ==Set .Set) andBool (X fullyFragmentedIn KLT) 
+
+
+
 
 
 // Case 5: they key X is "partialy fragmented" in the array. This happens e.g. if 

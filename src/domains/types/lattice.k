@@ -229,8 +229,8 @@ module LATTICE
 	   syntax 	Bool ::= K ">Lattice" K		[function]
 	   
 	   rule A:K >Lattice B:K => B <Lattice A
-	   
-	   
+	
+
 	   syntax  Bool ::= "valid" "(" ABool ")"	                [predicate]
 	   syntax  Bool ::= "unsatisfiable" "(" ABool ")"    		[predicate]
 	   

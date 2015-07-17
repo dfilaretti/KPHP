@@ -417,11 +417,26 @@ context [assign-strict-RHS]:
 
 // convert LHS reference to basic one
 
-
 rule [assign-2-basic-ref]:
 	<k> 'Assign((LR:LRef => toBasicRef(LR)),, V:Value) ... </k>
 	[intermediate]
 
+rule [assign-LHS2-gamma]:
+	<k> 'Assign(ref(L,X),,V:KResult) => 
+		assign0(
+			Lget(ref(L,X)),
+			V) // weak VS strong update
+	... 
+	</k>
+	[intermediate]
+
+syntax K ::= "assign0" "(" K "," K ")" [strict(1)]
+
+rule [assign-RHS2Loc-NonLiteral]:    
+	<k>  assign0(sref(L,X),V:KResult) => assign1(L,V,isGammaSingleton(X)) ... </k>
+	[intermediate]
+
+/*
 rule [assign-LHS2-gamma]:
 	<k> 'Assign(ref(L,X),,V:KResult) => 
 		assign1(
@@ -431,8 +446,15 @@ rule [assign-LHS2-gamma]:
 	... 
 	</k>
 	[intermediate]
+*/
+
 
 syntax K ::= "assign1" "(" K "," K "," Bool ")" [strict(1,2)]
+
+
+rule [assign1-sref]:
+	<k>  assign1(_:KResult,sref(L,X)=>L,_) ... </k>
+	[intermediate]
 
 
 rule [assign-RHS2Loc-NonLiteral]:    
