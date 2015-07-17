@@ -805,18 +805,24 @@ rule len(ListItem(_) Tail) => 1 +Int len(Tail)
 /* Returns the max int key in a list  */
 
 syntax AInt ::= "biggestIntKey" "(" List ")" [function]
+
+//SM-FIXME hack for now, needs to be defined properly
+rule biggestIntKey(L:List) => alpha(len(L))
+
+/*
 rule biggestIntKey(.List) => alpha(-1)
 rule biggestIntKey(ListItem([Key:AString,_,_]) Tail) => biggestIntKey(Tail)
 rule biggestIntKey(ListItem([Key:AInt,_,_]) Tail) => max(Key, biggestIntKey(Tail))
+*/
 
 /* Return the biggest of two (abstract) integers  */
 
 syntax AInt ::= "max" "(" AInt "," AInt ")" [function]
 
-/* TODO: it used to work in concrete. What about abstract?
-rule max(I1, I2) => I1	when I1 >=AInt I2
-rule max(I1, I2) => I2	when I1 <AInt I2
-*/
+// TODO: it used to work in concrete. What about 
+//rule max(I1, I2) => I1	when I1 >=AInt I2
+//rule max(I1, I2) => I2	when I1 <AInt I2
+
 
 
 // ---------------------------------------------------------------------------------------------
@@ -1224,6 +1230,7 @@ rule [rget-array-prop]:
 	</k>
 	<thematrix> ... L' |-> L ... </thematrix>
 	<heap>... L |-> zval(Array(_,ArrayValues),_,_,_)  ...</heap>
+     	<trace> Trace:List => Trace ListItem("rget-array-prop") </trace>
 	[internal]
 
 // object
@@ -1675,6 +1682,7 @@ rule [lget-array-prop]:
 	</k>
 	<thematrix> ... L' |-> L ... </thematrix>
 	<heap>... L |-> zval(Array(_,ArrayValues),_,_,_)  ...</heap>
+        when X =/=K NULL
 	[internal]
 
 
@@ -1826,7 +1834,6 @@ rule [lget-not-found-default-array-key]:
 	<trace> Trace:List => Trace ListItem("lget-not-found-default-array-key") </trace>
 	when  (L =/=K LError)
 	[internal]
-
 
 
 endmodule

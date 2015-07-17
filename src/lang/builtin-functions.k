@@ -427,31 +427,26 @@ rule [strlen]:
 /* As a preliminary step we 'unroll' calls to unset which has more that one argument.   
    For example: var_dump($x, $y) ==> var_dump($x); var_dump($y). */
 
-rule [vardump-unroll-cons]:
-	<k> 'FunctionCall("var_dump",,'ListWrap(Arg:K,, Args:KList)) =>
-		'Expr('FunctionCall("var_dump",,'ListWrap(Arg))) ~>
-		'FunctionCall("var_dump",,'ListWrap(Args)) ... </k>
-	<trace> Trace:List => Trace ListItem("vardump-unroll-cons") </trace>
-	when (Args =/=KList .KList)
-	[structural]
+
+//SM: arg is a list of values now, cheating a bit
+syntax K ::= "var_dump_map" "(" K ")" [strict]
+
+rule [vardump-map-arg2langval]:
+	<k> var_dump_map(R:Ref=>convertToLanguageValue(R)) ...</k>
+	[internal]
+
+rule [vardump-map-ind]:
+	<k> var_dump_map(Array(C,(ListItem([_,_,L':Loc]) T:List))) 
+        => var_dump(L')      
+        ~> var_dump_map(Array(C,T)) ...</k>
+	[internal]
+
+rule [vardump-map-base]:
+	<k> var_dump_map(Array(_,.List)) => . ...</k>
+	[internal]
+
 	
-rule [func-call-vardump]:
-	<k> 'FunctionCall(FName:String,,'ListWrap(Arg:K),,Lab) => 
-		runFunction(FName, FunDef,'ListWrap(Arg),none,none,true,Lab,sf(FName,L,CurrentClass,CurrentObj,retTypeOfFunDef(FunDef),D,Lab)) ... </k>
-	<functions> ... FName |-> FunDef ... </functions>
-	<functionArgumentsDeclaration> D:K => . </functionArgumentsDeclaration>
-	<currentScope> L:Loc </currentScope>
-	<class> CurrentClass:K </class>
-	<object> CurrentObj:K </object>
-	when (FName ==String "var_dump") 
-	[step]
-
 syntax K ::= "var_dump" "(" K ")" [strict]
-
-rule [vardump-arg2Loc]:    
-	<k> var_dump (R:Ref => convertToLoc(R,r)) ... </k>
-	<trace> Trace:List => Trace ListItem("vardump-arg2Loc") </trace>
-	[intermediate]
 
 /* var_dumping an array  */
 rule [vardump-array]:
