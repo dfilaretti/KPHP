@@ -304,6 +304,10 @@ syntax ZvalField ::= "@Value" | "@Type" | "@RefCount" | "@IsRef"
 
 syntax K ::= "zvalRead" "(" Loc "," ZvalField ")" [strict(1)]
 
+rule [zval-read-getloc]:
+	<k> zvalRead(sref(L,X)=>L,_) ... </k>
+	[internal]
+
 rule [zval-read-value]:
 	<k> zvalRead(L',@Value) => V ... </k>
 	<thematrix> ... L' |-> L ... </thematrix> 	 
@@ -1381,10 +1385,10 @@ rule [rget-obj-prop-private]:
 
 
 syntax Loc ::= "sref" "(" Loc "," Key ")"
-//syntax KResult ::= SRef
-rule <k> ref(sref(L,X),Y) => ref(L,Y) ... </k>
-
-
+//rule sref2loc(sref(L,X)) => L [function]
+rule <k> ref(sref(L,X) => L,Y) ... </k>
+syntax K ::= "sref2loc" "(" K ")"
+//SM-FIXME: maybe use getloc function where needed
 
 
 // Case 3: the key X is not present, but a "bigger" key, say X1 is present 
@@ -1504,117 +1508,6 @@ rule [rget-string-undef]:
 	<heap> ... L |-> zval(Str:AString,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("rget-string-undef") </trace>
 	[internal]
-
-/*
-// Original (pre-abstraction) rule
-
-rule [rget-string-index]:	
-	<k> RgetRef(ref(L':Loc, Index:AInt),_) => substrString(Str, Index, Index +Int 1) ... </k>
-	<thematrix> ... L' |-> L ... </thematrix>	
-	<heap> ... L |-> zval(Str:String,_,_,_) ... </heap>
-	<trace> Trace:List => Trace ListItem("rget-string-index") </trace>
-	[internal]
-*/
-
-
-
-
-
-
-
-
-
-
-// TODO TODO TODO TODO TODO 
-
-// Reading an object property
-// NOTE: I'm leaving the following unchanged, as I concentrate on writing new ("abstract")
-//       rules for the (base) array case above. 
-
-/*
-// public (i.e. no restrictions)
-rule [rget-obj-prop-public]:
-	<k> RgetRef(ref(L':Loc, X:String), _) => L2 ... </k>
-	<class> Context:K </class>
-	<thematrix> 
-	... 
-		L'  |-> L 
-		L1' |-> L1
-	... 
-	</thematrix>	
-	<heap>
-	... 
-		L |-> zval(OID(L1':Loc,_,_),_,_,_)  
-		L1 |-> zval(Array(_,(E:List ListItem([X,public,L2:Loc]) F:List)),_,_,_)
-	...
-	</heap>
-	<trace> Trace:List => Trace ListItem("rget-obj-prop-public") </trace>
-	when notBool (E F hasPrivateProperty X for Context)
-	[internal]
-
-// protected        
-rule [rget-obj-prop-protected]:    
-	<k> RgetRef(ref(L':Loc, X:String), _) => 
-		*Cond(isVisible(ObjClass, Context, protected), L2, ERROR("ERROR-PROTECTED")) ... </k>
-	<class> Context:K </class>
-	<thematrix> 
-	... 
-		L'  |-> L 
-		L1' |-> L1
-	... 
-	</thematrix>	
-	<heap>
-	... 
-		L |-> zval(OID(L1':Loc,ObjClass:Id,_),_,_,_)  
-		L1 |-> zval(Array(_,(E:List ListItem([X,protected,L2:Loc]) F:List)),_,_,_)
-	...
-	</heap>
-	<trace> Trace:List => Trace ListItem("rget-obj-prop-protected") </trace>
-	when notBool (E F hasPrivateProperty X for Context)
-	[internal]
-	
-// private
-rule [rget-obj-prop-private]:
-	<k> RgetRef(ref(L':Loc, X:String),_) => L2 ... </k>
-	<class> Context </class>
-	<thematrix> 
-	... 
-		L'  |-> L 
-		L1' |-> L1
-	... 
-	</thematrix>	
-	<heap>
-	... 
-		L |-> zval(OID(L1':Loc,ObjClass,_),_,_,_)  
-        	L1 |-> zval(Array(_,(E:List ListItem([X,private(Context),L2:Loc]) F:List)),_,_,_)
-	...
-	</heap>
-	<trace> Trace:List => Trace ListItem("rget-obj-prop-private") </trace>
-	[internal]
-
-// non-existent property
-rule [rget-obj-prop-undefined]:    
-	<k> RgetRef(ref(L':Loc, X:String), _) => 
-		NOTICE("Undefined property: %s in %s on line %d\n") ~> 
-		locNull ... </k>
-	<thematrix> 
-	... 
-		L'  |-> L 
-		L1' |-> L1
-	... 
-	</thematrix>	
-	<heap>
-	... 
-		L |-> zval(OID(L1':Loc,_,_),_,_,_)  
-        	L1 |-> zval(Array(_,E:List),_,_,_)
-	...
-	</heap>
-	<trace> Trace:List => Trace ListItem("rget-obj-prop-undefined") </trace>
-	when notBool (E hasProperty X)
-	[internal]
-*/
-// TODO TODO TODO TODO TODO 
-
 
 
 

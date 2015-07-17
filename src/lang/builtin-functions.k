@@ -559,6 +559,17 @@ rule [vardump-float]:
 	<trace> Trace:List => Trace ListItem("vardump-float") </trace>
 	when (V isNumeric)
 
+rule [vardump-top]:    
+	<k> var_dump (L':Loc)  => 
+			*Cond(IsRef, print("&"), .) ~> 
+            print ("unknown") ~> 
+            print("(") ~>
+            print("Top") ~>
+            print(")\n") ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
+        <heap> ... L |-> zval(Top, _, _, IsRef:Bool) ... </heap>
+	<trace> Trace:List => Trace ListItem("vardump-top") </trace>
+
 /* Here we define an operation that recursively performs var_dump on compound 
    values (i.e. arrays and objects).  */
 

@@ -29,7 +29,8 @@ module LATTICE
 	   
 	   syntax ANum ::= AInt| AFloat| "(" "ANum" "," List ")"
 	   
-	   syntax Scalar ::= ANumValue | AStringValue | ABoolValue | Null | Bot
+	   syntax Scalar ::= ANumValue | AStringValue | ABoolValue | Null | Bot | Top
+//SM added top above?
 	
 	   syntax Scalar ::= "getValue" "(" DomainValue ")" [function]
 	   
@@ -62,6 +63,8 @@ module LATTICE
 	   rule specify(VE(V:AStringValue, E)) => specify_AString(VE(V,E))
 	   rule specify(VE(V:ABoolValue, E)) => specify_ABool(VE(V,E))
 	   rule specify(VE(NULL, _) ) => NULL
+//SM missing case?
+	   rule specify(VE(Top, _) ) => Top
 	  
 	   rule specify_AInt ( VE(I:AIntValue, E) ) => (I,E)
 	   rule specify_AFloat ( VE(F:AFloatValue, E) ) => (F,E)
@@ -107,6 +110,9 @@ module LATTICE
 	   
 	   rule lub_Value(S1:String, S2:String)=>S1
 	   when S1 ==String S2
+
+//SM missing?
+	   rule lub_Value(S1:String, I:AIntValue)=>Top
 
        rule lub_Value(AStringTop, X:AStringValue)=>AStringTop
 
