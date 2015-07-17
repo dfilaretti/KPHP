@@ -160,11 +160,11 @@ module LATTICE
 	   
 	   rule ErrsOfErr(MayBeNull) => ListItem(NullTypeConversion)
 	   
-	   rule ErrsOfErr(VisibilityErr) => .List
+	   rule ErrsOfErr(VisibilityErr) => ListItem(VisibilityErr)
 	   
-	   rule ErrsOfErr(ImplicitTypeConversion) => .List
+	   rule ErrsOfErr(ImplicitTypeConversion) => ListItem(ImplicitTypeConversion)
 	   
-	   rule ErrsOfErr(NullTypeConversion) => .List
+	   rule ErrsOfErr(NullTypeConversion) => ListItem(NullTypeConversion)
 	   
 	   syntax List ::= "FilterErrFlags" "(" List ")" [function]
 	   
@@ -199,7 +199,7 @@ module LATTICE
 	   
 	   rule AInt <ScalarLattice AInt => false
 	   rule (AFloat <ScalarLattice AFloat) => false
-//TODO	   rule "ANum" <ScalarLattice X:ANum => false
+	   rule ANum <ScalarLattice X:ANumValue => false
 	   rule (AInt <ScalarLattice AFloat) => false
 	   rule (AFloat <ScalarLattice AInt) => false
 	   rule (AInt <ScalarLattice ANum) => true
