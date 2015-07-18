@@ -414,7 +414,6 @@ context [assign-strict-RHS]:
 	'Assign(_:KResult,,HOLE) 
 	[structural]
 
-
 // convert LHS reference to basic one
 
 rule [assign-2-basic-ref]:
@@ -422,13 +421,9 @@ rule [assign-2-basic-ref]:
 	[intermediate]
 
 rule [assign-LHS2-gamma]:
-	<k> 'Assign(ref(L,X),,V:KResult) => 
-		assign0(
-			Lget(ref(L,X)),
-			V) // weak VS strong update
-	... 
-	</k>
+	<k> 'Assign(ref(L,X),,V:KResult) => assign0(Lget(ref(L,X)),V) ... </k>
 	[intermediate]
+
 
 syntax K ::= "assign0" "(" K "," K ")" [strict(1)]
 
@@ -436,26 +431,14 @@ rule [assign-RHS2Loc-NonLiteral]:
 	<k>  assign0(sref(L,X),V:KResult) => assign1(L,V,isGammaSingleton(X)) ... </k>
 	[intermediate]
 
-/*
-rule [assign-LHS2-gamma]:
-	<k> 'Assign(ref(L,X),,V:KResult) => 
-		assign1(
-			Lget(ref(L,X)),
-			V,
-			isGammaSingleton(X)) // weak VS strong update
-	... 
-	</k>
-	[intermediate]
-*/
-
 
 syntax K ::= "assign1" "(" K "," K "," Bool ")" [strict(1,2)]
 
-
+/* SM changing strategy using sref2loc in convertoloc
 rule [assign1-sref]:
 	<k>  assign1(_:KResult,sref(L,X)=>L,_) ... </k>
 	[intermediate]
-
+*/
 
 rule [assign-RHS2Loc-NonLiteral]:    
 	<k>  assign1(_:KResult, (V:ConvertibleToLoc => convertToLoc(V,r)),UpdateType) ... </k>
@@ -489,7 +472,7 @@ rule [assign]:
 	<k> assign1(L:Loc,V:LanguageValue,UpdateType) => 
 		copyValueToLoc(V,L,UpdateType) ~> 
 		zvalRead(L,@Value) ... </k>
-	[step] // last K was "V"
+	[step] 
 
 rule [assign-error]:
 	<k> assign1(thisTag(L:K),_,_) =>  ERROR("Cannot re-assign $this in %s on line %d") ... </k>

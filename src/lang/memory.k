@@ -122,7 +122,7 @@ rule lub(_,Top) => Top
 rule lub(Bot,X) => X
 rule lub(X,Bot) => X
 
-// NOTE: doesn't wotk for booleans! 
+// NOTE: doesn't work for booleans! 
  
  /*
 rule lub(V1,V2) => Top
@@ -243,7 +243,6 @@ rule    typeOf(V:AString) => string
 rule    typeOf(V:Object) => object
 rule    typeOf(V:Array) => array
 rule    typeOf(NULL) => unset
-
 rule	typeOf(Top) => unknown // NOTE: internal!
 
 
@@ -267,6 +266,7 @@ rule T1:Type ==Type T2:Type => T1 ==K T2 when notBool ((T1 ==K unknown) orBool (
 
 syntax Bool ::= "hasSameType" "(" Value "," Value ")" [function]
 rule hasSameType(V1, V2) => typeOf(V1) ==Type typeOf(V2) 
+//SM should this return false for Top? 
 
 syntax Bool ::= "isLiteral" "(" ConvertibleToLoc ")" [function]
 
@@ -1213,7 +1213,7 @@ rule [rget-default]:
 // Recursive propagation of get operations
 
 rule [rget-propagate]:    
-	<k> RgetRef(lref(R:Ref, X:Key, T1:RefType),T2:RefType) => RgetRef(ref(RgetRef(R,T1), X), T2) ... </k>
+	<k> RgetRef(lref(R:Ref, X:Key, T1:RefType),T2:RefType) => RgetRef(ref(sref2loc(RgetRef(R,T1)), X), T2) ... </k>
 	[structural]
 
 
@@ -1384,11 +1384,17 @@ rule [rget-obj-prop-private]:
 // 	 the wrong context.
 
 
+// SM sref is used to remember the key X once the reference has been resolved to L
 syntax Loc ::= "sref" "(" Loc "," Key ")"
-//rule sref2loc(sref(L,X)) => L [function]
-rule <k> ref(sref(L,X) => L,Y) ... </k>
-syntax K ::= "sref2loc" "(" K ")"
-//SM-FIXME: maybe use getloc function where needed
+// in genereal there will be places that need a L:Loc and get instead a sref(L,X):Loc
+// and we need to force the conversion with sref2loc below 
+
+syntax K ::= "sref2loc" "(" Loc ")" [strict]
+rule sref2loc(sref(L,X)) => L 
+//rule sref2loc(L) => L //SM how to have this and make it mutually exclusive wrt rule above?
+rule sref2loc(locNull) => locNull 
+rule <k> ref(sref(L,X) => L,Y) ... </k> //SM still needed in some cases
+
 
 
 // Case 3: the key X is not present, but a "bigger" key, say X1 is present 
@@ -1532,7 +1538,7 @@ syntax K ::= "LgetRef" "(" Ref "," RefType ")" [strict(1), klabel('put)]
 syntax Loc ::= "LError"
 
 rule [lget-propagate]:    
-	<k> LgetRef(lref(R:Ref, X:Key, T1:RefType),T2:RefType) => LgetRef(ref(LgetRef(R,T1), X), T2) ... </k>
+	<k> LgetRef(lref(R:Ref, X:Key, T1:RefType),T2:RefType) => LgetRef(ref(sref2loc(LgetRef(R,T1)), X), T2) ... </k>
 	<trace> Trace:List => Trace ListItem("lget-propagate") </trace>
 	[structural]
 
