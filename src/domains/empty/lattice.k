@@ -25,6 +25,8 @@ syntax 	Bool ::= K "<Lattice" K		[function]
 
 rule _ <Lattice _ => false
 
+syntax Bool ::= K "==Lattice" K [function]
+rule A ==Lattice B => A ==K B
 
 
 

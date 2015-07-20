@@ -99,6 +99,9 @@ syntax 	Bool ::= AString ">Lattice" AString [function]
 	(notBool V1 <Lattice V2) andBool (notBool V1 ==K V2)
 */
 
+	syntax Bool ::= K "==Lattice" K [function]
+	rule A ==Lattice B => A ==K B
+
 
 
 
