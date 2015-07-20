@@ -101,6 +101,51 @@ rule [function-decl-type-hint-not-supported-4]:
 /*@ \subsection{Function Call} */
 // ---------------------------------------------------------------------------------------------
 
+rule (config(_) => .) ~> returnToCaller(Caller) ~> K
+
+syntax K ::= "returnToCaller" "(" K ")" 
+rule <k> returnToCaller(K) => V ~> K ... </k>
+	 <returns> V => Bot </returns>
+
+// Given an abstract string (fun neme), returns all existing functions that match
+syntax Set ::= "getFunSet" "(" AString "," Map ")" [function]
+// TODO
+
+rule getFunSet(_,.Map) => .Set 
+
+rule getFunSet(FunName,(F |-> _) Fs) => SetItem(F) getFunSet(FunName,Fs)
+	when (F <Lattice FunName) orBool (F ==K FunName)
+
+rule getFunSet(FunName,(F |-> _) Fs) => getFunSet(FunName,Fs)
+	when notBool ((F <Lattice FunName) orBool F ==K FunName)
+
+
+// Given a set of functions, an argument list and a lable, 
+// produces a list of function calls 
+syntax Set ::= "makeFunCalls" "(" Set "," K "," Int "," Bag ")" [function]
+
+rule makeFunCalls(.Set,_,_,_) => .Set
+rule makeFunCalls(SetItem(FunName) FunNames,Args,Lab,Conf) => 
+		SetItem(runAndGetConfig(runInConf(config(Conf), functionCall1(FunName,Args,Lab))))
+		makeFunCalls(FunNames,Args,Lab,Conf)
+
+// Takes a set of functions as well as arguments and a label.
+// executes all of them in pseudo-parallel and merges the results
+syntax K ::= "runFunctions" "(" AString "," Set "," K "," Int ")"
+
+rule [run-functions]:
+	<kphp>
+		<script>
+			<k> runFunctions(_,FunctionSet,Args,Label) =>  
+				mergeConfigsSet(makeFunCalls(FunctionSet,Args,Label,Conf)) ... </k>
+			_
+		</script>
+		Conf:Bag
+	</kphp>
+	when FunctionSet =/=Set .Set
+
+rule runFunctions(FName,.Set,_,_) => NOT-SUPPORTED("'" +String FName +String "' not defined!") 
+
 rule [function-name]:
 	<k> 'FunctionName(FName:String) => FName ... </k>
 	[step]
@@ -115,8 +160,32 @@ rule [func-call-fname2LangValue]:
 		_:K,,_) ... </k>
 	[intermediate]
 
+/*
 rule [func-call]:
-	<k> 'FunctionCall(FName:String,,'ListWrap(Args:KList),,Lab) => 
+	<k> 'FunctionCall(FName:String,,Args,,Lab) => 
+		functionCall1(FName,Args,Lab) ... </k>
+	[step]
+*/
+
+/*
+rule [func-call]:
+	<k> 'FunctionCall(FName:String,,Args,,Lab) => 
+		runFunctions(getFunSet(FName,Functions),Args,Lab) ... </k>
+	<functions> Functions </functions>
+	[step]
+*/
+
+rule [func-call]:
+	<k> 'FunctionCall(FName:AString,,Args,,Lab) ~> K => 
+		runFunctions(FName,getFunSet(FName,Functions),Args,Lab) ~> 
+		returnToCaller(K) </k>
+	<functions> Functions </functions>
+	[step]
+
+syntax K ::= "functionCall1" "(" String "," K "," Int ")"
+
+rule [func-call]:
+	<k> functionCall1(FName:String,'ListWrap(Args:KList),Lab) => 
 		runFunction(FName,FunDef,'ListWrap(Args),none,none,true,Lab,sf(FName,L,CurrentClass,CurrentObj,retTypeOfFunDef(FunDef),D,Lab)) ... </k>
 	<functions> ... FName |-> FunDef ... </functions>
 	<functionArgumentsDeclaration> D:K => . </functionArgumentsDeclaration>
@@ -125,13 +194,15 @@ rule [func-call]:
 	<object> CurrentObj:K </object>
 	[step]
 
+/*
 rule [func-call-func-not-defined]: 
-	<k> 'FunctionCall(FName:String,,'ListWrap(Args:KList),,_) => 
+	<k> functionCall1(FName:String,'ListWrap(Args:KList),_) => 
 		NOT-SUPPORTED("'" +String FName +String "' not defined!") ... </k>
 	<functions> F:Map </functions>
 	<trace> Trace:List => Trace ListItem("func-call-func-not-defined") </trace>
 	when notBool (FName in keys(F)) 
 	[step, error]
+*/
 	
 ///////////////////////////////////////////////////////////////////////////////
 /*@ \subsection{Return} */
@@ -223,31 +294,9 @@ rule [return]:
     from the stack and resumes the suspended computation with the return value.
     If no return was provided, a default one is used as whown below... */ 
 
-    syntax K ::= "POP"  "(" K ")" 
+    //syntax K ::= "POP"  "(" K ")" 
 
-/*
-    rule    <k> POP(K) => *Cond(
-			(RefMode ==K @byRef) andBool (notBool isRetValueLoc(V)),
-                	NOTICE("Only variable references should be returned by reference in %s on line %d\n"),.
-		) ~>         	
-                setCrntScope(CallerScope) ~>
-                setCrntClass(CallerClass) ~>
-                setCrntObj(CallerObj) ~>
-                decRefCount(LocalScope) ~>
-                popStackFrame ~>
-                V ~> K   </k> 
-            <functionStack> ListItem(sf(_:String,CallerScope,CallerClass,CallerObj:K, RefMode, D,_)) ... </functionStack>
- 
-	<currentScope> LocalScope:Loc </currentScope>
-        <heap> ... LocalScope |-> zval(Array(_,Elems:List),_,_,_) ... </heap>
-	<functionArgumentsDeclaration> _ => D </functionArgumentsDeclaration>
-	<status> S => NEXT </status> 
-	<returns> V => Bot </returns> // TODO 
-	[transition]	
-*/	
-
-
-
+	/*
     rule    <k> POP(K) =>	
                 setCrntScope(CallerScope) ~>
                 setCrntClass(CallerClass) ~>
@@ -265,8 +314,24 @@ rule [return]:
 	<returns> V => Bot </returns> 
 	<returns-loc> VL => .Set </returns-loc>
 	[transition]	
+	*/
 
+	syntax K ::= "POP"
 
+    rule    <k> POP =>	
+                setCrntScope(CallerScope) ~>
+                setCrntClass(CallerClass) ~>
+                setCrntObj(CallerObj) ~>
+                decRefCount(LocalScope') ~>
+                popStackFrame ... </k> 
+            <functionStack> ListItem(sf(_:String,CallerScope,CallerClass,CallerObj:K, RefMode, D,_)) ... </functionStack>
+ 
+	<currentScope> LocalScope':Loc </currentScope>
+	<thematrix> ... LocalScope' |-> LocalScope ... </thematrix>	
+        <heap> ... LocalScope |-> zval(Array(_,Elems:List),_,_,_) ... </heap>
+	<functionArgumentsDeclaration> _ => D </functionArgumentsDeclaration>
+	<status> S => NEXT </status> 
+	[transition]	
 
 
 
@@ -680,6 +745,8 @@ rule
 
 syntax K ::= "runFunction" "(" String "," FunDef "," K "," OptionId "," OptionLoc "," Bool "," Int "," StackFrame ")"
 
+
+/*
 rule [run-function]:	
 	<k> runFunction(FName:String, f(Parameters:K, Body:K, RetType:K, LStatic:Loc), Args:K, Class:OptionId,Obj:OptionLoc,Static:Bool,Lab,Sf:StackFrame) ~> K:K =>
 			*Cond(
@@ -703,7 +770,33 @@ rule [run-function]:
 	<object> CurrentObj:K </object>
 	when (fresh(L1:Loc)) andBool (notBool((H',H) |- Sf isIn S)) 
 	[internal]
+*/
 
+rule [run-function]:	
+	<k> runFunction(FName:String, f(Parameters:K, Body:K, RetType:K, LStatic:Loc), Args:K, Class:OptionId,Obj:OptionLoc,Static:Bool,Lab,Sf:StackFrame) =>
+			*Cond(
+				(notBool Static) andBool ((Obj ==K none) andBool (CurrentObj ==K .K)),
+				NOTICE("Non-static method should not be called statically\n"),.) ~>
+			processFunArgs(Parameters, Args) ~> 
+			pushStackFrame(Sf) ~> 	
+			ArrayCreateEmpty(L1) ~>
+			setCrntScope(L1) ~>
+			incRefCount(L1) ~> 
+			setCrntClass(Class) ~> 
+			*Cond(Obj =/=K none, allocCrntObj(Obj), .K) ~>
+			CopyFunctionArgs ~> 
+			'ListWrap(Body,, 'Return(NULL)) ~> POP ... </k>
+	<functionArgumentsDeclaration> D:K => . </functionArgumentsDeclaration>
+	<currentScope> L:Loc </currentScope>
+	<heap> H:Map </heap>
+	<thematrix> H' </thematrix>
+	<class> CurrentClass:K </class>
+	<functionStack> S:List </functionStack>
+	<object> CurrentObj:K </object>
+	when (fresh(L1:Loc)) andBool (notBool((H',H) |- Sf isIn S)) 
+	[internal]
+
+/*
 rule [run-function]:	
 	<k> (runFunction(FName:String, f(Parameters:K, Body:K, RetType:K, LStatic:Loc), Args:K, Class:OptionId,Obj:OptionLoc,Static:Bool,Lab,Sf) ~> K:K) => R ~> K </k>
 	<returns> R </returns>
@@ -712,7 +805,16 @@ rule [run-function]:
 	<functionStack> S:List </functionStack>
 	when (H',H) |- Sf isIn S
 	[internal]
+*/
 
+rule [run-function]:	
+	<k> (runFunction(FName:String, f(Parameters:K, Body:K, RetType:K, LStatic:Loc), Args:K, Class:OptionId,Obj:OptionLoc,Static:Bool,Lab,Sf)) => . ... </k>
+	<returns> R </returns>
+	<heap> H:Map </heap>
+	<thematrix> H' </thematrix>
+	<functionStack> S:List </functionStack>
+	when (H',H) |- Sf isIn S
+	[internal]
 
 
 /* Old IMP's stuff
