@@ -3,8 +3,8 @@ require "program-transformations.k"
 require "builtin-functions.k"
 
 //require "../domains/empty/empty-domain.k"
-//require "../domains/types/types-domain.k"
-require "../domains/mySigns/mySigns-domain.k"
+require "../domains/types/types-domain.k"
+//require "../domains/mySigns/mySigns-domain.k"
 
 module CORE 
 	imports SHARED
@@ -12,8 +12,8 @@ module CORE
 	imports BUILTIN-FUNCTIONS
 	
 	//imports EMPTY-DOMAIN
-	imports MYSIGNS-DOMAIN
-	//imports TYPES-DOMAIN
+	//imports MYSIGNS-DOMAIN
+	imports TYPES-DOMAIN
 	imports ID-HOOKS
 
 syntax Domain ::= "Concrete"
