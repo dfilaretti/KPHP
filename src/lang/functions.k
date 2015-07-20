@@ -123,7 +123,6 @@ rule [func-call]:
 	<currentScope> L:Loc </currentScope>
 	<class> CurrentClass:K </class>
 	<object> CurrentObj:K </object>
-	when notBool (FName ==String "var_dump") 
 	[step]
 
 rule [func-call-func-not-defined]: 
@@ -528,6 +527,32 @@ rule [pop-stack-frame]:
 
 syntax K ::= "processFunArgs" "(" K "," K ")"
 
+
+// Process variable length list of arguments by creating an array [PHP >= 5.6]
+
+context [process-fun-args-varlength]:	
+	processFunArgs(
+		'ListWrap('VarLengthParam(Param:K)),
+		'ListWrap('Param(HOLE),, Args:KList))
+
+rule [process-fun-args-empty]:	
+	<k> processFunArgs(_:K,'ListWrap(.KList)) => . ... </k>
+	<trace> Trace:List => Trace ListItem("process-fun-args-varlength-empty") </trace>
+	[step]
+
+rule [process-fun-args-param-varlength]:
+	<k> processFunArgs(
+		'ListWrap('VarLengthParam(Param:K)),
+		'ListWrap('Param(V:Value),, Args:KList)) => 
+		processFunArgs('ListWrap('VarLengthParam(Param:K)), 'ListWrap(Args)) ... </k>
+	<functionArgumentsDeclaration> 
+		I:K => I ~>'Expr('Assign('ArrayAccess(Param,,'None(.KList)),,V))                                    
+	</functionArgumentsDeclaration>
+	<trace> Trace:List => Trace ListItem("process-fun-args-param") </trace>
+	[intermediate]
+
+// Process fixed number of arguments
+
 context [process-fun-args-strict]:	
 	processFunArgs(
 		'ListWrap('Param(Param:K),, Params:KList),
@@ -557,7 +582,7 @@ rule [process-fun-args-param]:
 rule [process-fun-args-param2]: 
 	<k> processFunArgs(
 		'ListWrap('Param(Param:K),, Params:KList),
-		'ListWrap(V:Value,, Args:KList)) => 
+		'ListWrap(V:Value,, Args:KList)) =>  //SM: when is V not 'Param(V)?
 		processFunArgs('ListWrap(Params), 'ListWrap(Args)) ... </k>
 	<functionArgumentsDeclaration> 
 		I:K => I ~>'Expr('Assign(Param,, V)) 
@@ -655,7 +680,6 @@ rule
 
 syntax K ::= "runFunction" "(" String "," FunDef "," K "," OptionId "," OptionLoc "," Bool "," Int "," StackFrame ")"
 
-// TODO: double chekc!
 rule [run-function]:	
 	<k> runFunction(FName:String, f(Parameters:K, Body:K, RetType:K, LStatic:Loc), Args:K, Class:OptionId,Obj:OptionLoc,Static:Bool,Lab,Sf:StackFrame) ~> K:K =>
 			*Cond(

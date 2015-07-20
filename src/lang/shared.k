@@ -1,5 +1,6 @@
 require "memory.k"
 require "meta.k"
+
 module SHARED
 	imports MEMORY
     imports META
@@ -56,8 +57,8 @@ syntax OptionConversionMode ::= ConversionMode | None
 
 syntax Loc ::= "convertToLoc" "(" ConvertibleToLoc "," OptionConversionMode ")" [function]
 rule convertToLoc(V:LiteralValue,_) => allocValue(V)
-rule convertToLoc(R:Ref,l) => Lget(R)
-rule convertToLoc(R:Ref,r) => Rget(R)
+rule convertToLoc(R:Ref,l) => sref2loc(Lget(R)) //SM extract loc from sref
+rule convertToLoc(R:Ref,r) => sref2loc(Rget(R))
 rule convertToLoc(thisTag(L),_) => L
 
 syntax BasicRef ::= "toBasicRef" "(" LRef ")" [function]

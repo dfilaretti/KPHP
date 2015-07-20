@@ -1,8 +1,10 @@
 require "shared.k"
+require "io.k"
 
 module BUILTIN-FUNCTIONS
 	imports SHARED
-
+	imports IO
+	
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 /*@ \section{Builtin Functions} */
@@ -192,7 +194,7 @@ rule [key.none]:
 
 // Array (current)   
 rule [key-some]:    
-	<k> key(L':Loc) => X ... </k>
+	<k> key(L':Loc) => alpha(X) ... </k>
 	<thematrix> ... L' |-> L ... </thematrix>	
 	<heap> ... L |-> zval(Array([X,_],_),_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("key-some") </trace>
@@ -405,7 +407,9 @@ rule [strlen-arg2LangValue]:
 	<trace> Trace:List => Trace ListItem("strlen-arg2LangValue") </trace>
 	[intermediate]
 	
-rule [strlen-arg2String]: 
+
+
+	rule [strlen-arg2String]: 
 	<k> strlen(V:LanguageValue => *toString(V)) ... </k>
 	<trace> Trace:List => Trace ListItem("strlen-arg2String") </trace>
 	when notBool (isStringType(V))
@@ -423,31 +427,26 @@ rule [strlen]:
 /* As a preliminary step we 'unroll' calls to unset which has more that one argument.   
    For example: var_dump($x, $y) ==> var_dump($x); var_dump($y). */
 
-rule [vardump-unroll-cons]:
-	<k> 'FunctionCall("var_dump",,'ListWrap(Arg:K,, Args:KList)) =>
-		'Expr('FunctionCall("var_dump",,'ListWrap(Arg))) ~>
-		'FunctionCall("var_dump",,'ListWrap(Args)) ... </k>
-	<trace> Trace:List => Trace ListItem("vardump-unroll-cons") </trace>
-	when (Args =/=KList .KList)
-	[structural]
+
+//SM: arg is a list of values now, cheating a bit
+syntax K ::= "var_dump_map" "(" K ")" [strict]
+
+rule [vardump-map-arg2langval]:
+	<k> var_dump_map(R:Ref=>convertToLanguageValue(R)) ...</k>
+	[internal]
+
+rule [vardump-map-ind]:
+	<k> var_dump_map(Array(C,(ListItem([_,_,L':Loc]) T:List))) 
+        => var_dump(L')      
+        ~> var_dump_map(Array(C,T)) ...</k>
+	[internal]
+
+rule [vardump-map-base]:
+	<k> var_dump_map(Array(_,.List)) => . ...</k>
+	[internal]
+
 	
-rule [func-call-vardump]:
-	<k> 'FunctionCall(FName:String,,'ListWrap(Arg:K),,Lab) => 
-		runFunction(FName, FunDef,'ListWrap(Arg),none,none,true,Lab,sf(FName,L,CurrentClass,CurrentObj,retTypeOfFunDef(FunDef),D,Lab)) ... </k>
-	<functions> ... FName |-> FunDef ... </functions>
-	<functionArgumentsDeclaration> D:K => . </functionArgumentsDeclaration>
-	<currentScope> L:Loc </currentScope>
-	<class> CurrentClass:K </class>
-	<object> CurrentObj:K </object>
-	when (FName ==String "var_dump") 
-	[step]
-
 syntax K ::= "var_dump" "(" K ")" [strict]
-
-rule [vardump-arg2Loc]:    
-	<k> var_dump (R:Ref => convertToLoc(R,r)) ... </k>
-	<trace> Trace:List => Trace ListItem("vardump-arg2Loc") </trace>
-	[intermediate]
 
 /* var_dumping an array  */
 rule [vardump-array]:
@@ -489,6 +488,8 @@ rule [vardump-object]:
 	[internal]
 
 /* var_dumping a string  */
+
+
 rule [vardump-string]:    
 	<k> var_dump (L':Loc) => 
             *Cond(IsRef, print("&"), .) ~>
@@ -500,7 +501,7 @@ rule [vardump-string]:
             print("\"\n") ...
         </k>
 	<thematrix> ... L' |-> L ... </thematrix>	
-	<heap> ... L |-> zval(S:String,_,_,IsRef) ... </heap>
+	<heap> ... L |-> zval(S:AString,_,_,IsRef) ... </heap>
 	<trace> Trace:List => Trace ListItem("vardump-string") </trace>
 	[internal]
 
@@ -558,6 +559,17 @@ rule [vardump-float]:
 	<trace> Trace:List => Trace ListItem("vardump-float") </trace>
 	when (V isNumeric)
 
+rule [vardump-top]:    
+	<k> var_dump (L':Loc)  => 
+			*Cond(IsRef, print("&"), .) ~> 
+            print ("unknown") ~> 
+            print("(") ~>
+            print("Top") ~>
+            print(")\n") ... </k>
+	<thematrix> ... L' |-> L ... </thematrix>	
+        <heap> ... L |-> zval(Top, _, _, IsRef:Bool) ... </heap>
+	<trace> Trace:List => Trace ListItem("vardump-top") </trace>
+
 /* Here we define an operation that recursively performs var_dump on compound 
    values (i.e. arrays and objects).  */
 
@@ -588,6 +600,7 @@ rule [dump-content-1]:
 	[internal]
 
 /* var_dumps protected object property */
+/*
 rule [dump-content-2]:   
 	 <k> dump_content(ListItem([K:String,protected,L:Loc]) Elems:List) =>
                 var_dump_indent(Depth) ~>
@@ -602,8 +615,9 @@ rule [dump-content-2]:
 	<varDumpLevel> Depth:Int </varDumpLevel>
 	<trace> Trace:List => Trace ListItem("dump-content-2") </trace>
 	[internal]	
-
+*/
 /* var_dumps private object property */
+/*
 rule [dump-content-3]:   
 	 <k> dump_content(ListItem([K:String,private(ClassName:Id),L:Loc]) Elems:List) =>
                 var_dump_indent(Depth) ~>
@@ -620,7 +634,7 @@ rule [dump-content-3]:
 	<varDumpLevel> Depth:Int </varDumpLevel>
 	<trace> Trace:List => Trace ListItem("dump-content-3") </trace>
 		[internal]
-
+*/
 rule [dump-content-nil]: 	
 	<k> dump_content(.List) => indentDec ~> print("}\n") ... </k>
 	<trace> Trace:List => Trace ListItem("dump-content-nil") </trace>
@@ -746,7 +760,7 @@ rule [printr-string]:
             'Echo( 'ListWrap("\n") ) ...
 	</k>
 	<thematrix> ... L' |-> L ... </thematrix>	
-	<heap> ... L |-> zval(S:String, _, _, IsRef:Bool) ... </heap>
+	<heap> ... L |-> zval(S:AString,_,_,IsRef:Bool) ... </heap>
 	<trace> Trace:List => Trace ListItem("printr-string") </trace>
 	[internal]
 
@@ -784,6 +798,7 @@ rule [printr-content-1]:
 	[internal]
 
 /* var_dumps protected object property */
+/*
 rule [printr-content-2]:        
 	<k> print_r_content(ListItem([K:String,protected,L:Loc]) Elems:List) =>
                 print_r_indent(((Depth *Int 2) -Int 1)) ~>
@@ -797,8 +812,9 @@ rule [printr-content-2]:
 	<varDumpLevel> Depth:Int </varDumpLevel>
 	<trace> Trace:List => Trace ListItem("printr-content-2") </trace>
 	[internal]
-
+*/
 /* var_dumps private object property */
+/*
 rule [printr-content-3]:            
 	<k> print_r_content(ListItem([K:String,private(ClassName:Id),L:Loc]) Elems:List) =>
                 print_r_indent(((Depth *Int 2) -Int 1)) ~>
@@ -814,7 +830,7 @@ rule [printr-content-3]:
 	<varDumpLevel> Depth:Int </varDumpLevel>
 	<trace> Trace:List => Trace ListItem("printr-content-3") </trace>
 	[internal]
-
+*/
 
 rule [printr-content-nil]:         	
 	<k> print_r_content(.List) => indentDec ... </k>
@@ -992,7 +1008,7 @@ rule [is-type-scalar]:
 	[internal]
 
 rule [is-type-numeric-numericString2Number]:
-	<k> is_type(S:String, "numeric") => isNumericString(S) ... </k>
+	<k> is_type(S:AString, "numeric") => isNumericString(S) ... </k>
 	<trace> Trace:List => Trace ListItem("is-type-numeric-numericString2Number") </trace>
 	[internal]
 
@@ -1014,7 +1030,7 @@ syntax K ::= "label" "(" K ")" [strict]
 
 rule label(S:ConvertibleToLanguageValue => convertToLanguageValue(S))
 
-rule <k> label(S:String) => NULL ... </k>
+rule <k> label(S:AString) => NULL ... </k>
 	 <label> _ => S </label>
 
 // ---------------------------------------------------------------------------------------------

@@ -78,21 +78,20 @@ syntax  K ::= "mergeConfigs" "(" BoxedConfig "," BoxedConfig ")" [strict(1,2)]
 ///////////////////////////////////////////////////////////////////////////////
 
 syntax  K ::= "Abexp"  "(" K "," OptionBag ")"
-syntax  K ::= "Abexp1" "(" K "," OptionBag ")" [strict(1)]
+syntax  K ::= "Abexp1" "(" K ")" [strict]
 
-rule Abexp(K,M) => Abexp1(runInMem(M,K),M)
+rule Abexp(K,M) => Abexp1(runInMem(M,K))
 
-rule Abexp1(V:KResult, M:OptionBag) =>
-	#if valid(V) #then 
-            M
-        #else
-            #if unsatisfiable(V) #then
-                none
-            #else
-                M   
-            #fi
-        #fi
-        [transition]
+
+
+rule <k> Abexp1(V:KResult) => some(M) ... </k>
+	<mem> M:Bag </mem>
+	when valid(V) orBool (notBool(unsatisfiable(V)))
+    [transition]
+
+rule <k> Abexp1(V:KResult) => none	... </k>
+	when unsatisfiable(V) andBool (notBool(valid(V)))
+    [transition]
 
 
 
@@ -130,7 +129,15 @@ rule <k> AbexpConf1(V:KResult) => none    ... </k>
 ///////////////////////////////////////////////////////////////////////////////
 
     // TODO: move to memory?
-    syntax ReturnCode ::= "NEXT" | "RET" | "DONE" | "LOOP" | "ERR"
+    syntax ReturnCode ::= SkippingCode | RunningCode | BreakingCode | NonBreakingCode
+	
+	syntax SkippingCode ::= SkippingNonBreakingCode | BreakingCode
+	syntax SkippingNonBreakingCode ::= "RET" | "LOOP" | "ERR" | "DONE"
+	syntax BreakingCode ::= BreakCode | ContinueCode
+	syntax ContinueCode ::= "CONTINUE" "(" Int ")"
+	syntax BreakCode ::= "BREAK" "(" Int ")"
+	syntax NonBreakingCode ::= RunningCode | SkippingNonBreakingCode
+	syntax RunningCode ::= "NEXT"
 
     //@ get status of a configuration
     syntax  ReturnCode ::= "configGetStatus" "(" Bag ")"    [function]
@@ -145,7 +152,7 @@ rule <k> AbexpConf1(V:KResult) => none    ... </k>
     generic and will work even if more cell are added to the language 
     (i.e. everyting of sort Bag can go there). */
 
-    syntax BoxedConfig ::= "config" "(" Bag ")"
+    syntax BoxedConfig ::= "config" "(" Bag ")" | None
     syntax KResult ::= BoxedConfig
 
     // option bag
@@ -194,7 +201,7 @@ rule <k> AbexpConf1(V:KResult) => none    ... </k>
     */
             
     ///////////////////////////////////////////////////////////////////////////
-    //@ Update current mconfiguration
+    //@ Update current configuration
     ///////////////////////////////////////////////////////////////////////////
  
 	syntax K ::= "updateConfig" "(" BoxedConfig ")" [strict]
@@ -213,9 +220,10 @@ rule <k> AbexpConf1(V:KResult) => none    ... </k>
     ///////////////////////////////////////////////////////////////////////////
 
     syntax K ::= "runInMem" "(" OptionBag "," K ")" [strict(1)]
-
+	
     rule    <k> runInMem(some(M:Bag), B:K) => updateMem(some(M)) ~> B ... </k>
             <status> _ => NEXT </status>
+			<trace> Trace:List => Trace ListItem("run-in-mem-some") </trace>
             [transition]
     
 rule	<k> runInMem(none, _) => .  ... </k> 
@@ -229,7 +237,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
 
     syntax K ::= "runInConf" "(" BoxedConfig "," K ")"     [strict(1)] 
 	
-	//rule	runInConf(C, K) => updateConfig(C) ~> K 
+
    
     rule    runInConf(config(C), K) => updateConfig(config(C)) ~> K
  
@@ -241,7 +249,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
     //@ Return current configuration
     ///////////////////////////////////////////////////////////////////////////
  
-	syntax  K ::= "getCurrentConfig"
+	syntax  K ::= "getCurrentConfig" [klabel('GetCurrentConfig)]
 
     rule 	<kphp>
                 <script>
@@ -258,6 +266,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
 	syntax  K ::= "runAndGetConfig"	"(" K ")" 	
 
 	rule 	<k> runAndGetConfig(S) => S ~> getCurrentConfig ... </k>
+			<trace>  Trace:List => Trace ListItem("run-and-get-config") </trace>
             [transition]
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -509,27 +518,61 @@ rule	<k> runInMem(none, _) => .  ... </k>
     /*@ This is misleading. It doesn't mean DONE. This is the case when 
     one branch is not executed at all. Should find better naming. */
 
-    rule    mergeConfigs(config(A),config(B)) => updateConfig(config(A)) 
+    rule    <k> mergeConfigs(config(A),config(B)) => updateConfig(config(A)) ... </k>
+			<trace> Trace:List => Trace ListItem("merge-configs-B-done") </trace>
             when (configGetStatus(B) ==K DONE)
             [transition]
 
-    rule    mergeConfigs(config(A),config(B)) => updateConfig(config(B)) 
+    rule    <k> mergeConfigs(config(A),config(B)) => updateConfig(config(B)) ... </k>
+			<trace> Trace:List => Trace ListItem("merge-configs-A-done") </trace>
             when (configGetStatus(A) ==K DONE)
             [transition]
 
+			
+	syntax Bool ::= "isStatusBreaking" "(" ReturnCode ")" [predicate]
+	
+	rule	isStatusBreaking(_:BreakingCode) => true
+	
+	rule 	isStatusBreaking(_:NonBreakingCode) => false
+	
+	
+	
+	rule    <k> mergeConfigs(config(A), config(B)) ~> K => 
+                #if (K =/=K .K) #then 
+                    mergeConfigs(runAndGetConfig(runInConf(config(A),K)), runAndGetConfig(runInConf(config(B),K)))
+                #else
+                    mergeConfigsBase(config(A), config(B))       
+                #fi </k>
+            when isNonTrivialBreakCase(configGetStatus(A), configGetStatus(B)) andBool (configGetStatus(A) =/=K DONE) andBool (configGetStatus(B) =/=K DONE)
+            [transition]
+			
+			
     rule    mergeConfigs(config(A), config(B)) => mergeConfigsBase(config(A),config(B))
             when  notBool isSpecialMergeCase(configGetStatus(A),configGetStatus(B))  
 		[transition]
  
     //@ decide wether our merging task is special or not
     syntax Bool ::= "isSpecialMergeCase" "(" ReturnCode "," ReturnCode ")" [predicate]
-
-    rule    isSpecialMergeCase(St1,St2) => ((St1 ==K DONE) orBool (St2 ==K DONE))
-
+	
+	syntax Bool ::= "isNonTrivialBreakCase" "(" ReturnCode "," ReturnCode ")" [predicate]
+	
+    rule    isSpecialMergeCase(St1,St2) => ((((St1 ==K DONE) orBool (St2 ==K DONE)) orBool ((St1 ==K RET) =/=Bool (St2 ==K RET))) orBool isNonTrivialBreakCase(St1, St2))
+	
+	rule 	isNonTrivialBreakCase(St1:BreakingCode, St2:BreakingCode) => St1 =/=K St2
+	
+	rule 	isNonTrivialBreakCase(_:NonBreakingCode, _:BreakingCode) => true
+	
+	rule 	isNonTrivialBreakCase(_:NonBreakingCode, _:NonBreakingCode) => false
+	
+	rule 	isNonTrivialBreakCase(_:BreakingCode, _:NonBreakingCode) => true
+	
+	
+	
     syntax K ::= "mergeConfigsBase" "(" BoxedConfig "," BoxedConfig ")"     [strict(1,2)]
     rule    mergeConfigsBase(
                 config( 
                         C1:Bag
+			<trace> T1 </trace>
 			<returns> R1 </returns>  
 			<returns-loc> RL1 </returns-loc>
 			<status> S1 </status> 	                 
@@ -541,9 +584,15 @@ rule	<k> runInMem(none, _) => .  ... </k>
 			<tables>
 			    Tables1:Bag
 			    <functions> F1 </functions>
-			</tables>),
+			</tables>
+			<IO>
+				IO1:Bag
+				<out> O1 </out>
+			</IO>
+			),
                 config(
                         C2:Bag
+			<trace> T2 </trace>
 			<returns> R2 </returns> 
 			<returns-loc> RL2 </returns-loc>
 			<status> S2 </status> 	
@@ -555,22 +604,37 @@ rule	<k> runInMem(none, _) => .  ... </k>
 			<tables>
 			    Tables2:Bag
 			    <functions> F2 </functions>
-			</tables>)) =>
+			</tables>
+			<IO>
+				IO2:Bag
+				<out> O2 </out>
+			</IO>
+			)
+			) =>
 
                 updateConfig(config(
-                        C1 // TODO 
+                        C2 // TODO 
+			<trace> 
+			//mergeOutputs(T1,T2) 
+			T2 //TODO
+			</trace>
 			<returns-loc> RL1 RL2 </returns-loc>
 			<returns> mergeReturns(R1,R2) </returns> 
 			<status> mergeStatus(S1,S2) </status>
                         <mem> mergeMem(0,M1,St1,F1,M2,St2,F2) </mem>
 			<control>
-			    Ctr1    // TODO
+			    Ctr2    // TODO
 			    <functionStack> mergeFunctionStack(St1,St2) </functionStack>
 			</control>
 			<tables>
-			    Tables1 // TODO
+			    Tables2 // TODO
 			    <functions> mergeFunctions(F1,F2) </functions>
-			</tables>))
+			</tables>
+			<IO>
+			IO2
+			<out> mergeOutputs(O1, O2) </out>
+			</IO>
+			))
                   
                     [transition]
 
@@ -608,7 +672,19 @@ rule	<k> runInMem(none, _) => .  ... </k>
     // are we sure?
     rule    mergeStatus(ERR,RET)    => RET
     rule    mergeStatus(RET,ERR)    => RET
-    // ...
+	
+	rule	mergeStatus(BREAK(N1), BREAK(N2)) => BREAK(N1)
+	when N1 ==Int N2
+	
+	rule	mergeStatus(CONTINUE(N1), CONTINUE(N2)) => CONTINUE(N1)
+	when N1 ==Int N2
+	
+	// TODO : not sure about this, but should be fine if we print that we detected a loop (Raphaël)
+	
+	rule mergeStatus(LOOP, St:ReturnCode) => St
+	rule mergeStatus(St:ReturnCode, LOOP) => St
+
+
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1795,7 +1871,7 @@ rule makeSet(SetItem(I) S:Set) => makeSet(S)
     rule    mergeZval(zval(V,T,R,I),zval(V',T',R',I')) => 
 	    zval(
 	        lub(V,V'),
-	        lub_type(T,T'),
+	        typeOf(lub(V,V')),			//allows the domain to give more info than just taking lub_Type(T, T')
 	        maxRC(R,R'),
 	        makeIsRef(R,R'))  
     
@@ -1819,8 +1895,6 @@ rule makeSet(SetItem(I) S:Set) => makeSet(S)
 			R1
 		#fi
 				
-
-
 
 
 
@@ -2006,12 +2080,44 @@ rule makeSet(SetItem(I) S:Set) => makeSet(S)
     */
 
 
+	///////////////////////////////////////////////////////////////////////////
+    /*@ \subsubsection{Merging outputs} */
+    ///////////////////////////////////////////////////////////////////////////
 
+	
+	syntax List ::= "mergeOutputs" "(" List "," List ")"	[function]
+	
+	rule mergeOutputs(.List, L2:List) => ListItem("(") ListItem("/") L2 ListItem(")")
+	when L2 =/=List .List
+	
+	rule mergeOutputs(L1:List, .List) => ListItem("(") L1 ListItem("/") ListItem(")")
+	when L1 =/=List .List
+	
+	rule mergeOutputs(.List, .List) => .List
+	
+	rule mergeOutputs(ListItem(A) L1:List, ListItem(B) L2:List) => ListItem(A) mergeOutputs(L1, L2)
+	when A ==K B
+	
+	rule mergeOutputs(ListItem(A) L1:List, ListItem(B) L2:List) => ListItem("(") ListItem(A) L1 ListItem("/") ListItem(B) L2 ListItem(")")
+	when A =/=K B
 
+	///////////////////////////////////////////////////////////////////////////
+    /*@ \subsubsection{Merging outputs} */
+    ///////////////////////////////////////////////////////////////////////////
 
-
-
-
+	
+	syntax K ::= "cleanUntilGetCfg" "(" K ")" [function]
+	
+	rule [clean-empty]:
+	<k> cleanUntilGetCfg(.K) => K </k>
+	<loopStack> ListItem(loopFrame(K,none)) => .List ... </loopStack>
+	
+	rule [clean-get-cfg]:
+	<k> cleanUntilGetCfg( getCurrentConfig ~> T:K) => getCurrentConfig ~> T ... </k>
+	
+	rule [clean-default]:
+	<k> cleanUntilGetCfg (H:K ~> T:K) => cleanUntilGetCfg (T) </k>
+	when ((getKLabel(H) =/=KLabel 'GetCurrentConfig) andBool (H =/=K .K))
 
 
 endmodule

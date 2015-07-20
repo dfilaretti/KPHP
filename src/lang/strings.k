@@ -12,7 +12,7 @@ module STRINGS
 context 'ConstantEncapsedString(HOLE)
 
 rule [constant-encapsed-string]: 
-	<k> 'ConstantEncapsedString(S:String) => S ... </k>
+	<k> 'ConstantEncapsedString(S:AString) => S ... </k>
 	<trace> Trace:List => Trace ListItem("constant-encapsed-string") </trace>
 	[structural]
 
@@ -31,12 +31,12 @@ rule ('StringAccess => 'ArrayAccess)(_,,_)
 context 'SingleQuoted('ListWrap(_:KList,,HOLE,,_:KList))
 
 rule [single-quoted]: 
-	<k> 'SingleQuoted('ListWrap(S:String)) => S ... </k>
+	<k> 'SingleQuoted('ListWrap(S:AString)) => S ... </k>
 	<trace> Trace:List => Trace ListItem("single-quoted") </trace>
 	[structural]
 
 rule [single-quoted-empty]: 
-	<k> 'SingleQuoted('ListWrap(.KList)) => "" ... </k>
+	<k> 'SingleQuoted('ListWrap(.KList)) => alpha("") ... </k>
 	<trace> Trace:List => Trace ListItem("single-quoted-empty") </trace>
 	[structural]
 	
@@ -47,7 +47,7 @@ rule [single-quoted-empty]:
 context 'DoubleQuoted(HOLE)
 
 rule [double-quoted]: 
-	<k> 'DoubleQuoted(S:String) => S ... </k>
+	<k> 'DoubleQuoted(S:AString) => S ... </k>
 	<trace> Trace:List => Trace ListItem("double-quoted") </trace>
 	[structural]
 
@@ -55,12 +55,12 @@ rule [double-quoted]:
 context 'DQContent('Some(HOLE))
 
 rule [dq-content]: 
-	<k> 'DQContent('Some(S:String)) => S ... </k>
+	<k> 'DQContent('Some(S:AString)) => S ... </k>
 	<trace> Trace:List => Trace ListItem("dq-content") </trace>
 	[structural]
 
 rule [dq-content-empty]: 
-	<k> 'DQContent('None(_)) => "" ... </k>
+	<k> 'DQContent('None(_)) => alpha("") ... </k>
 	<trace> Trace:List => Trace ListItem("dq-content-empty") </trace>
 	[structural]
 	
@@ -85,17 +85,17 @@ rule [dq-content-arg2LangValue-3]:
 	[intermediate]
 
 rule [dq-content-arg-none-1]: 
-	<k> 'DQContent(('None(_) => ""),, _:K,, _:K) ... </k>
+	<k> 'DQContent(('None(_) => alpha("")),, _:K,, _:K) ... </k>
 	<trace> Trace:List => Trace ListItem("dq-content-arg-none-1") </trace>
 	[intermediate]
 
 rule [dq-content-arg-none-2]: 
-	<k> 'DQContent(_:K,, ('None(_) => ""),, _:K) ... </k>
+	<k> 'DQContent(_:K,, ('None(_) => alpha("")),, _:K) ... </k>
 	<trace> Trace:List => Trace ListItem("dq-content-arg-none-2") </trace>
 	[intermediate]
 
 rule [dq-content-arg-none-3]: 
-	<k> 'DQContent(_:K,, _:K,, ('None(_) => "")) ... </k>
+	<k> 'DQContent(_:K,, _:K,, ('None(_) => alpha(""))) ... </k>
 	<trace> Trace:List => Trace ListItem("dq-content-arg-none-3") </trace>
 	[intermediate]
 
@@ -177,37 +177,37 @@ rule [concat-toString]:
 // ---------------------------------------------------------------------------------------------
 
 rule [escape-34]:
- 	<k> 'Escape(34) => "\"" ... </k>
+ 	<k> 'Escape(34) => alpha("\"") ... </k>
 	<trace> Trace:List => Trace ListItem("escape-34") </trace>
 	[step]
 
 rule [escape-36]:
-	<k> 'Escape(36) => "$" ... </k>
+	<k> 'Escape(36) => alpha("$") ... </k>
 	<trace> Trace:List => Trace ListItem("escape-36") </trace>
 	[step]
 
 rule [escape-39]:
-	<k> 'Escape(39) => "'" ... </k>
+	<k> 'Escape(39) => alpha("'") ... </k>
 	<trace> Trace:List => Trace ListItem("escape-39") </trace>
 	[step]
 
 rule [escape-92]:
-	<k> 'Escape(92) => "\\" ... </k>
+	<k> 'Escape(92) => alpha("\\") ... </k>
 	<trace> Trace:List => Trace ListItem("escape-92") </trace>
 	[step]
 
 rule [escape-110]:
-	<k> 'Escape(110) => "\n" ... </k>
+	<k> 'Escape(110) => alpha("\n") ... </k>
 	<trace> Trace:List => Trace ListItem("escape-110") </trace>
 	[step]
 
 rule [escape-116]:
-	<k> 'Escape(116) => "\t" ... </k>
+	<k> 'Escape(116) => alpha("\t") ... </k>
 	<trace> Trace:List => Trace ListItem("escape-116") </trace>
 	[step]
 
 rule [escape-114]:
-	<k> 'Escape(114) => "\r"  ... </k>
+	<k> 'Escape(114) => alpha("\r")  ... </k>
 	<trace> Trace:List => Trace ListItem("escape-114") </trace>
 	[step]
 

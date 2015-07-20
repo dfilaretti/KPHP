@@ -1,9 +1,12 @@
 require "objects.k"
 require "arrays.k"
+require "shared.k"
+
 
 module MEMORY
 	imports OBJECTS
 	imports ARRAYS
+	imports SHARED
 	
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
@@ -21,7 +24,10 @@ syntax LanguageValue ::= PlainLanguageValue | LiteralValue
 syntax PlainLanguageValue ::= ScalarValue 
 			    | CompoundValue 
 			    | SpecialValue
-			    | "Top" | "Bot"
+			    | Top | Bot
+
+syntax Top::= "Top"
+syntax Bot ::= "Bot"
 
 syntax ScalarValue ::= AInt | AFloat | ABool | AString     
 syntax CompoundValue ::= Object | Array
@@ -86,7 +92,7 @@ syntax KResult ::= ARefCount
 // NOTE: aven if the particular domain has no concrete integers, we might want them to 
 // be KResults anyway. For example, we might still use them for reference counting... 
 
-syntax KResult ::= Int
+syntax KResult ::= Int | String //TODO : String is temporary !
 
 /* For convenience, we define a set of option types */
 
@@ -103,12 +109,12 @@ syntax OptionARefCount ::= ARefCount | None
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Lub} */
 
-syntax PlainLanguageValue ::= "lub" "(" PlainLanguageValue "," PlainLanguageValue ")" [function]
+syntax PlainLanguageValue ::= "lub" "(" K "," K ")" [function]
 
-rule lub(V1:AInt,V2:AInt) => lub_AInt(V1,V2)
+//rule lub(V1:AInt,V2:AInt) => lub_AInt(V1,V2)
 //rule lub(V1:AFloat,V2:AFloat) => lub_AFloat(V1,V2) TODO
 //rule lub(V1:ABool,V2:ABool) => lub_ABool(V1,V2) TODO
-rule lub(V1:AString,V2:AString) => lub_AString(V1,V2)
+//rule lub(V1:AString,V2:AString) => lub_AString(V1,V2)
 
 rule lub(Top,_) => Top
 rule lub(_,Top) => Top
@@ -116,12 +122,13 @@ rule lub(_,Top) => Top
 rule lub(Bot,X) => X
 rule lub(X,Bot) => X
 
-// NOTE: doesn't wotk for booleans! 
+// NOTE: doesn't work for booleans! 
  
+ /*
 rule lub(V1,V2) => Top
 	when (V1 =/=K Bot andBool V2 =/=K Bot) andBool
 		(getKLabel(V1) =/=KLabel getKLabel(V2))
-
+*/
 
 
 
@@ -236,7 +243,6 @@ rule    typeOf(V:AString) => string
 rule    typeOf(V:Object) => object
 rule    typeOf(V:Array) => array
 rule    typeOf(NULL) => unset
-
 rule	typeOf(Top) => unknown // NOTE: internal!
 
 
@@ -249,8 +255,18 @@ rule V isCompoundValue => isArrayType(V) orBool isObjectType(V)
 syntax Bool ::= Value "isScalar" [function]
 rule V isScalar => isStringType(V) orBool isIntType(V) orBool isFloatType(V) orBool isBoolType(V)
 
+
+syntax Bool ::= Type "==Type" Type [function]
+
+rule unknown ==Type _ => true
+
+rule _ ==Type unknown => true
+
+rule T1:Type ==Type T2:Type => T1 ==K T2 when notBool ((T1 ==K unknown) orBool (T2 ==K unknown))
+
 syntax Bool ::= "hasSameType" "(" Value "," Value ")" [function]
-rule hasSameType(V1, V2) => typeOf(V1) ==K typeOf(V2) 
+rule hasSameType(V1, V2) => typeOf(V1) ==Type typeOf(V2) 
+//SM should this return false for Top? 
 
 syntax Bool ::= "isLiteral" "(" ConvertibleToLoc ")" [function]
 
@@ -288,9 +304,19 @@ syntax ZvalField ::= "@Value" | "@Type" | "@RefCount" | "@IsRef"
 
 syntax K ::= "zvalRead" "(" Loc "," ZvalField ")" [strict(1)]
 
+rule [zval-read-getloc]:
+	<k> zvalRead(sref(L,X)=>L,_) ... </k>
+	[internal]
+
 rule [zval-read-value]:
 	<k> zvalRead(L',@Value) => V ... </k>
 	<thematrix> ... L' |-> L ... </thematrix> 	 
+	<heap> ... L |-> zval(V,_,_,_) ... </heap>
+	<trace> Trace:List => Trace ListItem("zval-read-value") </trace>
+	[internal]
+	
+rule [zval-read-value]:
+	<k> zvalRead(L, @Value) => V ... </k>
 	<heap> ... L |-> zval(V,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("zval-read-value") </trace>
 	[internal]
@@ -783,18 +809,20 @@ rule len(ListItem(_) Tail) => 1 +Int len(Tail)
 /* Returns the max int key in a list  */
 
 syntax AInt ::= "biggestIntKey" "(" List ")" [function]
+
 rule biggestIntKey(.List) => alpha(-1)
 rule biggestIntKey(ListItem([Key:AString,_,_]) Tail) => biggestIntKey(Tail)
-rule biggestIntKey(ListItem([Key:AInt,_,_]) Tail) => max(Key, biggestIntKey(Tail))
+rule biggestIntKey(ListItem([Key:AInt,_,_]) Tail) => maxAInt(Key, biggestIntKey(Tail))
 
 /* Return the biggest of two (abstract) integers  */
 
-syntax AInt ::= "max" "(" AInt "," AInt ")" [function]
+syntax AInt ::= "maxAInt" "(" AInt "," AInt ")" [function]
 
-/* TODO: it used to work in concrete. What about abstract?
-rule max(I1, I2) => I1	when I1 >=AInt I2
-rule max(I1, I2) => I2	when I1 <AInt I2
-*/
+rule maxAInt(I1, I2) => I1	       	when valid(greater(I1,I2))
+rule maxAInt(I1, I2) => I2	   	when valid(lessEqual(I1,I2))
+rule maxAInt(I1, I2) => lub(I1,I2)	when notBool (valid(lessEqual(I1,I2)) orBool valid(greater(I1,I2)))
+
+//SM: if we fix a pattern for these cases, it should be used here
 
 
 // ---------------------------------------------------------------------------------------------
@@ -1007,8 +1035,7 @@ rule 	getLTKeys(ListItem([K1,_,_]) Elems ,K) => SetItem(K1) getLTKeys(Elems,K)
 	when K1 <Lattice K
 
 rule 	getLTKeys(ListItem([K1,_,_]) Elems ,K) => getLTKeys(Elems,K) 
-	when (notBool (K1 <Lattice K)) orBool (K1 ==K K)
-
+	when (K1 ==K K) orBool (notBool (K1 <Lattice K))
 
 syntax 	Set ::= "getGEQKeys" "(" List "," Key ")" 	[function]
 
@@ -1186,7 +1213,7 @@ rule [rget-default]:
 // Recursive propagation of get operations
 
 rule [rget-propagate]:    
-	<k> RgetRef(lref(R:Ref, X:Key, T1:RefType),T2:RefType) => RgetRef(ref(RgetRef(R,T1), X), T2) ... </k>
+	<k> RgetRef(lref(R:Ref, X:Key, T1:RefType),T2:RefType) => RgetRef(ref(sref2loc(RgetRef(R,T1)), X), T2) ... </k>
 	[structural]
 
 
@@ -1203,6 +1230,7 @@ rule [rget-array-prop]:
 	</k>
 	<thematrix> ... L' |-> L ... </thematrix>
 	<heap>... L |-> zval(Array(_,ArrayValues),_,_,_)  ...</heap>
+     	<trace> Trace:List => Trace ListItem("rget-array-prop") </trace>
 	[internal]
 
 // object
@@ -1228,25 +1256,11 @@ rule [rget-obj-prop]:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // We now define the auxiliary RgetRef1 operation. 
 // It is used to distinguish among cases when the actual RgetRef operation 
 // has fully evaluated the reference to be resolved 
 
-syntax K ::= "RgetRef1" "(" Loc "," Key "," Set "," Set "," RefType ")"
+syntax K ::= "RgetRef1" "(" Loc "," Key "," Set "," Set "," RefType ")"	
 
 // Case 1: the key X is "not present" at all in the array i.e. there are no other keys 
 // which are =, < or >= to X. 
@@ -1256,7 +1270,7 @@ rule [rget1-array-prop-undefined]:
 	<k> 
 		RgetRef1(L',X,KLT,KGEQ,_) => 
 		NOTICE("Undefined variable: %s in %s on line %d\n") ~> 
-		locNull ... 
+		sref(locNull,X) ... 
 	</k>
 	when (KLT ==Set .Set) andBool (KGEQ ==Set .Set) 
 
@@ -1293,7 +1307,7 @@ rule [rget1-obj-prop-undefined]:
 
 // arrays
 rule [rget1-array-prop-literally-found]:
-	<k> RgetRef1(L',X,_,KGEQ,_) =>  L1 ... </k>
+	<k> RgetRef1(L',X,_,KGEQ,_) =>  sref(L1,X) ... </k>
 	<thematrix> ... L' |-> L ... </thematrix>
 	<heap>... L |-> zval(Array(_,_:List ListItem([X,public,L1]) _:List),_,_,_)  ...</heap>
 	when (X in KGEQ) 
@@ -1308,7 +1322,7 @@ rule [rget1-array-prop-literally-found]:
 
 // public (i.e. no restrictions)
 rule [rget-obj-prop-public]:
-	<k> RgetRef1(L':Loc,X:AString,_,_,_) => L2 ... </k>
+	<k> RgetRef1(L':Loc,X:AString,_,_,_) => sref(L2,X) ... </k>
 	<class> Context:K </class>
 	<thematrix> 
 	... 
@@ -1329,7 +1343,7 @@ rule [rget-obj-prop-public]:
 // protected        
 rule [rget-obj-prop-protected]:    
 	<k> RgetRef1(L':Loc,X:AString,_,_,_) => 
-		*Cond(isVisible(ObjClass, Context, protected), L2, ERROR("ERROR-PROTECTED")) ... </k>
+		*Cond(isVisible(ObjClass, Context, protected), sref(L2,X), ERROR("ERROR-PROTECTED")) ... </k>
 	<class> Context:K </class>
 	<thematrix> 
 	... 
@@ -1349,7 +1363,7 @@ rule [rget-obj-prop-protected]:
 	
 // private
 rule [rget-obj-prop-private]:
-	<k> RgetRef1(L':Loc,X:AString,_,_,_) => L2 ... </k>
+	<k> RgetRef1(L':Loc,X:AString,_,_,_) => sref(L2,X) ... </k>
 	<class> Context </class>
 	<thematrix> 
 	... 
@@ -1370,21 +1384,16 @@ rule [rget-obj-prop-private]:
 // 	 the wrong context.
 
 
+// SM sref is used to remember the key X once the reference has been resolved to L
+syntax Loc ::= "sref" "(" Loc "," Key ")"
+// in genereal there will be places that need a L:Loc and get instead a sref(L,X):Loc
+// and we need to force the conversion with sref2loc below 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+syntax K ::= "sref2loc" "(" Loc ")" [strict]
+rule sref2loc(sref(L,X)) => L 
+//rule sref2loc(L) => L //SM how to have this and make it mutually exclusive wrt rule above?
+rule sref2loc(locNull) => locNull 
+rule <k> ref(sref(L,X) => L,Y) ... </k> //SM still needed in some cases
 
 
 
@@ -1418,9 +1427,7 @@ rule [rget1-array-prop-bigger]:
 //       it is true for cases which ARE NOT fully fragmented! 
 //       E.g.: Top fullyFragmentedIn {Pos, Neg} => true
 //       but we know it should be false!
-
-
-
+// 	 At the moment case 4 and 5 do the same, if we fix the predicate we can benefit from the 2 variants.
 
 rule [rget1-obj-prop-fully-fragmented]:
 	<k> RgetRef1((L' => L1'),X,KLT,KGEQ,InitValue) ... </k>
@@ -1434,6 +1441,9 @@ rule [rget1-array-prop-fully-fragmented]:
 	<thematrix> ... L' |-> L ... </thematrix>
 	<heap> ... L |-> zval(V:Array,_,_,_) </heap>
 	when (KGEQ ==Set .Set) andBool (X fullyFragmentedIn KLT) 
+
+
+
 
 
 // Case 5: they key X is "partialy fragmented" in the array. This happens e.g. if 
@@ -1501,129 +1511,15 @@ rule [rget-null]:
 rule [rget-string-undef]:	
 	<k> RgetRef(ref(L':Loc, Index:AString),_) => locNull ... </k>
 	<thematrix> ... L' |-> L ... </thematrix>	
-	<heap> ... L |-> zval(Str:String,_,_,_) ... </heap>
+	<heap> ... L |-> zval(Str:AString,_,_,_) ... </heap>
 	<trace> Trace:List => Trace ListItem("rget-string-undef") </trace>
 	[internal]
 
-/*
-// Original (pre-abstraction) rule
-
-rule [rget-string-index]:	
-	<k> RgetRef(ref(L':Loc, Index:AInt),_) => substrString(Str, Index, Index +Int 1) ... </k>
-	<thematrix> ... L' |-> L ... </thematrix>	
-	<heap> ... L |-> zval(Str:String,_,_,_) ... </heap>
-	<trace> Trace:List => Trace ListItem("rget-string-index") </trace>
-	[internal]
-*/
 
 
 
 
 
-
-
-
-
-
-// TODO TODO TODO TODO TODO 
-
-// Reading an object property
-// NOTE: I'm leaving the following unchanged, as I concentrate on writing new ("abstract")
-//       rules for the (base) array case above. 
-
-/*
-// public (i.e. no restrictions)
-rule [rget-obj-prop-public]:
-	<k> RgetRef(ref(L':Loc, X:String), _) => L2 ... </k>
-	<class> Context:K </class>
-	<thematrix> 
-	... 
-		L'  |-> L 
-		L1' |-> L1
-	... 
-	</thematrix>	
-	<heap>
-	... 
-		L |-> zval(OID(L1':Loc,_,_),_,_,_)  
-		L1 |-> zval(Array(_,(E:List ListItem([X,public,L2:Loc]) F:List)),_,_,_)
-	...
-	</heap>
-	<trace> Trace:List => Trace ListItem("rget-obj-prop-public") </trace>
-	when notBool (E F hasPrivateProperty X for Context)
-	[internal]
-
-// protected        
-rule [rget-obj-prop-protected]:    
-	<k> RgetRef(ref(L':Loc, X:String), _) => 
-		*Cond(isVisible(ObjClass, Context, protected), L2, ERROR("ERROR-PROTECTED")) ... </k>
-	<class> Context:K </class>
-	<thematrix> 
-	... 
-		L'  |-> L 
-		L1' |-> L1
-	... 
-	</thematrix>	
-	<heap>
-	... 
-		L |-> zval(OID(L1':Loc,ObjClass:Id,_),_,_,_)  
-		L1 |-> zval(Array(_,(E:List ListItem([X,protected,L2:Loc]) F:List)),_,_,_)
-	...
-	</heap>
-	<trace> Trace:List => Trace ListItem("rget-obj-prop-protected") </trace>
-	when notBool (E F hasPrivateProperty X for Context)
-	[internal]
-	
-// private
-rule [rget-obj-prop-private]:
-	<k> RgetRef(ref(L':Loc, X:String),_) => L2 ... </k>
-	<class> Context </class>
-	<thematrix> 
-	... 
-		L'  |-> L 
-		L1' |-> L1
-	... 
-	</thematrix>	
-	<heap>
-	... 
-		L |-> zval(OID(L1':Loc,ObjClass,_),_,_,_)  
-        	L1 |-> zval(Array(_,(E:List ListItem([X,private(Context),L2:Loc]) F:List)),_,_,_)
-	...
-	</heap>
-	<trace> Trace:List => Trace ListItem("rget-obj-prop-private") </trace>
-	[internal]
-
-// non-existent property
-rule [rget-obj-prop-undefined]:    
-	<k> RgetRef(ref(L':Loc, X:String), _) => 
-		NOTICE("Undefined property: %s in %s on line %d\n") ~> 
-		locNull ... </k>
-	<thematrix> 
-	... 
-		L'  |-> L 
-		L1' |-> L1
-	... 
-	</thematrix>	
-	<heap>
-	... 
-		L |-> zval(OID(L1':Loc,_,_),_,_,_)  
-        	L1 |-> zval(Array(_,E:List),_,_,_)
-	...
-	</heap>
-	<trace> Trace:List => Trace ListItem("rget-obj-prop-undefined") </trace>
-	when notBool (E hasProperty X)
-	[internal]
-*/
-// TODO TODO TODO TODO TODO 
-
-
-
-
-
-
-
-
-
-	
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Lget} 
 		LGet works the same ways as RGet when the reference being resolved does exists. 
@@ -1642,7 +1538,7 @@ syntax K ::= "LgetRef" "(" Ref "," RefType ")" [strict(1), klabel('put)]
 syntax Loc ::= "LError"
 
 rule [lget-propagate]:    
-	<k> LgetRef(lref(R:Ref, X:Key, T1:RefType),T2:RefType) => LgetRef(ref(LgetRef(R,T1), X), T2) ... </k>
+	<k> LgetRef(lref(R:Ref, X:Key, T1:RefType),T2:RefType) => LgetRef(ref(sref2loc(LgetRef(R,T1)), X), T2) ... </k>
 	<trace> Trace:List => Trace ListItem("lget-propagate") </trace>
 	[structural]
 
@@ -1657,6 +1553,7 @@ rule [lget-array-prop]:
 	</k>
 	<thematrix> ... L' |-> L ... </thematrix>
 	<heap>... L |-> zval(Array(_,ArrayValues),_,_,_)  ...</heap>
+        when X =/=K NULL
 	[internal]
 
 
@@ -1808,7 +1705,6 @@ rule [lget-not-found-default-array-key]:
 	<trace> Trace:List => Trace ListItem("lget-not-found-default-array-key") </trace>
 	when  (L =/=K LError)
 	[internal]
-
 
 
 endmodule

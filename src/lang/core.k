@@ -2,16 +2,24 @@ require "shared.k"
 require "program-transformations.k"
 require "builtin-functions.k"
 
-require "../domains/empty/empty-domain.k"
+//require "../domains/empty/empty-domain.k"
 //require "../domains/mySigns/mySigns-domain.k"
+require "../domains/types/types-domain.k"
 
 module CORE 
 	imports SHARED
 	imports PROGRAM-TRANSFORMATIONS
 	imports BUILTIN-FUNCTIONS
-	imports EMPTY-DOMAIN
-    	//imports MYSIGNS-DOMAIN
-    	
+	
+	//imports EMPTY-DOMAIN
+	//imports MYSIGNS-DOMAIN
+	imports TYPES-DOMAIN
+	imports ID-HOOKS
+
+syntax Domain ::= "Concrete"
+				| "Signs"
+				| "Types"
+
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 // =/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=/=
 /*@ \section{Core} */
@@ -127,27 +135,6 @@ rule    [literal-null]:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* TODO: remove when done
 rule    [literal-int]:
 	    <k> 'LNumber('Deci(Str:String)) => String2Int(Str) ... </k>
@@ -205,18 +192,24 @@ rule [block]:
         normally, but if the status is e.g. RET or ERR, statements are not 
         executed. */
 ///////////////////////////////////////////////////////////////////////////////
-
-rule [seq-cons]:
-	<k> 'ListWrap(S:K,, Ss:KList) => S ~> runStmt('ListWrap(Ss)) ... </k>	
-	[structural]
+rule [seq-cons-continue]:
+	<k> 'ListWrap(S:K,, Ss:KList) => S ~> 'ListWrap(Ss) ... </k>	
+	<status> C:RunningCode </status>
+	[transition]
+	
+rule [seq-cons-skip]:
+	<k> 'ListWrap(S:K,, Ss:KList) => . ... </k>	
+	<status> C:SkippingCode </status>
+	[transition]
 
 rule [seq-empty]:
 	<k> 'ListWrap(.KList) => . ... </k>
-	[structural]
+	[transition]
 
 rule [empty]:	
 	<k> 'Empty(.KList) => . ... </k>
-	[structural]
+	[transition]
+	/*
 
 //@ statements might or might not be executed, depending on the status 
 syntax K ::= "runStmt" "(" K ")"
@@ -237,7 +230,7 @@ rule    <k> runStmt(S) ~> K => . ... </k>
         <status> LOOP </status> 
         [transition]
 
-
+*/
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Expression as a statement} */
@@ -272,8 +265,8 @@ rule [var2Id]:
 
 rule [var] :   
 	<k> var(X:Id)  => *Cond(isSuperGlobal(X), 
-			ref(Lsg, Id2String(X)), 
-			ref(Lg, Id2String(X))) ... </k>
+			ref(Lsg, alpha(Id2String(X))), 
+			ref(Lg, alpha(Id2String(X)))) ... </k>
 	<currentScope> Lg:Loc </currentScope>
 	<superGlobalScope> Lsg:Loc </superGlobalScope>
 	when notBool(isSpecialVar(X))
@@ -421,26 +414,31 @@ context [assign-strict-RHS]:
 	'Assign(_:KResult,,HOLE) 
 	[structural]
 
-
 // convert LHS reference to basic one
-
 
 rule [assign-2-basic-ref]:
 	<k> 'Assign((LR:LRef => toBasicRef(LR)),, V:Value) ... </k>
 	[intermediate]
 
 rule [assign-LHS2-gamma]:
-	<k> 'Assign(ref(L,X),,V:KResult) => 
-		assign1(
-			Lget(ref(L,X)),
-			V,
-			isGammaSingleton(X)) // weak VS strong update
-	... 
-	</k>
+	<k> 'Assign(ref(L,X),,V:KResult) => assign0(Lget(ref(L,X)),V) ... </k>
 	[intermediate]
+
+
+syntax K ::= "assign0" "(" K "," K ")" [strict(1)]
+
+rule [assign-RHS2Loc-NonLiteral]:    
+	<k>  assign0(sref(L,X),V:KResult) => assign1(L,V,isGammaSingleton(X)) ... </k>
+	[intermediate]
+
 
 syntax K ::= "assign1" "(" K "," K "," Bool ")" [strict(1,2)]
 
+/* SM changing strategy using sref2loc in convertoloc
+rule [assign1-sref]:
+	<k>  assign1(_:KResult,sref(L,X)=>L,_) ... </k>
+	[intermediate]
+*/
 
 rule [assign-RHS2Loc-NonLiteral]:    
 	<k>  assign1(_:KResult, (V:ConvertibleToLoc => convertToLoc(V,r)),UpdateType) ... </k>
@@ -474,7 +472,7 @@ rule [assign]:
 	<k> assign1(L:Loc,V:LanguageValue,UpdateType) => 
 		copyValueToLoc(V,L,UpdateType) ~> 
 		zvalRead(L,@Value) ... </k>
-	[step] // last K was "V"
+	[step] 
 
 rule [assign-error]:
 	<k> assign1(thisTag(L:K),_,_) =>  ERROR("Cannot re-assign $this in %s on line %d") ... </k>

@@ -37,22 +37,22 @@ rule [exit]:
 /*@ \subsection{Auxiliary stuff} */
 // ---------------------------------------------------------------------------------------------
 
-/* 
-syntax  K ::= "print" "(" K ")"     [strict]
 
+syntax  K ::= "print" "(" K ")"     [strict]
+/* SM-FIXME: missing cases due to AFLOAT domain
 
 rule [internal-print]:    
-	<k> print (V:Float => Float2Int(V))  ... </k>
+	<k> print (V:AFloat => Float2Int(V))  ... </k>
 	<trace> Trace:List => Trace ListItem("internal-print") </trace>
 	when (hasNoDecimalPart(V))
 	[internal, output]
 	
 rule [internal-print]:    
-	<k> print (V:Float => *toString(V))  ... </k>
+	<k> print (V:AFloat => *toString(V))  ... </k>
 	<trace> Trace:List => Trace ListItem("internal-print") </trace>
 	when notBool (hasNoDecimalPart(V))
 	[internal, output]
-	
+*/
 rule [internal-print]:    
 	<k> print (V:LanguageValue => *toString(V))  ... </k>
 	<trace> Trace:List => Trace ListItem("internal-print") </trace>
@@ -64,7 +64,7 @@ rule [internal-print]:
 	<out> ... . => ListItem(V) </out>  
 	<trace> Trace:List => Trace ListItem("internal-print") </trace>
 	[internal, output]
-*/
+
 
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Echo} */

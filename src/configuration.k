@@ -56,8 +56,8 @@ configuration
      	<br/> 		
      	<IO color="magenta">
      		<in stream="stdin"> .List </in>
-     		<out stream="stdout"> .List </out>	
-     		// <out> .List </out>	// use this one for model checking (and comment previous)
+     		//<out stream="stdout"> .List </out>	
+     		<out> .List </out>	   // use this one for model checking (and comment previous)
             <exitStatus> 0 </exitStatus>
      		<errorManagement> 0 </errorManagement>
      		<varDumpLevel> 0 </varDumpLevel>
@@ -72,6 +72,7 @@ configuration
 			<locationsToCollect> .List </locationsToCollect>
 			<gcEnabled> false </gcEnabled>
 		</gc>
-		<trace> .List </trace> 
+		<trace> .List </trace>
+		<domain> .K </domain>
     	</kphp>
 endmodule

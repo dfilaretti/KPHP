@@ -7,6 +7,7 @@
 
 	$name = "kphp";
 	echo "Hello world!\n";
+	echo "Hello world!\n";
 	echo "This is $name\n";
 
 ?>

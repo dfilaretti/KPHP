@@ -8,6 +8,7 @@ $a = array("a","b","c");
 foreach ($a as $v) {
 	var_dump($v);
 }
+/*
 foreach ($a as $k => $v) {
 	var_dump($k, $v);
 }
@@ -33,7 +34,7 @@ var_dump(current($a));
 $a=array("a","b","c");
 foreach ($a as &$v);
 var_dump(current($a));
-
+*/
 ?>
 --EXPECT--
 string(1) "a"

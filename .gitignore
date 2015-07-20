@@ -1,0 +1,9 @@
+src/.k
+src/php-kompiled
+test.php
+*.phptemp
+*.tmp
+src/tests/zend/singletest/bug23922.phpt
+src/test_out
+src/test.php
+src/test2.php

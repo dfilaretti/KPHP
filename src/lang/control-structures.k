@@ -53,6 +53,8 @@ rule [if-guard2Bool]:
 // Abstract semantics
 /* TODO: remove once the "config" version works
 rule [if]:	
+    <kphp>
+         <script>
         <k> 'If(C,,B1,,'ListWrap(.KList),,B2) => 
 	mergeConfigs(
 		runAndGetConfig(runInMem(Abexp(C, some(E)), B1)),
@@ -114,6 +116,13 @@ rule [break-some]:
 
 // Here we finally give the semantics for Break
 
+rule [break]:
+	<k> 'Break(N:Int) => . ... </k>
+	<status> NEXT => BREAK(N) </status>
+	<trace> Trace:List => Trace ListItem("break") </trace>
+	[step]
+
+/*
 rule [break-n]: 	
 	<k> 'Break(NSteps => NSteps -Int 1) ... </k>
 	<loopStack> ListItem(K) => .List ... </loopStack>
@@ -121,15 +130,52 @@ rule [break-n]:
 	[intermediate]
 
 rule [break-1-normal]:
+	<k> 'Break(1) ~> T:K => cleanUntilGetCfg(T) </k>
+	[step]
+*/	
+/*
+rule [break-1-normal]:
 	<k> 'Break(1) ~> _ => K </k>
 	<loopStack> ListItem(loopFrame(K,none)) => .List ... </loopStack>
 	[step]
-	
-rule [break-1-special-some]:
+
+rule [break-1-special-some]:												//TODO : change this like above ?
 	<k> 'Break(1) ~> _ => syncArrayCurrent(Lorig, Llocal) ~> K </k>
 	<loopStack> ListItem(loopFrame(K:K,foreachArrayPair(Lorig, Llocal))) => .List ... </loopStack>
 	[step]
+*/	
+	
+syntax K ::= "decreaseBreak"
 
+rule <k> decreaseBreak => . ... </k>
+	<status> BREAK(N:Int) => BREAK(N -Int 1) </status>
+	<trace> Trace:List => Trace ListItem("decreaseBreak") </trace>
+	when N >Int 1
+
+rule <k> decreaseBreak => . ... </k>
+	<status> BREAK(1) => NEXT </status>
+	<trace> Trace:List => Trace ListItem("decreaseBreak") </trace>
+	
+rule <k> decreaseBreak => . ... </k>
+	<status> RET </status>
+
+rule <k> decreaseBreak => . ... </k>
+	<status> DONE </status>
+
+rule <k> decreaseBreak => . ... </k>
+	<status> LOOP </status>
+	
+rule <k> decreaseBreak => . ... </k>
+	<status> NEXT </status>
+
+rule <k> decreaseBreak => . ... </k>
+	<status> ERR </status>
+	
+rule <k> decreaseBreak => . ... </k>
+	<status> CONTINUE(_) </status>	
+	
+
+	
 ///////////////////////////////////////////////////////////////////////////////
 /*@ \subsection{Continue} */
 ///////////////////////////////////////////////////////////////////////////////
@@ -141,22 +187,56 @@ rule [continue-none]:
  
 context 'Continue('Some(HOLE))
 
-/* TODO: later
 rule
 	<k> 'Continue('Some(R:ConvertibleToLanguageValue => convertToLanguageValue(R))) ... </k>
 	<trace> Trace:List => Trace ListItem("continue-arg2LangValue") </trace>
 	[intermediate] 
-*/
 
 rule [continue-some]: 	
 	<k> 'Continue('Some(Steps:Int)) => 'Continue(Steps) ... </k>
 	<trace> Trace:List => Trace ListItem("continue-some") </trace>
 	[structural]
 
+/*
 rule [continue-1]:
 	<k> ('Continue(_) ~> _ ) =>  . ... </k>
 	<trace> Trace:List => Trace ListItem("continue-1") </trace>
 	[step]
+*/
+
+rule [continue]:
+	<k> 'Continue(N:Int) => . ... </k>
+	<status> NEXT => CONTINUE(N) </status>
+	[step]
+
+
+syntax K ::= "decreaseContinue"
+
+rule <k> decreaseContinue => . ... </k>
+	<status> CONTINUE(N:Int) => CONTINUE(N -Int 1) </status>
+	when N >Int 1
+
+rule <k> decreaseContinue => . ... </k>
+	<status> CONTINUE(1) => NEXT </status>
+
+rule <k> decreaseContinue => . ... </k>
+	<status> RET </status>
+
+rule <k> decreaseContinue => . ... </k>
+	<status> DONE </status>
+
+rule <k> decreaseContinue => . ... </k>
+	<status> LOOP </status>
+	
+rule <k> decreaseContinue => . ... </k>
+	<status> NEXT </status>
+
+rule <k> decreaseContinue => . ... </k>
+	<status> ERR </status>
+	
+rule <k> decreaseContinue => . ... </k>
+	<status> BREAK(_) </status>	
+	
 
 ///////////////////////////////////////////////////////////////////////////////
 /*@ \subsection{While} */
@@ -177,32 +257,40 @@ rule [alt-while]:
 // NOTE: in the following we are ignoring break/continue support
 rule    
 	<k> 'While(B:K,,S:K) => 
-                LFP(none, #whileStep(B,S)) ~> moveOnFromLoop(B) ... </k>		
+                LFP(none, #whileStep(B,S)) ~> moveOnFromLoop(B) ~> decreaseBreak ... </k>		
             //<niter> _ => 0 </niter> TODO 
 		[transition]
 
 //@ compute a "single step" of while loop
 syntax K ::= "#whileStep" "(" K "," K ")" 
 
-rule    <k> #whileStep(B,S) => 
+rule    
+		<kphp>
+		<script>
+		<k> #whileStep(B,S) => 
  		mergeConfigs(
-			runAndGetConfig(runInMem(Abexp(B, some(E)), S)),
-                    	runAndGetConfig(runInMem(Abexp('Not(B), some(E)), .K))) ... </k>
-        <mem> E </mem>         
+			runAndGetConfig(runInConf(AbexpConf(B, config(Cfg)), 'ListWrap(S ~> decreaseContinue))),
+            runAndGetConfig(runInConf(AbexpConf('Not(B), config(Cfg)), 'Break(1)))) ... 
+		</k>
+		_
+		</script>
+        Cfg:Bag
+		</kphp>
+		//<mem> E </mem>         
         //<niter> N => N +Int 1 </niter> 
       	[transition] 
 
 syntax  K ::= "moveOnFromLoop" "(" K ")" [strict]
 
 rule	<k> moveOnFromLoop(V:KResult) => . ... </k>
-	<status> _ => NEXT </status>
+	<status> St </status>
  	//<niter> _ => 0 </niter> 
- 	when notBool (valid(V)) 
+ 	when notBool (valid(V)) orBool isStatusBreaking(St)
 
-rule    <k> moveOnFromLoop(V:KResult) => . ... </k>      
-	<status> _ => LOOP </status>
+rule    <k> moveOnFromLoop(V:KResult) => print("Loop detected !") ... </k>      
+	<status> St => LOOP </status>
  	//<niter> _ => 0 </niter>  
- 	when valid(V)  
+ 	when valid(V) andBool (notBool (isStatusBreaking(St)))
 
 
 
@@ -230,16 +318,13 @@ rule [for]:
 
 syntax K ::= "for" "(" K "," K "," K "," K ")"
 
-/* TODO: broken after WHILE semantics has chnaged
 rule [for-spec]: 	
 	for(Init:K, 'ListWrap(Guard:K), Increment:K, Body:K) => 
 	'ListWrap(
 		makeForInit(Init),,
-		while(
-			Guard,
-			'ListWrap(Body) ~> makeForInit(Increment))) 	
+		'While(Guard,, 'ListWrap(Body) ~> makeForInit(Increment))) 	
 	[structural]
-*/
+
 
 syntax K ::= "makeForInit" "(" K ")"
 
@@ -272,6 +357,8 @@ rule [switch]:
 	<k> 'Switch(In:KResult,, Clauses:K) ~> K  => 
 		pushLoopContext(loopFrame(K, none)) ~> 
 		switch(In, Clauses) ~> 
+		decreaseBreak ~>
+		decreaseContinue ~>
 		popLoopContext </k>
 	<trace> Trace:List => Trace ListItem("switch") </trace>
 	[step]
@@ -288,7 +375,7 @@ rule [switch-spec-default]:
 		'ListWrap(
 			'DefaultCase(":" ,,Stmt:K),, 
 			Cases:KList)) 
-		=> Stmt ~> runRemainingSwitchClauses('ListWrap(Cases)) ... </k>
+		=> 'ListWrap(Stmt,, runRemainingSwitchClauses('ListWrap(Cases))) ... </k>
 	<trace> Trace:List => Trace ListItem("switch-spec-default") </trace>
 	[internal]
 
@@ -301,7 +388,7 @@ rule [switch-spec-no-default]:
 		=>
 		'If(
 			'IsEqual(VIn,, VCase),, 
-			Stmt ~> runRemainingSwitchClauses('ListWrap(Cases)),,
+			'ListWrap(Stmt,, runRemainingSwitchClauses('ListWrap(Cases))),,
 			'ListWrap(.KList),,
 			switch(VIn, 'ListWrap(Cases))) ... </k>
 	<trace> Trace:List => Trace ListItem("switch-spec-no-default") </trace>
@@ -321,7 +408,7 @@ rule [switch-spec-run-remaining-clauses]:
 			Cases:KList
 		)
 	) =>
-	Stmt ~> runRemainingSwitchClauses('ListWrap(Cases)) ... </k>
+	'ListWrap(Stmt,, runRemainingSwitchClauses('ListWrap(Cases))) ... </k>
 	<trace> Trace:List => Trace ListItem("switch-spec-run-remaining-clauses") </trace>
 	[internal]
 
@@ -429,7 +516,8 @@ rule [foreach-without-local-copy]:
 rule [foreach]: 	
 	<k> ('ForEach(L':Loc,,Pattern:K,,Stmt:K) ~> K:K) => 
 			pushLoopContext(loopFrame(K, foreachArrayPair(L', none))) ~> 
-			foreach(L', Pattern, Stmt) ~>
+			foreach(L', Pattern, 'ListWrap(Stmt ~> decreaseContinue)) ~>
+			decreaseBreak ~>
 			popLoopContext
 	</k>
 	<heap> ... L |-> zval(V:Value,_,N,_) ... </heap>
@@ -475,13 +563,12 @@ syntax K ::= "foreach" "(" Loc "," K "," K ")"  [strict(1)]
 // TODO: replace 'crnt' with some variable name which will not interfere with 
 //       user-defined variables
 
-/* TODO: broken after WHILE rule changed
 rule [foreach-spec]:
 	<k> foreach(L:Loc, Pattern:K, Stmt:K) => 
 		'ListWrap(
 			'Expr(reset(L)),,
 			'Expr('Assign('Variable('Simple("crnt")),,key(L))),,
-			while('IsNotIdentical('False(.KList),,'Variable('Simple("crnt"))),
+			'While('IsNotIdentical('False(.KList),,'Variable('Simple("crnt"))),,
 					*Cond(
 						isCrntVisib(L),
 						'ListWrap(
@@ -501,13 +588,13 @@ rule [foreach-spec]:
 					)
 				)	
 		) ... </k>
-		<heap> ... L |-> zval(V:Value,_,_,_) ... </heap>
+		<heap> ... L2 |-> zval(V:Value,_,_,_) ... </heap>
+		<thematrix> ... L |-> L2 ... </thematrix>
 		<currentForeachItem> L1:Loc </currentForeachItem>
 	<trace> Trace:List => Trace ListItem("foreach-spec") </trace>
 	when (V isCompoundValue)
 	[internal]
-*/
-
+	
 syntax K ::= "ArrayCrnt2None" "(" Loc ")"
 
 rule 

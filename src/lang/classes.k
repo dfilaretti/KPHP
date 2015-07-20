@@ -270,7 +270,7 @@ rule [write-class-static-members-default]:
 				ClassName:Id, 
 				'ListWrap('Default('Variable('Simple(X:String)),,DefValue:Value),, Others:KList), 
 				Visib) => 
-			ArrayCreateElem(L,X,Visib,allocValue(DefValue)) ~>
+			ArrayCreateElem(L,alpha(X),Visib,allocValue(DefValue)) ~>
 			writeClassStaticMembers(ClassName, 'ListWrap(Others), Visib) ...
 			</k>
 	<classes>... ClassName |-> class(_,_,_,L) ... </classes>

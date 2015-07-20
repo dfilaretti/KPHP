@@ -21,15 +21,18 @@ module INIT
 // ---------------------------------------------------------------------------------------------
 
 syntax  Internal ::= "buildInitState" 
+				   | "initDomain"
 				   | "initScopes"
 				   | "initBuiltinFunctions"
 				   | "initBuiltinClasses"
 				   | "initSuperGlobals"
                    | "initStatus"
+				   
 
 rule [built-init-state]:	
 	<k> buildInitState =>
-        	initStatus ~> 
+		initDomain ~>
+        initStatus ~> 
 		initScopes ~>
 		initBuiltinFunctions ~>
 		initBuiltinClasses ~>
@@ -137,8 +140,8 @@ rule [init-builtin-functions]:
 				@byValue, L7')
 			
 			"var_dump" |-> f (
-				'ListWrap('Param('Variable('Simple("x")))), 
-				'ListWrap(var_dump('Variable('Simple("x")))), 
+				'ListWrap('VarLengthParam('Variable('Simple("x")))), 
+				'ListWrap(var_dump_map('Variable('Simple("x")))), 
 				@byValue, L8')
 			
 			"print_r" |-> f (
@@ -304,10 +307,10 @@ rule [init-scopes]:
 
 rule [init-superglobals]:    
 	<k> initSuperGlobals => 
-			'Expr('Assign(ref(Lsg, "_GET"),, 'Array('ListWrap(.KList)))) ~>
-			'Expr('Assign(ref(Lsg, "_COOKIE"),, 'Array('ListWrap(.KList)))) ~>
-			'Expr('Assign(ref(Lsg, "_POST"),, 'Array('ListWrap(.KList)))) ~>
-			'Expr('ReferenceAssign(ref(Lsg, "GLOBALS"),, Lg))
+			'Expr('Assign(ref(Lsg, alpha("_GET")),, 'Array('ListWrap(.KList)))) ~>
+			'Expr('Assign(ref(Lsg, alpha("_COOKIE")),, 'Array('ListWrap(.KList)))) ~>
+			'Expr('Assign(ref(Lsg, alpha("_POST")),, 'Array('ListWrap(.KList)))) ~>
+			'Expr('ReferenceAssign(ref(Lsg, alpha("GLOBALS")),, Lg))
 	... </k>    
 	<superGlobalScope> Lsg:Loc </superGlobalScope>
 	<globalScope> Lg:Loc  </globalScope>

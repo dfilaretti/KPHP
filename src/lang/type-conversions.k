@@ -149,6 +149,8 @@ rule [toInteger-compound]:
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{Is numeric string} */
 // ---------------------------------------------------------------------------------------------
+/*@
+
 
 // TODO: move to domain	
 syntax Bool ::= "isNumericString" "(" String ")" [function]	
@@ -183,7 +185,7 @@ rule
 		#isDigit(substrString(S, 0, 1))) orBool
 		((substrString(S, 0, 1) ==String "-") andBool (#isDigit(substrString(S, 1, 2))))
 
-/* string starting with ".N"  */
+// string starting with ".N"  
 
 rule 
 	isNumericString(S:String) => true
@@ -191,20 +193,23 @@ rule
 		#isDigit(substrString(S, 0, 1))) orBool
 		((substrString(S, 0, 1) ==String ".") andBool (#isDigit(substrString(S, 1, 2))))
 
-/* string starting with "-."  */
+//  string starting with "-."  
 
 rule     
 	isNumericString(S:String) => true
 	when ((lengthString(S) >Int 2) andBool
 		#isDigit(substrString(S, 0, 1))) orBool
 		((substrString(S, 0, 2) ==String "-.") andBool (#isDigit(substrString(S, 2, 3))))
-
+*/
 // ---------------------------------------------------------------------------------------------
 /*@ \subsection{String 2 number} 
 		Converts a string to a number. */
 // ---------------------------------------------------------------------------------------------
 
 // TODO: move to domains
+
+/*@
+
 syntax K ::= "string2Number" "(" AString ")"
 
 rule [string2Number-empty]:
@@ -268,6 +273,8 @@ rule [string2Number-float-minus-dot]:
 	[internal]
 
 // conversion from string to int according to PHP rules (see PHP docs) 
+
+*/
 
 // TODO: move to domains
 syntax K ::= "extractIntSubstring" "(" String "," String "," Int "," Type ")"
@@ -420,7 +427,7 @@ syntax K ::= "*toObject" "(" LanguageValue ")" [strict]
 // cast to object for scalar values
 
 rule [toObject-scalar]:    
-	<k> *toObject(S:ScalarValue) =>  makeObjectFromArray(makeArrayFromScalar(S, "scalar")) ... </k>
+	<k> *toObject(S:ScalarValue) =>  makeObjectFromArray(makeArrayFromScalar(S, alpha("scalar"))) ... </k>
 	<trace> Trace:List => Trace ListItem("toObject-scalar") </trace>
 	[internal]
 
@@ -451,7 +458,7 @@ rule [make-object-from-array]:
 
 // takes a scalar V and a key K as input and returns an array {K => V}. 
 
-syntax K ::= "makeArrayFromScalar" "(" ScalarValue "," Key ")"
+syntax Array ::= "makeArrayFromScalar" "(" ScalarValue "," Key ")" [function]
 
 rule [make-array-from-scalar]:
 	<k> makeArrayFromScalar(V, K) => Literal('Array('ListWrap('Pair('Some('Key(K)),,'Value(V))))) ... </k>
