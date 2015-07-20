@@ -5,5 +5,3 @@ test.php
 *.tmp
 src/tests/zend/singletest/bug23922.phpt
 src/test_out
-src/test.php
-src/test2.php
