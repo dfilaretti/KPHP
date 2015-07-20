@@ -1,3 +1,3 @@
 <?php
-	echo(10/3);
+	$x = "$x hello $y world";
 ?>
