@@ -1035,14 +1035,14 @@ rule 	getLTKeys(ListItem([K1,_,_]) Elems ,K) => SetItem(K1) getLTKeys(Elems,K)
 	when K1 <Lattice K
 
 rule 	getLTKeys(ListItem([K1,_,_]) Elems ,K) => getLTKeys(Elems,K) 
-	when (K1 ==K K) orBool (notBool (K1 <Lattice K))
+	when (notBool (K1 <Lattice K))
 
 syntax 	Set ::= "getGEQKeys" "(" List "," Key ")" 	[function]
 
 rule	getGEQKeys(.List,_) => .Set
 
 rule 	getGEQKeys(ListItem([K1,_,_]) Elems ,K) => SetItem(K1) getGEQKeys(Elems,K) 
-	when (K <Lattice K1) orBool (K1 ==K K)
+	when (K <Lattice K1) orBool (K1 ==Lattice K)
 
 rule 	getGEQKeys(ListItem([K1,_,_]) Elems ,K) => getGEQKeys(Elems,K) 
 	when (notBool (K <Lattice K1))
@@ -1502,8 +1502,14 @@ rule [rget-obj-scalar]:
 	[internal]
 
 rule [rget-null]: 	
-	<k> RgetRef(ref(locNull, _), _) => locNull ... </k>
+	<k> RgetRef(ref(locNull, K:Key), _) => locNull ... </k>
 	<trace> Trace:List => Trace ListItem("rget-null") </trace>
+        when K =/=K NULL
+	[internal]
+
+rule [rget-null]: 	
+	<k> RgetRef(ref(L:Loc, NULL), _) => ERROR("Cannot use [] for reading in %s line %n") ... </k>
+	<trace> Trace:List => Trace ListItem("rget-null-fatal") </trace>
 	[internal]
 
 // String element access.

@@ -111,12 +111,13 @@ module LATTICE
 	   rule lub_Value(S1:String, S2:String)=>S1
 	   when S1 ==String S2
 
-//SM missing?
-	   rule lub_Value(S1:String, I:AIntValue)=>Top
+	   rule lub_Value(I:AIntValue, S1:AStringValue)=>Top
 
-       rule lub_Value(AStringTop, X:AStringValue)=>AStringTop
+	   rule lub_Value(S1:AStringValue, I:AIntValue)=>Top
 
-       rule lub_Value(X:AStringValue, AStringTop)=>AStringTop
+           rule lub_Value(AStringTop, X:AStringValue)=>AStringTop
+ 
+           rule lub_Value(X:AStringValue, AStringTop)=>AStringTop
 
 	   rule lub_Value(ANum, N:ANumValue)=>ANum
 	   
@@ -187,12 +188,19 @@ module LATTICE
 	   when keepErrFlag(E)
 	   */
 	   
-	   syntax 	Bool ::= K "<Lattice" K		[function]
+           syntax Bool ::= K "==Lattice" K [function]
+	   syntax Bool ::= K "<Lattice" K		[function]
 	   syntax Bool ::= Scalar "<ScalarLattice" Scalar [function]
+
+	   rule D1:DomainValue ==Lattice D2:DomainValue => generalize(D1) ==Lattice generalize(D2) 
+
+	   rule VE(V1, E1):VEPair ==Lattice VE(V2, E2):VEPair => (lub_Value(V1,valueOfErrs(E1)) ==K lub_Value(V2,valueOfErrs(E2)))
+           
 	   
 	   rule D1:DomainValue <Lattice D2:DomainValue => generalize(D1) <Lattice generalize(D2)
 	   
-	   rule VE(V1, E1):VEPair <Lattice VE(V2, E2):VEPair => (V1 <ScalarLattice V2) andBool (E1 incList E2) 
+	   rule VE(V1, E1):VEPair <Lattice VE(V2, E2):VEPair =>
+(lub_Value(V1,valueOfErrs(E1)) <ScalarLattice lub_Value(V2,valueOfErrs(E2)))
 	   
 	   rule Top <Lattice X:K => false
 	   rule X:K <Lattice Bot => false

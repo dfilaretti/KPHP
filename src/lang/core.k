@@ -239,7 +239,12 @@ rule    <k> runStmt(S) ~> K => . ... </k>
 context 'Expr(HOLE)
 
 rule [expr]:	
-	<k> 'Expr(V:Value) => . ... </k>
+	<k> 'Expr(V:ConvertibleToLanguageValue => convertToLanguageValue(V)) ... </k>
+	<trace> Trace:List => Trace ListItem("expr") </trace>
+	[step]
+
+rule [expr]:	
+	<k> 'Expr(V:LanguageValue) => . ... </k>
 	<trace> Trace:List => Trace ListItem("expr") </trace>
 	[step]
 
@@ -345,6 +350,11 @@ rule [array-access-LHS2LangValue]:
 rule [array-access-key-cast-float]:	
 	<k> 'ArrayAccess(_,,(F:AFloat => 'IntCast(F))) ... </k>
 	<trace> Trace:List => Trace ListItem("array-access-key-cast-float") </trace>
+	[intermediate]
+	
+rule [array-access-key-cast-NULL]:	
+	<k> 'ArrayAccess(_,,(NULL => 'StringCast(NULL))) ... </k>
+	<trace> Trace:List => Trace ListItem("array-access-key-cast-NULL") </trace>
 	[intermediate]
 	
 rule [array-access-key-cast-bool]:	
