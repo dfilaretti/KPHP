@@ -1,20 +1,28 @@
---TEST--
-Testing recursive function
---FILE--
 <?php
+	function foo() {
+		echo "foo";
+		return 1;
+	}
 
-function Test($a)
-{
-   echo "$a ";
-   $a++;
-   if($a<10): Test($a); endif;
-}
+	function bar() {
+		echo "bar";
+		return 2;
+	}
 
-Test(1);
+	function baz() {
+		echo "baz";
+		return 3;
+	}
+
+
+
+	if (2 == 2) 
+		$f = "foo";
+	else
+		$f = "bar";
+
+	$result = $f(1, 2, 3, 4, 5);
+
+	echo "hey";
 
 ?>
---EXPECT--
-1 2 3 4 5 6 7 8 9
-
-
-

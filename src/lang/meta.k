@@ -227,13 +227,16 @@ rule	<k> runInMem(none, _) => .  ... </k>
     //@ Run computation in given configuration
     ///////////////////////////////////////////////////////////////////////////
 
-    syntax K ::= "runInConf" "(" BoxedConfig "," K ")"     [strict(1)] 
+	syntax OptionBoxedConfig ::= BoxedConfig | None
+
+    syntax K ::= "runInConf" "(" OptionBoxedConfig "," K ")"     [strict(1)] 
 	
+
 	//rule	runInConf(C, K) => updateConfig(C) ~> K 
    
     rule    runInConf(config(C), K) => updateConfig(config(C)) ~> K
  
-    rule   <k> runInConf(None, K) => . ... </k>
+    rule   <k> runInConf(none, K) => . ... </k>
            <status> _ => DONE </status>
            [transition]
  
@@ -478,6 +481,33 @@ rule	<k> runInMem(none, _) => .  ... </k>
 ///////////////////////////////////////////////////////////////////////////////
 
     ///////////////////////////////////////////////////////////////////////////
+    // Merging a set of configfurations.
+    ///////////////////////////////////////////////////////////////////////////
+
+	syntax K ::= "mergeConfigsSet" "(" Set ")" 
+
+	// base
+	rule mergeConfigsSet(.Set) => .
+	rule mergeConfigsSet(SetItem(K)) => 
+			mergeConfigs(
+				K,
+				runAndGetConfig(runInConf(none,.K))
+			) 
+
+	rule mergeConfigsSet(SetItem(K1) SetItem(K2)) => mergeConfigs(K1,K2)	
+
+	// cons
+	rule mergeConfigsSet(SetItem(K1) SetItem(K2) X:Set) => 
+			mergeConfigs(
+				runAndGetConfig(mergeConfigs(K1,K2)),
+				runAndGetConfig(mergeConfigsSet(X)))
+	when X =/=Set .Set 
+
+
+
+
+
+    ///////////////////////////////////////////////////////////////////////////
     // Merging entry point, Special cases.
     ///////////////////////////////////////////////////////////////////////////
 
@@ -492,7 +522,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
                     mergeConfigs(config(A), runAndGetConfig(runInConf(config(B),K)))
                 #else
                     mergeConfigsBase(config(A), config(B))       
-                #fi) ~> POP(_)
+                #fi) ~> POP/*(_)*/
             when (configGetStatus(A) ==K RET) andBool (configGetStatus(B) ==K NEXT)
             [transition]
 
@@ -502,7 +532,7 @@ rule	<k> runInMem(none, _) => .  ... </k>
                 #else
                     mergeConfigsBase(config(A), config(B))       
                 #fi
-                ) ~> POP(_)
+                ) ~> POP/*(_)*/
             when (configGetStatus(A) ==K NEXT) andBool (configGetStatus(B) ==K RET)
             [transition]       
 
